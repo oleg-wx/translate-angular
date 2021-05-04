@@ -22,11 +22,8 @@
     ],
     "paths": {
       "simply-translate-angular": [
-        "dist",
+        "dist/translate",
       ],
-      // "@hos/soeui/*": [
-      //   "dist/soeui/*"
-      // ],
     }
   }
 }
