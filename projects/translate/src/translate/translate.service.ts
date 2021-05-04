@@ -7,7 +7,19 @@ export const DEFAULT_OPTIONS = new InjectionToken<{ cacheDynamic?: boolean }>('T
 export class TranslateService {
     private service: Translations;
 
-    public defaultLang:string;
+    public set defaultLang(val: string) {
+        this.service.defaultLang = val;
+    }
+    public get defaultLang(): string {
+        return this.service.defaultLang;
+    }
+
+    public set fallbackLang(val: string) {
+        this.service.fallbackLang = val;
+    }
+    public get fallbackLang(): string {
+        return this.service.fallbackLang;
+    }
 
     constructor(@Optional() @Inject(DEFAULT_OPTIONS) options) {
         const cd = options ? options.cacheDynamic : false;
@@ -15,14 +27,14 @@ export class TranslateService {
     }
 
     translateTo(lang: string, key: string, dynamicValues?: { [key: string]: string | number }, fallback?: string): string {
-        return this.service.translate(lang, key, dynamicValues, fallback);
+        return this.service.translateTo(lang, key, dynamicValues, fallback);
     }
 
     translate(key: string, dynamicValues?: { [key: string]: string | number }, fallback?: string): string {
-        return this.service.translate(this.defaultLang, key, dynamicValues, fallback);
+        return this.service.translate(key, dynamicValues, fallback);
     }
 
     extendDictionary(lang: string, dictionary: Dictionary) {
-        this.service.extendDictionary(lang,dictionary);
+        this.service.extendDictionary(lang, dictionary);
     }
 }

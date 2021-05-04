@@ -4,6 +4,7 @@
   "scripts": {
     "build": "ng build translate",
     "build:prod": "ng build translate --prod",
+    "publish:prod": "npn run build:prod && cd dist/translate && npm publish && cd ../..",
     "build:demo": "ng build",
     "build:demo:prod": "node --max-old-space-size=8192 ./node_modules/@angular/cli/bin/ng build --prod --aot",
     "start:demo": "ng serve --port 4800 --live-reload false",
@@ -28,7 +29,7 @@
     "@angular/platform-browser-dynamic": "^10.2.4",
     "@angular/router": "^10.2.4",
     "ng-packagr": "10.x.x",
-    "simply-translate": "~0.0.8",
+    "simply-translate": "^0.0.10",
     "tslib": "^2.2.0",
     "typescript": "4.0.x",
     "zone.js": "^0.11.4"

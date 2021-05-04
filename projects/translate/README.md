@@ -26,7 +26,8 @@ import { TranslateModule, TranslateService } from 'simply-translate-angular';
     imports: [
         TranslateModule.forRoot((service:TranslateService) => {
             // set default language to use .translate method and translate pipe
-            service.defaultLang = 'en-US';
+            service.defaultLang = window.navigator.language;
+            service.fallbackLang = 'en-US';
             service.extendDictionary('en-US', {
                 'hello_world':'Hello World',
                 'hello_user':'Hello ${user}',
@@ -52,7 +53,7 @@ export class Component {
         // use default language from service
         this.hello = translate.translate('hello_user', { user: 'Oleg' })
         // use other language
-        this.hello = translateTo.translate('ru-RU','hello_user', { user: 'Oleg' })
+        this.hello = translate.translateTo('ru-RU','hello_user', { user: 'Oleg' })
     }
 }
 ```
@@ -78,12 +79,14 @@ Default `forRoot` initialization allows to use http client to fetch dictionaries
         TranslateModule.forRoot((service:TranslateService, client:) => {
             // set default language to use .translate method and translate pipe
             service.defaultLang = 'en-US';
+            service.fallbackLang = 'en-US';
             return client.get<any>(`https://my-translations.com/${lang}`).pipe(
                 map((res) => {
                     service.defaultLang = 'en-US';
                     service.extendDictionary('en-US', res);
                 })
             ).toPromise();
+            // don't forget to load fallback translations
         })
     ],
     providers: [
