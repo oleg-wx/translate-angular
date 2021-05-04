@@ -80,7 +80,7 @@ Default `forRoot` initialization allows to use http client to fetch dictionaries
             // set default language to use .translate method and translate pipe
             service.defaultLang = 'en-US';
             service.fallbackLang = 'en-US';
-            return client.get<any>(`/assets/translations/${service.defaultLang}`).pipe(
+            return client.get<any>(`https://my-translations.com/${lang}`).pipe(
                 map((res) => {
                     service.defaultLang = 'en-US';
                     service.extendDictionary('en-US', res);
