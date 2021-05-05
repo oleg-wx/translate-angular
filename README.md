@@ -1,6 +1,6 @@
 # Simply Translate for Angular
 
-[Simplest translations](https://www.npmjs.com/package/simply-translate) for Angular _(tested for v10+)_.
+[Simplest translations](https://github.com/oleg-wx/translate#readme) for Angular _(tested for v10+)_.
 
 ### Basics
 
