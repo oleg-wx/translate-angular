@@ -41,6 +41,32 @@ import { TranslateModule, TranslateService } from 'simply-translate-angular';
 });
 ```
 
+### Use Directive
+
+```html
+<!-- use default language from service -->
+<h2 translate="hello_user" [values]="{ user: 'Oleg' }"></h2>
+<!-- use other language -->
+<h2 translate="hello_user" to="ru-RU" [values]="{ user: 'Oleg' }"></h2>
+<!-- use fallback -->
+<!-- please not that Angular does not like when we use "{" in templates so tou need to replace it with $&#123; (optionally closing bracket with $&#125;) or escape it somehow :) -->
+<h2 translate="hello_user_not_there" [values]="{ user: 'Oleg' }">Hello $&#123;user}</h2>
+<!-- use simpler fallback -->
+<h2 translate="hello_user_not_there" [values]="{ user: 'Oleg' }">Hello user</h2>
+```
+In this case as a fallback we use element text.
+
+### Use Pipe
+
+```html
+<!-- use default language from service -->
+<h2>{{ 'hello_user' | translate: { user: 'Oleg' } }}</h2>
+<!-- use other language -->
+<h2>{{ 'hello_user' | translateTo: 'ru-RU': { user: 'Oleg' } }}</h2>
+<!-- use fallback -->
+<h2>{{ 'hello_user_not_there' | translate: { user: 'Oleg' } : 'Hello ${user}'}}</h2>
+```
+
 ### Use Service
 
 ```javascript
@@ -54,17 +80,10 @@ export class Component {
         this.hello = translate.translate('hello_user', { user: 'Oleg' })
         // use other language
         this.hello = translate.translateTo('ru-RU','hello_user', { user: 'Oleg' })
+        // use fallback
+        this.hello = translate.translateTo('ru-RU','hello_user_not_there', { user: 'Oleg' }, 'Hello ${user}')
     }
 }
-```
-
-### Use Pipe
-
-```html
-<!-- use default language from service -->
-<h2>{{ 'hello_user' | translate: { user: 'Oleg' } }}</h2>
-<!-- use other language -->
-<h2>{{ 'hello_user' | translateTo: 'ru-RU': { user: 'Oleg' } }}</h2>
 ```
 
 ### Load dictionaries
@@ -78,11 +97,11 @@ Default `forRoot` initialization allows to use http client to fetch dictionaries
         HttpClientModule,
         TranslateModule.forRoot((service:TranslateService, client:) => {
             // set default language to use .translate method and translate pipe
-            service.defaultLang = 'en-US';
-            service.fallbackLang = 'en-US';
+            const lang = 'en-US';
+            service.fallbackLang = 'ru-RU';
             return client.get<any>(`https://my-translations.com/${lang}`).pipe(
                 map((res) => {
-                    service.defaultLang = 'en-US';
+                    service.defaultLang = lang;
                     service.extendDictionary('en-US', res);
                 })
             ).toPromise();
@@ -94,6 +113,7 @@ Default `forRoot` initialization allows to use http client to fetch dictionaries
     ],
 });
 ```
+You may subscribe on `languageChange$` and `dictionaryChange$` if need to.  
 
 For more complex scenarios you may use initialization functions and `APP_INITIALIZER` token.  
 To extend dictionary with new values for lazy modules you may think of using __Angular Resolvers__.
