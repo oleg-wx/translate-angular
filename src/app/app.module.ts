@@ -9,6 +9,7 @@ import { TranslateModule, TranslateService } from 'simply-translate-angular';
 import { MoreModule } from './more/more.module';
 import { AppRoutingModule } from './app.routing';
 import { AppViewComponent } from './view.component';
+import { forkJoin } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 
@@ -22,25 +23,22 @@ function getDictionary(lang: string, client: HttpClient) {
         HttpClientModule,
         BrowserModule,
         TranslateModule.forRoot((service, client) => {
-            let lang = "ru-RU";// window.navigator.language;
-            return getDictionary(lang, client).pipe(
-                catchError((err, obs) => {
-                    // fallback to English
-                    lang = 'en-US';
-                    return getDictionary(lang, client)
-                }),
-                map((res) => {
-                    service.defaultLang = lang;
-                    service.extendDictionary(lang, res);
-                }),
-            ).toPromise();
-        },true),
+            let lang = 'en-US'; // window.navigator.language;
+            return forkJoin([getDictionary(lang, client), getDictionary('ru-RU', client)])
+                .pipe(
+                    map((res) => {
+                        service.defaultLang = lang;
+                        service.fallbackLang = 'ru-RU';
+                        service.extendDictionary(lang, res[0]);
+                        service.extendDictionary('ru-RU', res[1]);
+                    })
+                )
+                .toPromise();
+        }, true),
         AppRoutingModule,
         MoreModule,
     ],
-    providers: [
-        TranslateService
-    ],
+    providers: [TranslateService],
     exports: [],
     bootstrap: [AppComponent],
 })
