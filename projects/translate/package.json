@@ -1,14 +1,14 @@
 {
   "name": "simply-translate-angular",
-  "version": "0.0.3",
+  "version": "0.11.1",
   "dependencies": {
     "tslib": "^2.0.0",
-    "simply-translate": "0.0.10"
+    "simply-translate": "0.11.x"
   },
   "peerDependencies": {
-    "@angular/common": "~10.2.4",
-    "@angular/core": "~10.2.4",
-    "@angular/compiler": "~10.2.4"
+    "@angular/common": "*",
+    "@angular/core": "*",
+    "@angular/compiler": "*"
   },
   "repository": {
     "type": "git",

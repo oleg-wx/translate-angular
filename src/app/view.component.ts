@@ -7,6 +7,7 @@ import { Router } from '@angular/router';
             APP:
             <h1>{{ 'hello_user' | translate: { user: 'Oleg' } }}</h1>
         </div>
+        <small translate="welcome_to_app"></small>
     `,
     encapsulation: ViewEncapsulation.None,
 })

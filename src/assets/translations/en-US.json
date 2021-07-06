@@ -1,5 +1,6 @@
 {
-    "hello_user": "Hello $T{user?User}!",
+    "hello_user": "Hello $&{user?User}!",
+    "welcome_to_app": "Welcome to Application",
     "day_since_new_year": {
       "value": "It is ${days} New Year",
       "plural": {
@@ -9,7 +10,7 @@
           [">365", "more then year since that"],
           [">181", "more then six months since"],
           [">93", "more then three months since"],
-          ["_", "{$} days"]
+          ["_", "$# days"]
         ]
       }
     }
