@@ -7,7 +7,7 @@ import { TranslateService } from './translate.service';
 export class TranslateDirective implements OnInit, OnChanges {
     private _init = false;
     private _fb?: string;
-    @Input('translate') _key?: string;
+    @Input('translate') _key?: string|string[];
     @Input('to') _to?: string;
     @Input('values') _values?: { [key: string]: string | number };
 

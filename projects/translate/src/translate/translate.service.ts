@@ -1,6 +1,7 @@
 import { APP_INITIALIZER, Inject, Injectable, InjectionToken, Injector, Optional } from '@angular/core';
 import { Translations, Dictionary } from 'simply-translate';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { TranslateDynamicProps } from 'simply-translate/dist/core/types';
 
 export const DEFAULT_OPTIONS = new InjectionToken<{ cacheDynamic?: boolean }>('TranslateService DEFAULT_OPTIONS');
 
@@ -36,12 +37,18 @@ export class TranslateService {
         this.service = new Translations({}, { cacheDynamic: options?.cacheDynamic !== false, $less: !!options?.$less });
     }
 
-    translateTo(lang: string, key: string, dynamicValues?: { [key: string]: string | number }, fallback?: string): string {
-        return this.service.translateTo(lang, key, dynamicValues, fallback);
+    translateTo(lang: string, key: string|string[]): string;
+    translateTo(lang: string, key: string|string[], fallback: string): string;
+    translateTo(lang: string, key: string|string[], dynamicValues: TranslateDynamicProps, fallback?: string): string;
+    translateTo(lang: string, key: string|string[], dynamicValuesOrFallback?: TranslateDynamicProps | string, fallback?: string): string {
+        return this.service.translateTo(lang, key, dynamicValuesOrFallback as any, fallback);
     }
 
-    translate(key: string, dynamicValues?: { [key: string]: string | number }, fallback?: string): string {
-        return this.service.translate(key, dynamicValues, fallback);
+    translate(key: string|string[]): string;
+    translate(key: string|string[], fallback: string): string;
+    translate(key: string|string[], dynamicValues: TranslateDynamicProps, fallback?: string): string;
+    translate(key: string|string[], dynamicValuesOrFallback?: TranslateDynamicProps | string, fallback?: string): string {
+        return this.service.translate(key, dynamicValuesOrFallback as any, fallback);
     }
 
     extendDictionary(lang: string, dictionary: Dictionary) {
