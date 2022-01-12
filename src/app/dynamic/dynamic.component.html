@@ -1,9 +1,9 @@
 <div>
     Dynamic:
     <!-- use default language from service -->
-    <h2>{{ 'hello_user' | translate: { user: 'Basil' } }}</h2>
+    <h2>{{ 'hello_user_dynamic' | translate: { user: 'Basil' } }}</h2>
     <!-- use other language -->
-    <h2>{{ 'hello_user' | translateTo: 'ru-RU': { user: 'Basil' } }}</h2>
+    <h2>{{ 'hello_user_dynamic' | translateTo: 'ru-RU': { user: 'Basil' } }}</h2>
     <h4>{{ 'hi_person' | translate: { user: 'Basil' }: 'Hi to $&{user}' }}</h4>
     <h4>{{ 'hi_person' | translateTo: 'ru-RU': { user: 'Alex' }: 'Hi to ${Alex}' }}</h4>
     <small translate="welcome_to_app" to="ru-RU"></small>

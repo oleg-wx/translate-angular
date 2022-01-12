@@ -3,7 +3,8 @@
   "dest": "../../dist/translate",
   "lib": {
     "entryFile": "src/public_api.ts",
-    "styleIncludePaths": ["./src/styles"]
+    "styleIncludePaths": ["./src/styles"],
+    "umdModuleIds": { "simply-translate": "simply-translate" }
   },
-  "whitelistedNonPeerDependencies": ["simply-translate"]
+  "allowedNonPeerDependencies": ["simply-translate"]
 }

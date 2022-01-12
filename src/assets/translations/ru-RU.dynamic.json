@@ -1,0 +1,3 @@
+{
+  "hello_user_dynamic": "Привет, $&{user?User}!! Это динамика"
+}
