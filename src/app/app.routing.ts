@@ -7,6 +7,7 @@ const routes: Routes = [
     { path: 'view', component: AppViewComponent },
     { path: 'more', component: MoreComponent },
     { path: 'dynamic', loadChildren: ()=>import('./dynamic/dynamic.module').then((m) => m.DynamicModule) },
+    { path: 'another-dynamic', loadChildren: ()=>import('./another-dynamic/dynamic.module').then((m) => m.AnotherDynamicModule) },
     // {path:'dynamic', loadChildren:'app/dynamic/dynamic.module#DynamicModule'}
 ];
 

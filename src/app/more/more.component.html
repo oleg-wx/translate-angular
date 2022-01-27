@@ -1,7 +1,9 @@
 <div>
-    MORE:
-    <h2>{{ hello }}</h2>
-    <h4>{{'day_since_new_year' | translate: {days:day} }}</h4>
-    <h4>{{'no_value' | translate: 'Fallback' }}</h4>
-    <input [(ngModel)]="day" />
+  MORE:
+  <h2>{{ hello }}</h2>
+  <h4>{{ 'day_since_new_year' | translate: { days: day } }}</h4>
+  <h4>{{ 'no_value' | translate: 'Fallback' }}</h4>
+  <h5 [appTitle]="'aaa' | translate">...</h5>
+  <input [(ngModel)]="day" />
+  <a [routerLink]="['..']">back</a>
 </div>

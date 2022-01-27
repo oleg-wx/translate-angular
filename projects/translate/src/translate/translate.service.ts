@@ -1,7 +1,7 @@
-import { APP_INITIALIZER, Inject, Injectable, InjectionToken, Injector, Optional } from '@angular/core';
+import { Inject, Injectable, InjectionToken, Optional } from '@angular/core';
 import { Translations, Dictionary } from 'simply-translate';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
-import { TranslateDynamicProps, TranslateKey } from 'simply-translate/dist/core/types';
+import { BehaviorSubject, Subject } from 'rxjs';
+import { TranslateDynamicProps, TranslateKey } from 'simply-translate';
 
 export const DEFAULT_OPTIONS = new InjectionToken<{ cacheDynamic?: boolean }>('TranslateService DEFAULT_OPTIONS');
 

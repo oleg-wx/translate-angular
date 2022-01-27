@@ -1,17 +1,17 @@
-import { v4 as uuidv4 } from 'uuid';
-import { APP_INITIALIZER, InjectionToken, ModuleWithProviders, NgModule } from '@angular/core';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { APP_INITIALIZER, ModuleWithProviders, NgModule } from '@angular/core';
 import { DEFAULT_OPTIONS, TranslateService } from './translate/translate.service';
 import { TranslatePipe, TranslateToPipe } from './translate/translate.pipe';
 import { TranslateDirective } from './translate/translate.directive';
-import { isObservable, lastValueFrom, Observable, tap } from 'rxjs';
+import { lastValueFrom, Observable, tap } from 'rxjs';
+import { TranslateResolve } from './translate/translate.resolver';
+import { S_TRANSLATE, TranslateSettings } from './translate/translate-child-config';
 import { Dictionary } from 'simply-translate';
 
 export function factory(init?: Function) {
-  var ret = (service: TranslateService) => {
+  var ret = (service: TranslateService, ...deps: any[]) => {
     return function () {
       if (init) {
-        var res: Observable<{ [key: string]: Dictionary }> = init(service);
+        var res: Observable<Record<string, Dictionary>> = init(service, ...deps);
         res = res.pipe(
           tap((dics) => {
             Object.keys(dics).forEach((key) => {
@@ -35,25 +35,20 @@ export function forRootGuard(service: TranslateService): any {
 }
 
 export interface Config {
-  init?: (service: TranslateService, ...any) => Observable<Dictionary>;
+  init?: (service: TranslateService, ...any) => Observable<Record<string, Dictionary>>;
   deps?: any[];
   cacheDynamic?: boolean;
   $less?: boolean;
 }
 
 export interface ChildConfig {
-  extend?: (service: TranslateService, ...any) => Observable<Dictionary>;
+  extend?: (service: TranslateService, ...any) => Observable<Record<string, Dictionary>>;
   deps?: any[];
-  id?: string;
 }
-
-export const S_TRANSLATE = new InjectionToken<{ id: string; extend: Observable<{ [lang: string]: Dictionary }> }>('S_TRANSLATE');
 
 @NgModule({
   declarations: [TranslatePipe, TranslateToPipe, TranslateDirective],
-  imports: [],
   exports: [TranslatePipe, TranslateToPipe, TranslateDirective],
-  bootstrap: [],
 })
 export class TranslateModule {
   static forRoot(config?: Config): ModuleWithProviders<TranslateModule> {
@@ -61,6 +56,7 @@ export class TranslateModule {
       ngModule: TranslateModule,
       providers: [
         TranslateService,
+        TranslateResolve,
         {
           provide: DEFAULT_OPTIONS,
           useValue: {
@@ -74,17 +70,22 @@ export class TranslateModule {
           deps: config.deps !== undefined ? [TranslateService, ...config.deps] : [TranslateService],
           multi: true,
         },
+        {
+          provide: S_TRANSLATE,
+          useValue: { id: 'root' },
+        },
       ],
     };
   }
   static forChild(config?: ChildConfig): ModuleWithProviders<TranslateModule> {
+    const value: TranslateSettings = { extend: config?.extend ? config.extend : undefined, deps: config.deps ?? [] };
     return {
       ngModule: TranslateModule,
       providers: [
-        TranslateService,
+        TranslateResolve,
         {
           provide: S_TRANSLATE,
-          useValue: { id: config?.id?.trim() || uuidv4(), init:config?.extend ? config.extend: undefined },
+          useValue: value,
         },
       ],
     };

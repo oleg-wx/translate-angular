@@ -6,11 +6,13 @@ import { MoreComponent } from './more.component';
 //import { TranslateModule } from 'projects/translate/src/simply-translate.module';
 import { TranslateModule } from 'simply-translate-angular';
 import { FormsModule } from '@angular/forms';
+import { TitleDirective } from './title.directive';
+import { RouterModule } from '@angular/router';
 
 
 @NgModule({
-    declarations: [MoreComponent],
-    imports: [TranslateModule, BrowserModule, FormsModule],
+    declarations: [MoreComponent, TitleDirective],
+    imports: [TranslateModule, RouterModule, BrowserModule, FormsModule],
     exports: [MoreComponent],
     providers: [
         // {
