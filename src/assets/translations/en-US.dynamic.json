@@ -1,0 +1,3 @@
+{
+  "hello_user_dynamic": "Hello $&{user?User}! This is Dynamic"
+}

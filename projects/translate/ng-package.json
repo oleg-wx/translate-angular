@@ -5,5 +5,5 @@
     "entryFile": "src/public_api.ts",
     "styleIncludePaths": ["./src/styles"]
   },
-  "whitelistedNonPeerDependencies": ["simply-translate"]
+  "allowedNonPeerDependencies": ["simply-translate", "rxjs"]
 }

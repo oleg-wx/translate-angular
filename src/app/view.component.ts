@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
         <div>
             APP:
             <h1>{{ 'hello_user' | translate: { user: 'Oleg' } }}</h1>
+            <h1 translate="hello_user" [values]="{ user: 'Oleg' }"></h1>
         </div>
         <small translate="welcome_to_app"></small>
     `,
