@@ -18,7 +18,6 @@ export class TranslateResolve implements Resolve<any> {
   }
 
   public resolve(): Observable<any> | null {
-    debugger
     if (typeof this.extend === 'function') {
       if (this._extended !== true) {
         if (isObservable(this._extended)) {

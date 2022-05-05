@@ -4,7 +4,8 @@ import { Dictionary } from 'simply-translate';
 import { TranslateService } from './translate.service';
 
 export interface TranslateSettings {
+  id?: string;
   extend: (service: TranslateService, ...deps: any[]) => Observable<{ [lang: string]: Dictionary }>;
-  deps:any[],
+  deps: any[];
 }
 export const S_TRANSLATE = new InjectionToken<TranslateSettings>('S_TRANSLATE');

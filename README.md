@@ -1,6 +1,6 @@
 # Simply Translate for Angular
 
-[Simplest translations](https://github.com/oleg-wx/translate#readme) for Angular _(tested for v10+)_.
+[Simplest translations](https://www.npmjs.com/package/simply-translate) for Angular _(tested for v10+)_.
 
 ### Basics
 
@@ -19,27 +19,15 @@ import { TranslateModule, TranslateService } from 'simply-translate-angular';
 ```
 
 ### Initialize
-
 ```javascript
 @NgModule({
     declarations: [AppComponent, AppViewComponent],
     imports: [
-        TranslateModule.forRoot((service:TranslateService) => {
-            // set default language to use .translate method and translate pipe
-            service.defaultLang = window.navigator.language;
-            service.fallbackLang = 'en-US';
-            service.extendDictionary('en-US', {
-                'hello_world':'Hello World',
-                'hello_user':'Hello ${user}',
-                ...
-            });
-        })
-    ],
-    providers: [
-        TranslateService
-    ],
+        TranslateModule.forRoot(...)
+    ]
 });
 ```
+See [Load dictionaries](#Load-dictionaries)   
 
 ### Use Directive
 
@@ -87,33 +75,80 @@ export class Component {
 ```
 
 ### Load dictionaries
-
-Default `forRoot` initialization allows to use http client to fetch dictionaries. It returns Promise for application initialization
-
+#### Root
+Default `forRoot` initialization allows to use injected dependencies (e.g. `HttpClient`) to fetch dictionaries. It returns `Observable` that contains set of dictionaries
 ```javascript
+export function getDictionary(lang: string, client: HttpClient) {
+  return client.get<Dictionary>(`/assets/translations/${lang}.json`);
+}
+
 @NgModule({
-    declarations: [AppComponent, AppViewComponent],
-    imports: [
-        HttpClientModule,
-        TranslateModule.forRoot((service:TranslateService, client:) => {
-            // set default language to use .translate method and translate pipe
-            const lang = 'en-US';
-            service.fallbackLang = 'ru-RU';
-            return client.get<any>(`https://my-translations.com/${lang}`).pipe(
-                map((res) => {
-                    service.defaultLang = lang;
-                    service.extendDictionary('en-US', res);
-                })
-            ).toPromise();
-            // don't forget to load fallback translations
-        })
-    ],
-    providers: [
-        TranslateService
-    ],
-});
+  declarations: [...],
+  imports: [
+    ...
+    TranslateModule.forRoot({
+      deps: [HttpClient],
+      init: (service, client) => {
+        const lang = window.navigator.language;
+        const fbLang = 'ru-RU';
+
+        service.defaultLang = lang;
+        service.fallbackLang = fbLang;
+
+        const res$ = forkJoin([getDictionary(lang, client), getDictionary(fbLang, client)]).pipe(
+          map((res) => {
+            return { [lang]: res[0], fbLang: res[1] };
+          })
+        );
+
+        return res$;
+      },
+    }),
+    ...
+  ],
+  ...
+})
 ```
-You may subscribe on `languageChange$` and `dictionaryChange$` if need to.  
+You may subscribe on `languageChange$` and `dictionaryChange$` if needed.  
 
 For more complex scenarios you may use initialization functions and `APP_INITIALIZER` token.  
-To extend dictionary with new values for lazy modules you may think of using __Angular Resolvers__.
+
+#### Lazy
+Load dictionaries for **Lazy** modules a bit trickier.   
+You have to *extend* dictionaries *(same keys with be replaced with latest added)*.
+First load dynamic dictionaries in the same (almost) as for root.
+```javascript
+export function getDictionary(lang: string, client: HttpClient) {
+  return client.get<Dictionary>(`/assets/translations/${lang}.dynamic.json`);
+}
+
+@NgModule({
+  declarations: [...],
+  imports: [
+    TranslateModule.forChild({
+      deps: [HttpClient],
+      extend: (service: TranslateService, client: HttpClient) => {
+        return forkJoin([getDictionary(service.defaultLang, client), getDictionary(service.fallbackLang, client)]).pipe(
+          map((res) => {
+            return { [service.defaultLang]: res[0], [service.fallbackLang]: res[1] };
+          })
+        );
+      },
+    }),
+    ...
+  ]
+})
+export class DynamicModule {}
+```
+Then resolve them with special `TranslateResolve` resolver that has to be added to every lazy component.
+```javascript
+const routes: Routes = [
+  { path: '', component: DynamicComponent, resolve: { translate: TranslateResolve } },
+];
+
+@NgModule({
+  imports: [RouterModule.forChild(routes)],
+  exports: [RouterModule],
+})
+export class DynamicRoutingModule {}
+```

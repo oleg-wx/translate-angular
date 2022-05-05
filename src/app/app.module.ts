@@ -26,6 +26,7 @@ function getDictionary(lang: string, client: HttpClient) {
       deps: [HttpClient],
       init: (service, client) => {
         let lang = 'en-US'; // window.navigator.language;
+        service.onFailure = (lang, key) => console.log(`${lang}:${key}`);
         service.defaultLang = lang;
         service.fallbackLang = 'ru-RU';
         const res$ = forkJoin([getDictionary(lang, client), getDictionary('ru-RU', client)]).pipe(

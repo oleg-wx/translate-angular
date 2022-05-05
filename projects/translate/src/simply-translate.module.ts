@@ -1,5 +1,5 @@
 import { APP_INITIALIZER, ModuleWithProviders, NgModule } from '@angular/core';
-import { DEFAULT_OPTIONS, TranslateService } from './translate/translate.service';
+import { DefaultTranslateOptions, DEFAULT_OPTIONS, TranslateRootService, TranslateService } from './translate/translate.service';
 import { TranslatePipe, TranslateToPipe } from './translate/translate.pipe';
 import { TranslateDirective } from './translate/translate.directive';
 import { lastValueFrom, Observable, tap } from 'rxjs';
@@ -8,7 +8,7 @@ import { S_TRANSLATE, TranslateSettings } from './translate/translate-child-conf
 import { Dictionary } from 'simply-translate';
 
 export function factory(init?: Function) {
-  var ret = (service: TranslateService, ...deps: any[]) => {
+  var ret = (service: TranslateRootService, ...deps: any[]) => {
     return function () {
       if (init) {
         var res: Observable<Record<string, Dictionary>> = init(service, ...deps);
@@ -34,16 +34,15 @@ export function forRootGuard(service: TranslateService): any {
   return 'guarded';
 }
 
-export interface Config {
-  init?: (service: TranslateService, ...any) => Observable<Record<string, Dictionary>>;
+export interface Config extends DefaultTranslateOptions {
+  init?: (service: TranslateRootService, ...any) => Observable<Record<string, Dictionary>>;
   deps?: any[];
-  cacheDynamic?: boolean;
-  $less?: boolean;
 }
 
 export interface ChildConfig {
   extend?: (service: TranslateService, ...any) => Observable<Record<string, Dictionary>>;
   deps?: any[];
+  id?: string;
 }
 
 @NgModule({
@@ -52,36 +51,46 @@ export interface ChildConfig {
 })
 export class TranslateModule {
   static forRoot(config?: Config): ModuleWithProviders<TranslateModule> {
+    config = config ?? {
+      cacheDynamic: true,
+      $less: false,
+      deps: [],
+    };
+
+    config.cacheDynamic = config.cacheDynamic !== undefined ? !!config.cacheDynamic : true;
+    config.$less = config.$less !== undefined ? !!config.$less : false;
+    config.deps = config.deps !== undefined ? [TranslateRootService, ...config?.deps] : [TranslateRootService];
+
     return {
       ngModule: TranslateModule,
       providers: [
+        TranslateRootService,
         TranslateService,
         TranslateResolve,
         {
           provide: DEFAULT_OPTIONS,
           useValue: {
-            cacheDynamic: config?.cacheDynamic !== undefined ? !!config?.cacheDynamic : true,
-            $less: config?.$less !== undefined ? !!config?.$less : false,
+            cacheDynamic: config.cacheDynamic,
+            $less: config.$less,
+            onFailure: config.onFailure,
           },
         },
         {
           provide: APP_INITIALIZER,
           useFactory: factory(config.init),
-          deps: config.deps !== undefined ? [TranslateService, ...config.deps] : [TranslateService],
+          deps: config.deps,
           multi: true,
-        },
-        {
-          provide: S_TRANSLATE,
-          useValue: { id: 'root' },
-        },
+        }
       ],
     };
   }
   static forChild(config?: ChildConfig): ModuleWithProviders<TranslateModule> {
-    const value: TranslateSettings = { extend: config?.extend ? config.extend : undefined, deps: config.deps ?? [] };
+    const value: TranslateSettings = { extend: config?.extend ? config.extend : undefined, deps: config?.deps ?? [], id: config.id };
+    console.log(value);
     return {
       ngModule: TranslateModule,
       providers: [
+        TranslateService,
         TranslateResolve,
         {
           provide: S_TRANSLATE,

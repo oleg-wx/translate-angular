@@ -19,6 +19,7 @@ export function getDictionary(lang: string, client: HttpClient) {
   declarations: [DynamicComponent, OtherDynamicComponent],
   imports: [
     TranslateModule.forChild({
+      id: 'dyn',
       deps: [HttpClient],
       extend: (service: TranslateService, client: HttpClient) => {
         return forkJoin([getDictionary(service.defaultLang, client), getDictionary(service.fallbackLang, client)]).pipe(
