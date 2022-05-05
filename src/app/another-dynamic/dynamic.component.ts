@@ -13,6 +13,8 @@ import { Component } from '@angular/core';
       <i translate="hi_person" to="ru-RU" [values]="{ user: 'Alex' }"></i><br />
       <i translate="hi_person_no" to="ru-RU" [values]="{ user: 'Alex' }">Hi $&#123;user} from Fallback</i>
       <br />
+      same: <b translate="same"></b>
+      <br />
       <a [routerLink]="['other']">other</a>
     </div>
   `,
