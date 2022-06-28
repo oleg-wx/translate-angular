@@ -1,10 +1,8 @@
-import { BrowserModule } from '@angular/platform-browser';
-import { APP_INITIALIZER, NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { MoreComponent } from './more.component';
-//import { TranslateModule } from 'projects/translate/src/simply-translate.module';
 import { TranslateModule } from 'simply-translate-angular';
+//import { TranslateModule } from 'projects/translate/src/simply-translate.module';
+import { BrowserModule } from '@angular/platform-browser';
+import { NgModule } from '@angular/core';
+import { MoreComponent } from './more.component';
 import { FormsModule } from '@angular/forms';
 import { TitleDirective } from './title.directive';
 import { RouterModule } from '@angular/router';

@@ -1,9 +1,9 @@
+import { TranslateResolve } from 'simply-translate-angular';
+// import { TranslateResolve } from 'projects/translate/src/translate/translate.resolver';
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { TranslateResolve } from 'simply-translate-angular';
 import { DynamicComponent } from './dynamic.component';
 import { OtherDynamicComponent } from './other-dynamic.component';
-//import { TranslateResolve } from 'projects/translate/src/resolver';
 
 const routes: Routes = [
   { path: '', component: DynamicComponent, resolve: { resolve: TranslateResolve } },

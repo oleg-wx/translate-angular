@@ -5,7 +5,7 @@ import { TranslateService } from './translate.service';
 
 export interface TranslateSettings {
   id?: string;
-  extend: (service: TranslateService, ...deps: any[]) => Observable<{ [lang: string]: Dictionary }>;
+  extendDictionaries: (opts: { lang: string; fallbackLang: string }, ...deps: any[]) => Observable<{ [lang: string]: Dictionary }>;
   deps: any[];
 }
 export const S_TRANSLATE = new InjectionToken<TranslateSettings>('S_TRANSLATE');

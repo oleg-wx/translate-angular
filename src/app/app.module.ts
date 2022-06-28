@@ -1,17 +1,15 @@
-import { BrowserModule } from '@angular/platform-browser';
-import { APP_INITIALIZER, NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { AppComponent } from './app.component';
+import { TranslateModule } from 'simply-translate-angular';
 //import { TranslateModule } from 'projects/translate/src/simply-translate.module';
-import { TranslateModule, TranslateService } from 'simply-translate-angular';
+import { Dictionary } from 'simply-translate';
+
+import { BrowserModule } from '@angular/platform-browser';
+import { NgModule } from '@angular/core';
+import { AppComponent } from './app.component';
 import { MoreModule } from './more/more.module';
 import { AppRoutingModule } from './app.routing';
 import { AppViewComponent } from './view.component';
-import { forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { Dictionary } from 'simply-translate';
 
 function getDictionary(lang: string, client: HttpClient) {
   return client.get<Dictionary>(`/assets/translations/${lang}.json`);
@@ -24,17 +22,41 @@ function getDictionary(lang: string, client: HttpClient) {
     BrowserModule,
     TranslateModule.forRoot({
       deps: [HttpClient],
-      init: (service, client) => {
-        let lang = 'en-US'; // window.navigator.language;
-        service.onFailure = (lang, key) => console.log(`${lang}:${key}`);
-        service.defaultLang = lang;
-        service.fallbackLang = 'ru-RU';
-        const res$ = forkJoin([getDictionary(lang, client), getDictionary('ru-RU', client)]).pipe(
+
+      cacheDynamic: true,
+      lang: 'en-US',
+      fallbackLang: 'ru-RU',
+
+      addMiddleware: (client: HttpClient) => {
+        return [
+          (context, next) => {
+            if (context.result.fallingBack) {
+              console.warn('falling back', context.params.key, context.params.lang);
+            }
+            next();
+          },
+        ];
+      },
+
+      loadDictionaries: ({ lang, fallbackLang }, client: HttpClient) => {
+        return getDictionary(lang, client).pipe(
           map((res) => {
-            return { [lang]: res[0], 'ru-RU': res[1] };
+            return { ['en-US']: res };
+          })
+        );
+      },
+
+      init: (service, client: HttpClient) => {
+        const res$ = getDictionary('ru-RU', client).pipe(
+          map((res) => {
+            return { 'ru-RU': res };
           })
         );
         return res$;
+      },
+
+      final: (service, client: HttpClient) => {
+        console.warn(service);
       },
     }),
     AppRoutingModule,

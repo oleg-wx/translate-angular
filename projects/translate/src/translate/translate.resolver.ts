@@ -13,7 +13,7 @@ export class TranslateResolve implements Resolve<any> {
   constructor(protected service: TranslateService, injector: Injector, @Inject(S_TRANSLATE) settings: TranslateSettings) {
     this.extend = () => {
       const deps = settings.deps.map((d: ProviderToken<any>) => injector.get(d));
-      return settings.extend(service, ...deps);
+      return settings.extendDictionaries({ lang: service.lang, fallbackLang: service.fallbackLang }, ...deps);
     };
   }
 
