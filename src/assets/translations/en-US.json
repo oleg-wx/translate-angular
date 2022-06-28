@@ -1,17 +1,18 @@
 {
-    "hello_user": "Hello $&{user?User}!",
-    "welcome_to_app": "Welcome to Application",
-    "day_since_new_year": {
-      "value": "It is ${days} New Year",
-      "plural": {
-        "days": [
-          ["=1", "one day since"],
-          ["<1", "day of"],
-          [">365", "more then year since that"],
-          [">181", "more then six months since"],
-          [">93", "more then three months since"],
-          ["_", "$# days"]
-        ]
-      }
+  "hello_user": "Hello $&{user?User}!",
+  "welcome_to_app": "Welcome to Application",
+  "day_since_new_year": {
+    "value": "It is ${days} New Year",
+    "plural": {
+      "days": [
+        ["=1", "one day since"],
+        ["<1", "day of"],
+        [">365", "more then year since that"],
+        [">181", "more then six months since"],
+        [">93", "more then three months since"],
+        ["_", "$# days"]
+      ]
     }
-  }
+  },
+  "same": "Same root"
+}

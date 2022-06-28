@@ -11,7 +11,10 @@ import { Component } from '@angular/core';
       <h4>{{ 'hi_person' | translateTo: 'ru-RU':{ user: 'Alex' }:'Hi to \${Alex}' }}</h4>
       <small [translate]="'welcome_to_app'" to="ru-RU"></small>
       <i translate="hi_person" to="ru-RU" [values]="{ user: 'Alex' }"></i><br />
-      <i translate="hi_person_no" to="ru-RU" [values]="{ user: 'Alex' }">Hi $&#123;user} from Fallback</i>
+      <i translate="hi_person_no" to="ru-RU" [values]="{ user: 'Alex' }">Hi $&#123;user} from Fallback INLINE</i>
+      <i translate="hi_person_no" to="ru-RU" [values]="{ user: 'Alex' }" fallback="Hi $&{user} from Fallback PROP"></i>
+      <br />
+      same: <b translate="same"></b>
       <br />
       <a [routerLink]="['other']">other</a>
     </div>

@@ -13,12 +13,11 @@ export class TranslateResolve implements Resolve<any> {
   constructor(protected service: TranslateService, injector: Injector, @Inject(S_TRANSLATE) settings: TranslateSettings) {
     this.extend = () => {
       const deps = settings.deps.map((d: ProviderToken<any>) => injector.get(d));
-      return settings.extend(service, ...deps);
+      return settings.extendDictionaries({ lang: service.lang, fallbackLang: service.fallbackLang }, ...deps);
     };
   }
 
   public resolve(): Observable<any> | null {
-    debugger
     if (typeof this.extend === 'function') {
       if (this._extended !== true) {
         if (isObservable(this._extended)) {
