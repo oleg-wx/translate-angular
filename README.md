@@ -14,7 +14,7 @@
 - added `fallback` property to directive.
 - `defaultLang` renamed to `lang`.
 - `extend` in `forChild` initialization changed to `extendDictionaries`.
-- **dynamic cache** enabled by default. To turn it off set `cacheDynamic` to `false` on initialization.
+- removed **dynamic cache**.
 
 ### Basics
 
@@ -113,10 +113,8 @@ export function getDictionary(lang: string, client: HttpClient) {
       lang: window.navigator.language,
       fallbackLang: 'ru-RU',
 
-      cacheDynamic: true, // true by default
-
       loadDictionaries: ({lang, fallbackLang}, client /* params are injected dependencies received in the same order as they are in deps */) => {
-       
+
         const res$ = forkJoin([getDictionary(lang, client), getDictionary(fbLang, client)]).pipe(
           map((res) => {
             return { [lang]: res[0], fbLang: res[1] };
@@ -134,7 +132,7 @@ export function getDictionary(lang: string, client: HttpClient) {
 
 You may subscribe on `languageChange$` and `dictionaryChange$` if needed.
 
-For more complex scenarios you may use initialization functions and `APP_INITIALIZER` token.
+For more complex scenarios you may use initialization functions with `APP_INITIALIZER` token.
 
 #### Lazy
 
@@ -151,7 +149,9 @@ export function getDictionary(lang: string, client: HttpClient) {
   declarations: [...],
   imports: [
     TranslateModule.forChild({
-      deps: [HttpClient],
+      // dependencies
+      deps: [ HttpClient ],
+
       extendDictionaries: ({ lang, fallbackLang }, client: HttpClient) => {
         return forkJoin([getDictionary(lang, client), getDictionary(fallbackLang, client)]).pipe(
           map((res) => {
@@ -181,8 +181,8 @@ export class DynamicRoutingModule {}
 ### Pipeline
 
 **(experimental)**
-Currently it is possible to **append** middleware to the end of translation pipeline.   
-It might be specially useful to add **logger** or rarely fine-tune translation result. 
+Currently it is possible to **append** middleware to the end of translation pipeline.  
+It might be specially useful to add **logger** or rarely fine-tune translation result.
 
 ```javascript
 @NgModule({

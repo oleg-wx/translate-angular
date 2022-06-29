@@ -76,7 +76,7 @@ export function factory(
         );
       }
 
-      return lastValueFrom(loadDics$);
+      return lastValueFrom(result$);
     };
   };
 
@@ -114,18 +114,15 @@ export interface ChildConfig {
 export class TranslateModule {
   static forRoot(config?: Config): ModuleWithProviders<TranslateModule> {
     config = config ?? {
-      cacheDynamic: true,
       placeholder: 'default',
       deps: [],
     };
 
-    config.cacheDynamic = config.cacheDynamic !== undefined ? !!config.cacheDynamic : true;
     config.placeholder = config.placeholder !== undefined ? config.placeholder : 'default';
     config.deps = config.deps !== undefined ? [TranslateRootService, ...config?.deps] : [TranslateRootService];
 
     const value: DefaultTranslateOptions = {
       lang: config.lang,
-      cacheDynamic: config.cacheDynamic,
       placeholder: config.placeholder,
       fallbackLang: config.fallbackLang,
     };
@@ -151,7 +148,7 @@ export class TranslateModule {
   }
 
   static forChild(config?: ChildConfig): ModuleWithProviders<TranslateModule> {
-    const value: TranslateSettings = { extendDictionaries: config?.extendDictionaries ? config.extendDictionaries : undefined, deps: config?.deps ?? [], id: config.id };
+    const value: TranslateSettings = { extendDictionaries: config?.extendDictionaries, deps: config?.deps ?? [], id: config?.id };
     return {
       ngModule: TranslateModule,
       providers: [

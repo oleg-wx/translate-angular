@@ -23,17 +23,15 @@ function getDictionary(lang: string, client: HttpClient) {
     TranslateModule.forRoot({
       deps: [HttpClient],
 
-      cacheDynamic: true,
       lang: 'en-US',
       fallbackLang: 'ru-RU',
 
       addMiddleware: (client: HttpClient) => {
         return [
-          (context, next) => {
+          (context) => {
             if (context.result.fallingBack) {
               console.warn('falling back', context.params.key, context.params.lang);
             }
-            next();
           },
         ];
       },
@@ -46,18 +44,18 @@ function getDictionary(lang: string, client: HttpClient) {
         );
       },
 
-      init: (service, client: HttpClient) => {
-        const res$ = getDictionary('ru-RU', client).pipe(
-          map((res) => {
-            return { 'ru-RU': res };
-          })
-        );
-        return res$;
-      },
+      // init: (service, client: HttpClient) => {
+      //   const res$ = getDictionary('ru-RU', client).pipe(
+      //     map((res) => {
+      //       return { 'ru-RU': res };
+      //     })
+      //   );
+      //   return res$;
+      // },
 
-      final: (service, client: HttpClient) => {
-        console.warn(service);
-      },
+      // final: (service, client: HttpClient) => {
+      //   console.warn(service);
+      // },
     }),
     AppRoutingModule,
     MoreModule,

@@ -17,7 +17,6 @@ import { S_TRANSLATE, TranslateSettings } from './translate-child-config';
 export interface DefaultTranslateOptions {
   lang?: string;
   fallbackLang?: string;
-  cacheDynamic?: boolean;
   placeholder?: PlaceholderType;
 }
 
@@ -74,16 +73,11 @@ export class TranslateRootService implements TranslateServiceBase {
   }
 
   constructor(@Optional() @Inject(DEFAULT_OPTIONS) options: DefaultTranslateOptions) {
-    const cacheDynamic = options.cacheDynamic !== false;
     const pipeline = new SimplePipeline();
 
     this._addFallbackMiddleware(pipeline, options.fallbackLang);
 
-    this._service = new Translations(
-      {},
-      { cacheDynamic, placeholder: options?.placeholder, lang: options?.lang, fallbackLang: options?.fallbackLang },
-      pipeline
-    );
+    this._service = new Translations({}, { placeholder: options?.placeholder, lang: options?.lang, fallbackLang: options?.fallbackLang }, pipeline);
   }
 
   translateTo(lang: string, key: TranslateKey): string;
@@ -119,6 +113,24 @@ export class TranslateRootService implements TranslateServiceBase {
 
 @Injectable()
 export class TranslateService implements TranslateServiceBase {
+  private _languageChange$: typeof this._root.languageChange$;
+  private _dictionaryChange$: typeof this._root.dictionaryChange$;
+
+  get languageChange$() {
+    if(!this._languageChange$){
+      this._languageChange$ = this._root.languageChange$.pipe();
+    }
+    return this._languageChange$;
+  }
+
+  get dictionaryChange$() {
+    if(!this._dictionaryChange$){
+      this._dictionaryChange$ = this._root.dictionaryChange$.pipe();
+    }
+    return this._dictionaryChange$;
+  }
+
+
   public get lang(): string {
     return this._root.lang;
   }
