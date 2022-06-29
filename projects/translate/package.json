@@ -1,9 +1,9 @@
 {
   "name": "simply-translate-angular",
-  "version": "0.20.0-beta.2",
+  "version": "0.20.0-beta.9",
   "dependencies": {
     "tslib": "^2.0.0",
-    "simply-translate": "0.20.0-beta.*",
+    "simply-translate": "0.20.0-beta.5",
     "rxjs": "^7.3.0"
   },
   "peerDependencies": {
