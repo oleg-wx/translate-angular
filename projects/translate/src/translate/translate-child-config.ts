@@ -1,7 +1,6 @@
 import { InjectionToken } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Dictionary } from 'simply-translate';
-import { TranslateService } from './translate.service';
 
 export interface TranslateSettings {
   id?: string;
