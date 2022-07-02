@@ -1,8 +1,7 @@
-import { Component, Injectable, ViewChild } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { debounceTime, lastValueFrom, of, Subject } from 'rxjs';
-import { TranslateDirective } from 'simply-translate-angular';
-import { DefaultTranslateConfig, DEFAULT_CONFIG, ROOT_DICTIONARIES, TranslateRootService, TranslateService } from '../public_api';
+import { DefaultTranslateConfig, TranslateRootService, TranslateService } from '../public_api';
 import { TranslateModule } from '../simply-translate.module';
 import { TestInjectedServiceComponent } from './core/test.component';
 
@@ -86,6 +85,9 @@ describe('service', () => {
   it('should fallback', () => {
     expect(service.translate('hello_user_not_there', { user: 'Oleg' }, 'Hello user fb')).toBe('Hello user fb');
     expect(service.translate('hello_user_not_there', { user: 'Oleg' }, 'Hello ${user} fb')).toBe('Hello Oleg fb');
+    expect(service.translate('hello_user_not_there', { user: 'Oleg', num: 5 }, { value: 'Hello ${user} ${num} fb', plural: { num: [['=5', 'five']] } })).toBe(
+      'Hello Oleg five fb'
+    );
   });
 
   it('should fallback to lang', () => {

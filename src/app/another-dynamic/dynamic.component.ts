@@ -1,22 +1,19 @@
 import { Component } from '@angular/core';
 @Component({
+  styles: [
+    `
+      :host {
+        display: block;
+        background: #00ff0029;
+      }
+    `,
+  ],
   template: `
     <div>
-      Another Dynamic:
-      <!-- use default language from service -->
-      <h2>{{ 'hello_user_dynamic' | translate: { user: 'Basil' } }}</h2>
-      <!-- use other language -->
-      <h2>{{ 'hello_user_dynamic' | translateTo: 'ru-RU':{ user: 'Basil' } }}</h2>
-      <h4>{{ 'hi_person' | translate: { user: 'Basil' }:'Hi to $&{user}' }}</h4>
-      <h4>{{ 'hi_person' | translateTo: 'ru-RU':{ user: 'Alex' }:'Hi to \${Alex}' }}</h4>
-      <small [translate]="'welcome_to_app'" to="ru-RU"></small>
-      <i translate="hi_person" to="ru-RU" [values]="{ user: 'Alex' }"></i><br />
-      <i translate="hi_person_no" to="ru-RU" [values]="{ user: 'Alex' }">Hi $&#123;user} from Fallback INLINE</i>
-      <i translate="hi_person_no" to="ru-RU" [values]="{ user: 'Alex' }" fallback="Hi $&{user} from Fallback PROP"></i>
-      <br />
-      same: <b translate="same"></b>
-      <br />
       <a [routerLink]="['other']">other</a>
+      <h6>Same key: <b [translate]="'same_key'"></b></h6>
+      <h6>Same dyn: <b [translate]="'same_dyn'"></b></h6>
+      <h6>Only root: <b [translate]="'only_root_key'"></b></h6>
     </div>
   `,
 })

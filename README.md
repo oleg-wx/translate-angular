@@ -6,20 +6,21 @@
 
 #### (v0.20.0)
 
+- see [plain JS library changes](https://www.npmjs.com/package/simply-translate#Breaking-changes).
 - deprecated `init` method in root import. Instead use `addMiddleware`, `loadDictionaries` and `final` methods instead.
-- deprecated ability to change `fallbackLang` after initialization.
 - `lang` and `fallbackLang` now in the root import.
 - added **middleware pipeline** _(see [Pipeline](#Pipeline))_.
 - removed `$less` property. Instead of `$less` use `placeholder = 'single'`.
 - added `fallback` property to directive.
 - `defaultLang` renamed to `lang`.
-- `extend` in `forChild` initialization changed to `extendDictionaries`.
+- `extend` in `forChild` initialization changed to `loadDictionaries`.
 - added language detection change for directives and pipes
+- after initialization `lang` and `fallbackLang` can be changed only from `TranslateRootService`.
 - removed **dynamic cache**.
 
 ### Basics
 
-You can learn by looking at package for plain JS on the link above.
+Please use link above to learn more about basic interaction, dictionaries, etc.
 
 ### Install
 
@@ -59,8 +60,15 @@ See [Load dictionaries](#Load-dictionaries)
 <h2 translate="hello_user_not_there" [values]="{ user: 'Oleg' }">Hello $&#123;user}</h2>
 <h2 translate="hello_user_not_there" [values]="{ user: 'Oleg' }" fallback="Hello ${user}"></h2>
 ```
-Directive can use inner text as a fallback.   
 
+Directives can detect language change, but it is not by default. Use _[detect]_ property.
+
+```html
+<!-- use default language -->
+<h2 translate="hello_user" to="ru-RU" [values]="{ user: 'Oleg' }" detect></h2>
+```
+
+Directive can use inner text as a fallback.
 
 ### Use Pipe
 
@@ -72,7 +80,9 @@ Directive can use inner text as a fallback.
 <!-- use fallback -->
 <h2>{{ 'hello_user_not_there' | translate: { user: 'Oleg' } : 'Hello ${user}'}}</h2>
 ```
-Pipes are pure by default. However if application has dynamic language change you may use special _impure_ directive (it has internal dirty check), it will detect language changes as well as pipe parameters. 
+
+Pipes are pure by default. However if application has dynamic language change you may use special _impure_ directive (it has internal dirty check), it will detect language changes as well as pipe parameters.
+
 ```html
 <!-- use default language -->
 <h2>{{ 'hello_user' | translate$: { user: 'Oleg' } }}</h2>
@@ -94,6 +104,16 @@ export class Component {
         // use fallback
         this.hello = translate.translateTo('ru-RU','hello_user_not_there', { user: 'Oleg' }, 'Hello ${user}')
     }
+}
+```
+
+To change language use `TranslateRootService` `lang` property.
+
+```javascript
+export class Component {
+  constructor(private rootTranslate: TranslateRootService){
+    rootTranslate.lang = "en-US";
+  }
 }
 ```
 
@@ -158,7 +178,7 @@ export function getDictionary(lang: string, client: HttpClient) {
       // dependencies
       deps: [ HttpClient ],
 
-      extendDictionaries: ({ lang, fallbackLang }, client: HttpClient) => {
+      loadDictionaries: ({ lang, fallbackLang }, client: HttpClient) => {
         return forkJoin([getDictionary(lang, client), getDictionary(fallbackLang, client)]).pipe(
           map((res) => {
             return { [lang]: res[0], [fallbackLang]: res[1] };
@@ -182,6 +202,36 @@ const routes: Routes = [{ path: '', component: DynamicComponent, resolve: { tran
   exports: [RouterModule],
 })
 export class DynamicRoutingModule {}
+```
+
+For rare cases you may use `id` parameter for Lazy loaded module, that allows having different values with same key.  
+"Lazy" values will be available only for lazy modules with that special `id`.
+
+```javascript
+@NgModule({
+  declarations: [...],
+  imports: [
+    TranslateModule.forRoot({
+      dictionaries: {'en-US':{
+        'key':'Value'
+      }}
+    })
+  ]
+})
+```
+
+```javascript
+@NgModule({
+  declarations: [...],
+  imports: [
+    TranslateModule.forChild({
+      id: 'lazy'
+      dictionaries: {'en-US':{
+        'key':'Value for Lazy'
+      }}
+    })
+  ]
+})
 ```
 
 ### Pipeline

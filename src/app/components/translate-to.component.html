@@ -1,0 +1,12 @@
+<h3>Directive:</h3>
+<div>{{ 'hello_world' | translateTo: lang }}</div>
+<div translate="namespace" [to]="lang"></div>
+<b>{{ 'namespace.hello_user' | translateTo: lang:{ user: this.user || undefined } }}</b>
+<div>
+  <small translate="goodbye_world" [to]="lang"></small>
+</div>
+<div>
+  <i translate="does_not_exist" [to]="lang" fallback="This is Fallback and value from dic: &{for_fallback}"></i>
+</div>
+<app-visits [lang]="lang"></app-visits>
+

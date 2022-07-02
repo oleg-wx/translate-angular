@@ -1,17 +1,16 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { debounceTime, lastValueFrom, of, Subject } from 'rxjs';
-import { TranslateDirective } from 'simply-translate-angular';
-import { DefaultTranslateConfig, DEFAULT_CONFIG, ROOT_DICTIONARIES, TranslateRootService, TranslateService } from '../public_api';
+import { DefaultTranslateConfig } from '../public_api';
 import { TranslateModule } from '../simply-translate.module';
-import { TestInjectedServiceComponent } from './core/test.component';
 
 @Component({
   template: `
     <div id="d1">{{ 'hello_user' | translate: { user: 'Oleg' } }}</div>
-    <div id="d2">{{ 'hello_user' | translateTo: 'ru-RU': { user: 'Oleg' } }}</div>
-    <div id="d3">{{ 'hello_user_not_there' | translate: { user: 'Oleg' } :'Hello user fb' }}</div>
-    <div id="d4">{{ 'hello_user_not_there' | translate: { user: 'Oleg' } :'Hello \${user} fb' }}</div>
+    <div id="d2">{{ 'hello_user' | translateTo: 'ru-RU':{ user: 'Oleg' } }}</div>
+    <div id="d3">{{ 'hello_user_not_there' | translate: { user: 'Oleg' }:'Hello user fb' }}</div>
+    <div id="d4">{{ 'hello_user_not_there' | translate: { user: 'Oleg' }:'Hello \${user} fb' }}</div>
+    <div id="d6">{{ 'hello_user_not_there' | translate: { user: 'Oleg', num:5 }:{ value: 'Hello \${user} \${num} fb', plural: { num: [['=5', 'five']] } } }}</div>
   `,
 })
 export class TestDirectiveComponent {}
@@ -76,5 +75,6 @@ describe('pipe', () => {
     expect(element.querySelector<HTMLElement>('#d2').innerText.trim()).toBe('Hello ru Oleg');
     expect(element.querySelector<HTMLElement>('#d3').innerText.trim()).toBe('Hello user fb');
     expect(element.querySelector<HTMLElement>('#d4').innerText.trim()).toBe('Hello Oleg fb');
+    expect(element.querySelector<HTMLElement>('#d6').innerText.trim()).toBe('Hello Oleg five fb');
   });
 });

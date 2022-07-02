@@ -1,10 +1,9 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { debounceTime, lastValueFrom, of, Subject } from 'rxjs';
-import { TranslateDirective } from 'simply-translate-angular';
-import { DefaultTranslateConfig, DEFAULT_CONFIG, ROOT_DICTIONARIES, TranslateRootService, TranslateService } from '../public_api';
+import { Dictionaries } from 'simply-translate';
+import { DefaultTranslateConfig } from '../public_api';
 import { TranslateModule } from '../simply-translate.module';
-import { TestInjectedServiceComponent } from './core/test.component';
 
 @Component({
   template: `
@@ -13,6 +12,12 @@ import { TestInjectedServiceComponent } from './core/test.component';
     <div id="d3" translate="hello_user_not_there" [values]="{ user: 'Oleg' }">Hello user fb</div>
     <div id="d4" translate="hello_user_not_there" [values]="{ user: 'Oleg' }">Hello $&#123;user} fb</div>
     <div id="d5" translate="hello_user_not_there" [values]="{ user: 'Oleg' }" fallback="Hello \${user} fb"></div>
+    <div
+      id="d6"
+      translate="hello_user_not_there"
+      [values]="{ user: 'Oleg', num: 5 }"
+      [fallback]="{ value: 'Hello \${user} \${num} fb', plural: { num: [['=5', 'five']] } }"
+    ></div>
   `,
 })
 export class TestDirectiveComponent {}
@@ -21,16 +26,25 @@ describe('directive', () => {
   const config: DefaultTranslateConfig = {
     lang: 'test',
   };
-  const rootDic = {
+  const rootDic: Dictionaries = {
     [config.lang]: {
       hello_user: 'Hello ${user}',
+      hello_world: {
+        value: 'Hello$!{type}world',
+        cases: {
+          type: [['!!', ' &{hello_world.$#} ']],
+        },
+        cruel: 'Cruel',
+        nice: '&{nice}',
+      },
+      nice: 'Nice',
     },
   };
   const dic = {
     ['ru-RU']: {
       hello_user: 'Hello ru ${user}',
     },
-  }
+  };
 
   const _wait = new Subject<void>();
   _wait.next();
@@ -78,5 +92,6 @@ describe('directive', () => {
     expect(element.querySelector<HTMLElement>('#d3').innerText.trim()).toBe('Hello user fb');
     expect(element.querySelector<HTMLElement>('#d4').innerText.trim()).toBe('Hello Oleg fb');
     expect(element.querySelector<HTMLElement>('#d5').innerText.trim()).toBe('Hello Oleg fb');
+    expect(element.querySelector<HTMLElement>('#d6').innerText.trim()).toBe('Hello Oleg five fb');
   });
 });

@@ -2,8 +2,7 @@ import { Component, ContentChildren, ElementRef, Inject, Injectable, InjectionTo
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, RouterModule, Routes } from '@angular/router';
 import { debounceTime, lastValueFrom, of, Subject } from 'rxjs';
-import { TranslateDirective } from 'simply-translate-angular';
-import { DefaultTranslateConfig, DEFAULT_CONFIG, ROOT_DICTIONARIES, TranslateRootService, TranslateService } from '../public_api';
+import { DefaultTranslateConfig, DEFAULT_CONFIG, ROOT_DICTIONARIES, TranslateRootService, TranslateService,TranslateResolve } from '../public_api';
 import { TranslateModule } from '../simply-translate.module';
 import { InjectedValue, INJECTED_TOKEN, TestInjectedServiceComponent } from './core/test.component';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -62,14 +61,14 @@ export class TestComponentRoot {
 
 const routes: Routes = [
   { path: '', component: TestComponent },
-  { path: 'child', loadChildren: () => DynamicModule },
+  { path: 'child', loadChildren: () => DynamicModule, resolve: { translate: TranslateResolve } },
 ];
 
 @NgModule({
   declarations: [TestComponentDyn],
   providers: [{ provide: INJECTED_TOKEN, useValue: { value: 100 } }],
   imports: [
-    RouterModule.forChild([
+    RouterTestingModule.withRoutes([
       {
         path: '',
         component: TestComponentDyn,
@@ -78,9 +77,8 @@ const routes: Routes = [
     TranslateModule.forChild({
       deps: [INJECTED_TOKEN],
       id: 'child',
-      extendDictionaries: (lang, value: InjectedValue) => {
+      loadDictionaries: (lang, value: InjectedValue) => {
         value.value = 100;
-        debugger
         return of(childeDic);
       },
     }),
@@ -134,13 +132,10 @@ xdescribe('forChild init', () => {
     await fixture.whenStable();
     await fixture.whenRenderingDone();
     element = fixture.elementRef.nativeElement;
-
   });
 
   it('should translate', async () => {
     await tick(300);
-    debugger;
-
     fixture.debugElement;
     fixture.elementRef.nativeElement;
     expect(element.querySelector<HTMLElement>('#dyn').innerText.trim()).toBe('Hello USER Child');

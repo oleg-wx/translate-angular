@@ -1,6 +1,6 @@
 import { Directive, ElementRef, Inject, InjectionToken, Input, OnChanges, OnDestroy, OnInit, Optional } from '@angular/core';
 import { skip, Subscription } from 'rxjs';
-import { TranslateKey } from 'simply-translate';
+import { DictionaryEntry, TranslateKey } from 'simply-translate';
 import { TranslateService } from './translate.service';
 
 export interface DefaultTranslateDirectiveConfig {
@@ -17,7 +17,7 @@ export class TranslateDirective implements OnInit, OnChanges, OnDestroy {
   private _sub?: Subscription;
   private _init = false;
   private _innerTextFallback?: string;
-  @Input('fallback') _fallback?: string;
+  @Input('fallback') _fallback?: DictionaryEntry | string;
   @Input('translate') _key?: TranslateKey;
   @Input('to') _to?: string;
   @Input('values') _values?: { [key: string]: string | number };

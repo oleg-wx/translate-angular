@@ -5,7 +5,7 @@ import { DefaultTranslateConfig, DEFAULT_CONFIG, ROOT_DICTIONARIES, TranslateRoo
 import { TranslatePipe, TranslateToPipe, TranslatePipeDetect } from './translate/translate.pipe';
 import { TranslateDirective } from './translate/translate.directive';
 import { TranslateResolve } from './translate/translate.resolver';
-import { S_TRANSLATE, TranslateSettings } from './translate/translate-child-config';
+import { TRANSLATE_CHILD, TranslateChildConfig } from './translate/translate-child-config';
 
 export type AddMiddlewareFunc = (...any) => Array<MiddlewareFunc | MiddlewareStatic>;
 export type LoadDictionariesFunc = (opts: { lang: string; fallbackLang: string }, ...any) => Observable<Record<string, Dictionary>>;
@@ -103,7 +103,8 @@ export interface Config extends DefaultTranslateConfig {
 export interface ChildConfig {
   /** @deprecated */
   extend?: (service: TranslateService, ...any) => Observable<Record<string, Dictionary>>;
-  extendDictionaries?: ({ lang, fallbackLang }, ...any) => Observable<Record<string, Dictionary>>;
+  loadDictionaries?: ({ lang, fallbackLang }, ...any) => Observable<Record<string, Dictionary>>;
+  dictionaries?: Dictionaries;
   deps?: any[];
   id?: string;
 }
@@ -135,6 +136,10 @@ export class TranslateModule {
         TranslateService,
         TranslateResolve,
         {
+          provide: TRANSLATE_CHILD,
+          useValue: {},
+        },
+        {
           provide: DEFAULT_CONFIG,
           useValue: value,
         },
@@ -150,14 +155,19 @@ export class TranslateModule {
   }
 
   static forChild(config?: ChildConfig): ModuleWithProviders<TranslateModule> {
-    const value: TranslateSettings = { extendDictionaries: config?.extendDictionaries, deps: config?.deps ?? [], id: config?.id };
+    const value: TranslateChildConfig = {
+      loadDictionaries: config?.loadDictionaries ?? config.extend,
+      dictionaries: config?.dictionaries,
+      deps: config?.deps ?? [],
+      id: config?.id,
+    };
     return {
       ngModule: TranslateModule,
       providers: [
         TranslateService,
         TranslateResolve,
         {
-          provide: S_TRANSLATE,
+          provide: TRANSLATE_CHILD,
           useValue: value,
         },
       ],

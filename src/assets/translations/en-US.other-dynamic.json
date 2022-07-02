@@ -1,4 +1,4 @@
 {
   "hello_user_dynamic": "Hello $&{user?User}! This is Other Dynamic",
-  "same": "Same other"
+  "same_dyn": "Same other Dic"
 }

@@ -1,10 +1,8 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { debounceTime, lastValueFrom, of, Subject } from 'rxjs';
-import { TranslateDirective } from 'simply-translate-angular';
-import { DefaultTranslateConfig, DEFAULT_CONFIG, ROOT_DICTIONARIES, TranslateRootService, TranslateService } from '../public_api';
+import { lastValueFrom, Subject } from 'rxjs';
+import { TranslateRootService, TranslateService } from '../public_api';
 import { TranslateModule } from '../simply-translate.module';
-import { TestInjectedServiceComponent } from './core/test.component';
 
 @Component({
   template: `

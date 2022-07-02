@@ -1,9 +1,18 @@
 import { Inject, Injectable, InjectionToken, Optional } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
-import { Translations, Dictionary, SimplePipeline, PlaceholderType, TranslateDynamicProps, TranslateKey, Dictionaries } from 'simply-translate';
+import {
+  Translations,
+  Dictionary,
+  SimplePipeline,
+  PlaceholderType,
+  TranslateDynamicProps,
+  TranslateKey,
+  Dictionaries,
+  DictionaryEntry,
+} from 'simply-translate';
 import { GetEntryMiddleware } from 'simply-translate/dist/core/middleware/get-entry-middleware';
 import { FallbackWithDifferentLanguageMiddleware } from 'simply-translate/dist/core/middleware/fallback-with-different-language-middleware';
-import { S_TRANSLATE, TranslateSettings } from './translate-child-config';
+import { TRANSLATE_CHILD, TranslateChildConfig } from './translate-child-config';
 
 export interface DefaultTranslateConfig {
   lang?: string;
@@ -20,13 +29,13 @@ export abstract class TranslateServiceBase {
 
   abstract translateTo(lang: string, key: TranslateKey): string;
   abstract translateTo(lang: string, key: TranslateKey, fallback: string): string;
-  abstract translateTo(lang: string, key: TranslateKey, dynamicValues: TranslateDynamicProps, fallback?: string): string;
-  abstract translateTo(lang: string, key: TranslateKey, dynamicValuesOrFallback?: TranslateDynamicProps | string, fallback?: string): string;
+  abstract translateTo(lang: string, key: TranslateKey, dynamicValues: TranslateDynamicProps, fallback?: DictionaryEntry | string): string;
+  abstract translateTo(lang: string, key: TranslateKey, dynamicValuesOrFallback?: TranslateDynamicProps | string, fallback?: DictionaryEntry | string): string;
 
   abstract translate(key: TranslateKey): string;
   abstract translate(key: TranslateKey, fallback: string): string;
-  abstract translate(key: TranslateKey, dynamicValues: TranslateDynamicProps, fallback?: string): string;
-  abstract translate(key: TranslateKey, dynamicValuesOrFallback?: TranslateDynamicProps | string, fallback?: string);
+  abstract translate(key: TranslateKey, dynamicValues: TranslateDynamicProps, fallback?: DictionaryEntry | string): string;
+  abstract translate(key: TranslateKey, dynamicValuesOrFallback?: TranslateDynamicProps | string, fallback?: DictionaryEntry | string);
 
   abstract extendDictionary(lang: string, dictionary: Dictionary);
 }
@@ -44,7 +53,7 @@ export class TranslateRootService implements TranslateServiceBase {
   private _fallbackAdded = false;
 
   private _langChangeSubj: BehaviorSubject<LangChange>;
-  private _dictionarySubj : Subject<void>;
+  private _dictionarySubj: Subject<void>;
   private _service: Translations;
 
   public languageChange$: Observable<LangChange>;
@@ -84,7 +93,7 @@ export class TranslateRootService implements TranslateServiceBase {
     this._langChangeSubj = new BehaviorSubject<LangChange>({ lang: config?.lang ?? '' });
     this.languageChange$ = this._langChangeSubj.asObservable();
     this._dictionarySubj = new Subject<void>();
-    this.dictionaryChange$ = this._dictionarySubj.asObservable()
+    this.dictionaryChange$ = this._dictionarySubj.asObservable();
 
     const pipeline = new SimplePipeline();
 
@@ -99,15 +108,15 @@ export class TranslateRootService implements TranslateServiceBase {
 
   translateTo(lang: string, key: TranslateKey): string;
   translateTo(lang: string, key: TranslateKey, fallback: string): string;
-  translateTo(lang: string, key: TranslateKey, dynamicValues: TranslateDynamicProps, fallback?: string): string;
-  translateTo(lang: string, key: TranslateKey, dynamicValuesOrFallback?: TranslateDynamicProps | string, fallback?: string): string {
+  translateTo(lang: string, key: TranslateKey, dynamicValues: TranslateDynamicProps, fallback?: DictionaryEntry | string): string;
+  translateTo(lang: string, key: TranslateKey, dynamicValuesOrFallback?: TranslateDynamicProps | string, fallback?: DictionaryEntry | string): string {
     return this._service.translateTo(lang, key, dynamicValuesOrFallback as any, fallback);
   }
 
   translate(key: TranslateKey): string;
   translate(key: TranslateKey, fallback: string): string;
-  translate(key: TranslateKey, dynamicValues: TranslateDynamicProps, fallback?: string): string;
-  translate(key: TranslateKey, dynamicValuesOrFallback?: TranslateDynamicProps | string, fallback?: string): string {
+  translate(key: TranslateKey, dynamicValues: TranslateDynamicProps, fallback?: DictionaryEntry | string): string;
+  translate(key: TranslateKey, dynamicValuesOrFallback?: TranslateDynamicProps | string, fallback?: DictionaryEntry | string): string {
     return this._service.translate(key, dynamicValuesOrFallback as any, fallback);
   }
 
@@ -120,6 +129,10 @@ export class TranslateRootService implements TranslateServiceBase {
     return this._service.hasTranslation(key);
   }
 
+  hasTranslationTo(lang: string, key: TranslateKey) {
+    return this._service.hasTranslationTo(lang, key);
+  }
+
   private _addFallbackLangMiddleware(pipeline: SimplePipeline, fallbackLang: string | undefined) {
     if (fallbackLang && !this._fallbackAdded) {
       this._fallbackAdded = true;
@@ -130,6 +143,7 @@ export class TranslateRootService implements TranslateServiceBase {
 
 @Injectable()
 export class TranslateService implements TranslateServiceBase {
+  private _id: string;
   private _languageChange$: typeof this._root.languageChange$;
   private _dictionaryChange$: typeof this._root.dictionaryChange$;
 
@@ -155,41 +169,49 @@ export class TranslateService implements TranslateServiceBase {
     return this._root.fallbackLang;
   }
 
-  constructor(private _root: TranslateRootService, @Optional() @Inject(S_TRANSLATE) private _options?: TranslateSettings) {}
+  constructor(private _root: TranslateRootService, @Optional() @Inject(TRANSLATE_CHILD) _options?: TranslateChildConfig) {
+    this._id = _options?.id;
+    if (_options?.dictionaries) {
+      Object.keys(_options.dictionaries).forEach((lang) => {
+        this.extendDictionary(lang, _options.dictionaries[lang]);
+      });
+    }
+  }
 
   translateTo(lang: string, key: TranslateKey): string;
   translateTo(lang: string, key: TranslateKey, fallback: string): string;
-  translateTo(lang: string, key: TranslateKey, dynamicValues: TranslateDynamicProps, fallback?: string): string;
-  translateTo(lang: string, key: TranslateKey, dynamicValuesOrFallback?: string | TranslateDynamicProps, fallback?: string): string {
+  translateTo(lang: string, key: TranslateKey, dynamicValues: TranslateDynamicProps, fallback?: DictionaryEntry | string): string;
+  translateTo(lang: string, key: TranslateKey, dynamicValuesOrFallback?: string | TranslateDynamicProps, fallback?: DictionaryEntry | string): string {
     return this._root.translateTo(lang, this.getChildKey(key), dynamicValuesOrFallback as any, fallback);
   }
 
   translate(key: TranslateKey): string;
   translate(key: TranslateKey, fallback: string): string;
-  translate(key: TranslateKey, dynamicValues: TranslateDynamicProps, fallback?: string): string;
-  translate(key: TranslateKey, dynamicValuesOrFallback?: string | TranslateDynamicProps, fallback?: string): string {
+  translate(key: TranslateKey, dynamicValues: TranslateDynamicProps, fallback?: DictionaryEntry | string): string;
+  translate(key: TranslateKey, dynamicValuesOrFallback?: string | TranslateDynamicProps, fallback?: DictionaryEntry | string): string {
     return this._root.translate(this.getChildKey(key), dynamicValuesOrFallback as any, fallback);
   }
 
   extendDictionary(lang: string, dictionary: Dictionary) {
-    if (!this._options?.id) {
+    if (!this._id) {
       this._root.extendDictionary(lang, dictionary);
+    } else {
+      this._root.extendDictionary(lang, { [this._id]: dictionary });
     }
-    this._root.extendDictionary(lang, { [this._options.id]: dictionary });
   }
 
   private getChildKey(key: TranslateKey) {
-    if (!this._options?.id) return key;
+    if (!this._id) return key;
 
     let _key: any;
 
     if (typeof key === 'string') {
-      _key = `${this._options.id}.${key}`;
+      _key = `${this._id}.${key}`;
     } else {
-      _key = [this._options.id, ...key];
+      _key = [this._id, ...key];
     }
 
-    if (this._root['_service'].dictionaries[this.lang][this._options.id] !== undefined) {
+    if (this._root['_service'].dictionaries[this.lang][this._id] !== undefined) {
       if (this._root.hasTranslation(_key)) {
         return _key;
       } else {
