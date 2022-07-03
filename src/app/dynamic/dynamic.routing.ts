@@ -1,7 +1,6 @@
-import { TranslateResolve } from 'simply-translate-angular';
-//import { TranslateResolve } from 'projects/translate/src/translate/translate.resolver';
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import { TranslateResolve } from 'src/_translate.imports';
 import { DynamicComponent } from './dynamic.component';
 import { OtherDynamicComponent } from './other-dynamic.component';
 

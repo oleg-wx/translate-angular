@@ -1,11 +1,11 @@
 import { APP_INITIALIZER, ModuleWithProviders, NgModule } from '@angular/core';
 import { combineLatest, lastValueFrom, Observable, of, tap } from 'rxjs';
-import { Dictionary, MiddlewareFunc, MiddlewareStatic } from 'simply-translate';
-import { DefaultTranslateOptions, DEFAULT_OPTIONS, TranslateRootService, TranslateService } from './translate/translate.service';
-import { TranslatePipe, TranslateToPipe } from './translate/translate.pipe';
+import { Dictionaries, Dictionary, MiddlewareFunc, MiddlewareStatic } from 'simply-translate';
+import { DefaultTranslateConfig, DEFAULT_CONFIG, ROOT_DICTIONARIES, TranslateRootService, TranslateService } from './translate/translate.service';
+import { TranslatePipe, TranslateToPipe, TranslatePipeDetect } from './translate/translate.pipe';
 import { TranslateDirective } from './translate/translate.directive';
 import { TranslateResolve } from './translate/translate.resolver';
-import { S_TRANSLATE, TranslateSettings } from './translate/translate-child-config';
+import { TRANSLATE_CHILD, TranslateChildConfig } from './translate/translate-child-config';
 
 export type AddMiddlewareFunc = (...any) => Array<MiddlewareFunc | MiddlewareStatic>;
 export type LoadDictionariesFunc = (opts: { lang: string; fallbackLang: string }, ...any) => Observable<Record<string, Dictionary>>;
@@ -13,7 +13,7 @@ export type InitFunc = (service: TranslateRootService, ...any) => Observable<Rec
 export type FinalFunc = (service: TranslateRootService, ...any) => void;
 
 export function factory(
-  config: DefaultTranslateOptions,
+  config: DefaultTranslateConfig,
   init?: InitFunc,
   addMiddlewareFn?: AddMiddlewareFunc,
   loadDictionariesFn?: LoadDictionariesFunc,
@@ -70,7 +70,7 @@ export function factory(
         return lastValueFrom(
           result$.pipe(
             tap(() => {
-              finalFn && finalFn(service, deps);
+              finalFn && finalFn(service, ...deps);
             })
           )
         );
@@ -90,26 +90,28 @@ export function forRootGuard(service: TranslateService): any {
   return 'guarded';
 }
 
-export interface Config extends DefaultTranslateOptions {
+export interface Config extends DefaultTranslateConfig {
   /** @deprecated */
   init?: InitFunc;
   loadDictionaries?: LoadDictionariesFunc;
   final?: FinalFunc;
   addMiddleware?: AddMiddlewareFunc;
+  dictionaries?: Dictionaries;
   deps?: any[];
 }
 
 export interface ChildConfig {
   /** @deprecated */
-  //extend?: (service: TranslateService, ...any) => Observable<Record<string, Dictionary>>;
-  extendDictionaries?: ({ lang, fallbackLang }, ...any) => Observable<Record<string, Dictionary>>;
+  extend?: (service: TranslateService, ...any) => Observable<Record<string, Dictionary>>;
+  loadDictionaries?: ({ lang, fallbackLang }, ...any) => Observable<Record<string, Dictionary>>;
+  dictionaries?: Dictionaries;
   deps?: any[];
   id?: string;
 }
 
 @NgModule({
-  declarations: [TranslatePipe, TranslateToPipe, TranslateDirective],
-  exports: [TranslatePipe, TranslateToPipe, TranslateDirective],
+  declarations: [TranslatePipe, TranslateToPipe, TranslatePipeDetect, TranslateDirective],
+  exports: [TranslatePipe, TranslateToPipe, TranslatePipeDetect, TranslateDirective],
 })
 export class TranslateModule {
   static forRoot(config?: Config): ModuleWithProviders<TranslateModule> {
@@ -121,7 +123,7 @@ export class TranslateModule {
     config.placeholder = config.placeholder !== undefined ? config.placeholder : 'default';
     config.deps = config.deps !== undefined ? [TranslateRootService, ...config?.deps] : [TranslateRootService];
 
-    const value: DefaultTranslateOptions = {
+    const value: DefaultTranslateConfig = {
       lang: config.lang,
       placeholder: config.placeholder,
       fallbackLang: config.fallbackLang,
@@ -134,9 +136,14 @@ export class TranslateModule {
         TranslateService,
         TranslateResolve,
         {
-          provide: DEFAULT_OPTIONS,
+          provide: TRANSLATE_CHILD,
+          useValue: {},
+        },
+        {
+          provide: DEFAULT_CONFIG,
           useValue: value,
         },
+        { provide: ROOT_DICTIONARIES, useValue: config.dictionaries ?? {} },
         {
           provide: APP_INITIALIZER,
           useFactory: factory(config, config.init, config.addMiddleware, config.loadDictionaries, config.final),
@@ -148,14 +155,19 @@ export class TranslateModule {
   }
 
   static forChild(config?: ChildConfig): ModuleWithProviders<TranslateModule> {
-    const value: TranslateSettings = { extendDictionaries: config?.extendDictionaries, deps: config?.deps ?? [], id: config?.id };
+    const value: TranslateChildConfig = {
+      loadDictionaries: config?.loadDictionaries ?? config.extend,
+      dictionaries: config?.dictionaries,
+      deps: config?.deps ?? [],
+      id: config?.id,
+    };
     return {
       ngModule: TranslateModule,
       providers: [
         TranslateService,
         TranslateResolve,
         {
-          provide: S_TRANSLATE,
+          provide: TRANSLATE_CHILD,
           useValue: value,
         },
       ],

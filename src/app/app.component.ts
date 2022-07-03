@@ -1,4 +1,5 @@
 import { Component, ViewEncapsulation } from '@angular/core';
+import { FormControl } from '@angular/forms';
 import { Router } from '@angular/router';
 @Component({
   selector: 'app-root',
@@ -7,7 +8,7 @@ import { Router } from '@angular/router';
   encapsulation: ViewEncapsulation.None
 })
 export class AppComponent {
-  config: any[];
+  nameInput = new FormControl('');
   constructor() {
   }
 

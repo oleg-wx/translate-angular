@@ -6,19 +6,21 @@
 
 #### (v0.20.0)
 
+- see [plain JS library changes](https://www.npmjs.com/package/simply-translate#Breaking-changes).
 - deprecated `init` method in root import. Instead use `addMiddleware`, `loadDictionaries` and `final` methods instead.
-- deprecated ability to change `fallbackLang` after initialization.
 - `lang` and `fallbackLang` now in the root import.
 - added **middleware pipeline** _(see [Pipeline](#Pipeline))_.
 - removed `$less` property. Instead of `$less` use `placeholder = 'single'`.
 - added `fallback` property to directive.
 - `defaultLang` renamed to `lang`.
-- `extend` in `forChild` initialization changed to `extendDictionaries`.
+- `extend` in `forChild` initialization changed to `loadDictionaries`.
+- added language detection change for directives and pipes
+- after initialization `lang` and `fallbackLang` can be changed only from `TranslateRootService`.
 - removed **dynamic cache**.
 
 ### Basics
 
-You can learn by looking at package for plain JS on the link above.
+Please use link above to learn more about basic interaction, dictionaries, etc.
 
 ### Install
 
@@ -48,7 +50,7 @@ See [Load dictionaries](#Load-dictionaries)
 ### Use Directive
 
 ```html
-<!-- use default language from service -->
+<!-- use default language -->
 <h2 translate="hello_user" [values]="{ user: 'Oleg' }"></h2>
 <!-- use other language -->
 <h2 translate="hello_user" to="ru-RU" [values]="{ user: 'Oleg' }"></h2>
@@ -56,20 +58,34 @@ See [Load dictionaries](#Load-dictionaries)
 <h2 translate="hello_user_not_there" [values]="{ user: 'Oleg' }">Hello user</h2>
 <!-- please not that Angular does not like when we use "{" in templates so rather use property in such cases or replace it with $&#123; (and optionally closing bracket with $&#125;) or escape it somehow :) -->
 <h2 translate="hello_user_not_there" [values]="{ user: 'Oleg' }">Hello $&#123;user}</h2>
-<h2 translate="hello_user_not_there" [values]="{ user: 'Oleg' }" fallback="Hello $&{user}"></h2>
+<h2 translate="hello_user_not_there" [values]="{ user: 'Oleg' }" fallback="Hello ${user}"></h2>
 ```
 
-In this case as a fallback we use element text.
+Directives can detect language change, but it is not by default. Use _[detect]_ property.
+
+```html
+<!-- use default language -->
+<h2 translate="hello_user" to="ru-RU" [values]="{ user: 'Oleg' }" detect></h2>
+```
+
+Directive can use inner text as a fallback.
 
 ### Use Pipe
 
 ```html
-<!-- use default language from service -->
+<!-- use default language -->
 <h2>{{ 'hello_user' | translate: { user: 'Oleg' } }}</h2>
 <!-- use other language -->
 <h2>{{ 'hello_user' | translateTo: 'ru-RU': { user: 'Oleg' } }}</h2>
 <!-- use fallback -->
 <h2>{{ 'hello_user_not_there' | translate: { user: 'Oleg' } : 'Hello ${user}'}}</h2>
+```
+
+Pipes are pure by default. However if application has dynamic language change you may use special _impure_ directive (it has internal dirty check), it will detect language changes as well as pipe parameters.
+
+```html
+<!-- use default language -->
+<h2>{{ 'hello_user' | translate$: { user: 'Oleg' } }}</h2>
 ```
 
 ### Use Service
@@ -81,13 +97,23 @@ In this case as a fallback we use element text.
 export class Component {
     hello: string;
     constructor(private translate: TranslateService) {
-        // use default language from service
+        // use default language
         this.hello = translate.translate('hello_user', { user: 'Oleg' })
         // use other language
         this.hello = translate.translateTo('ru-RU','hello_user', { user: 'Oleg' })
         // use fallback
         this.hello = translate.translateTo('ru-RU','hello_user_not_there', { user: 'Oleg' }, 'Hello ${user}')
     }
+}
+```
+
+To change language use `TranslateRootService` `lang` property.
+
+```javascript
+export class Component {
+  constructor(private rootTranslate: TranslateRootService){
+    rootTranslate.lang = "en-US";
+  }
 }
 ```
 
@@ -152,7 +178,7 @@ export function getDictionary(lang: string, client: HttpClient) {
       // dependencies
       deps: [ HttpClient ],
 
-      extendDictionaries: ({ lang, fallbackLang }, client: HttpClient) => {
+      loadDictionaries: ({ lang, fallbackLang }, client: HttpClient) => {
         return forkJoin([getDictionary(lang, client), getDictionary(fallbackLang, client)]).pipe(
           map((res) => {
             return { [lang]: res[0], [fallbackLang]: res[1] };
@@ -176,6 +202,36 @@ const routes: Routes = [{ path: '', component: DynamicComponent, resolve: { tran
   exports: [RouterModule],
 })
 export class DynamicRoutingModule {}
+```
+
+For rare cases you may use `id` parameter for Lazy loaded module, that allows having different values with same key.  
+"Lazy" values will be available only for lazy modules with that special `id`.
+
+```javascript
+@NgModule({
+  declarations: [...],
+  imports: [
+    TranslateModule.forRoot({
+      dictionaries: {'en-US':{
+        'key':'Value'
+      }}
+    })
+  ]
+})
+```
+
+```javascript
+@NgModule({
+  declarations: [...],
+  imports: [
+    TranslateModule.forChild({
+      id: 'lazy'
+      dictionaries: {'en-US':{
+        'key':'Value for Lazy'
+      }}
+    })
+  ]
+})
 ```
 
 ### Pipeline

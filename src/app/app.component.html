@@ -1,12 +1,27 @@
 <nav>
   <ul>
-    <li><a routerLink="/view" routerLinkActive="active">View</a></li>
-    <li><a routerLink="/more" routerLinkActive="active">More</a></li>
+    <li><a routerLink="/" routerLinkActive="active">Home</a></li>
+    <li><a routerLink="/translate" [queryParams]="{ user: nameInput.value }" routerLinkActive="active">Translate</a></li>
+    <li><a routerLink="/translate-to" [queryParams]="{ lang: 'ru-RU' }" routerLinkActive="active">Translate to RU</a></li>
+    <li><a routerLink="/try-date" [queryParams]="{ lang: 'ru-RU' }" routerLinkActive="active">Date</a></li>
     <li><a routerLink="/dynamic" routerLinkActive="active">Dynamic</a></li>
     <li><a routerLink="/another-dynamic" routerLinkActive="active">Dynamic</a></li>
   </ul>
 </nav>
 
-<div>
+<header>
+  <h1 translate="welcome_to_app" e2e="welcome-to-app"></h1>
+  <h2 translate="hello_user" [values]="{ user: nameInput.value || undefined }" e2e="hello-user"></h2>
+
+  <div>
+    <label for="nameinput">Your Name:</label>
+    <input name="nameinput" [formControl]="nameInput" />
+  </div>
+</header>
+
+<article>
   <router-outlet></router-outlet>
-</div>
+</article>
+
+<h6>Same key: <b [translate]="'same_key'"></b></h6>
+

@@ -1,11 +1,11 @@
 import { InjectionToken } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Dictionary } from 'simply-translate';
-import { TranslateService } from './translate.service';
+import { Dictionaries } from 'simply-translate';
 
-export interface TranslateSettings {
+export interface TranslateChildConfig {
   id?: string;
-  extendDictionaries: (opts: { lang: string; fallbackLang: string }, ...deps: any[]) => Observable<{ [lang: string]: Dictionary }>;
-  deps: any[];
+  dictionaries?: Dictionaries;
+  loadDictionaries?: (opts: { lang: string; fallbackLang: string }, ...deps: any[]) => Observable<Dictionaries>;
+  deps?: any[];
 }
-export const S_TRANSLATE = new InjectionToken<TranslateSettings>('S_TRANSLATE');
+export const TRANSLATE_CHILD = new InjectionToken<TranslateChildConfig>('TranslateService TRANSLATE_CHILD');
