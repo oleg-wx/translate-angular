@@ -156,7 +156,7 @@ export class TranslateModule {
 
   static forChild(config?: ChildConfig): ModuleWithProviders<TranslateModule> {
     const value: TranslateChildConfig = {
-      loadDictionaries: config?.loadDictionaries ?? config.extend,
+      loadDictionaries: config?.loadDictionaries ?? config?.extend,
       dictionaries: config?.dictionaries,
       deps: config?.deps ?? [],
       id: config?.id,
