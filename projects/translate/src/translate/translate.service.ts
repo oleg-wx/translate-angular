@@ -10,8 +10,7 @@ import {
   Dictionaries,
   DictionaryEntry,
 } from 'simply-translate';
-import { GetEntryMiddleware } from 'simply-translate/dist/core/middleware/get-entry-middleware';
-import { FallbackWithDifferentLanguageMiddleware } from 'simply-translate/dist/core/middleware/fallback-with-different-language-middleware';
+import { FallbackWithDifferentLanguageMiddleware } from 'simply-translate/es/core/middleware/fallback-with-different-language-middleware';
 import { TRANSLATE_CHILD, TranslateChildConfig } from './translate-child-config';
 
 export interface DefaultTranslateConfig {
@@ -136,7 +135,7 @@ export class TranslateRootService implements TranslateServiceBase {
   private _addFallbackLangMiddleware(pipeline: SimplePipeline, fallbackLang: string | undefined) {
     if (fallbackLang && !this._fallbackAdded) {
       this._fallbackAdded = true;
-      pipeline.addMiddlewareAt(2, new FallbackWithDifferentLanguageMiddleware(GetEntryMiddleware));
+      pipeline.addMiddlewareAt(2, FallbackWithDifferentLanguageMiddleware);
     }
   }
 }
