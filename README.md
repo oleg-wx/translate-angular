@@ -156,15 +156,36 @@ export function getDictionary(lang: string, client: HttpClient) {
 })
 ```
 
-You may subscribe on `languageChange$` and `dictionaryChange$` if needed.
+**Note**: it is probably useful to **hardcode** _fallback dictionary_ in .ts or .json file then import it rather then use http client to download.
 
-For more complex scenarios you may use initialization functions with `APP_INITIALIZER` token.
+```javascript
+import fallback from './translations/fallback';
+
+TranslateModule.forRoot({
+  lang: window.navigator.language,
+  fallbackLang: env.fallbackLanguage,
+  dictionaries: {
+    [env.fallbackLanguage]: fallback,
+  },
+
+  deps: [ HttpClient ],
+  loadDictionaries: ({lang, fallbackLang}, client /* params are injected dependencies received in the same order as they are in deps */) => {
+    return getDictionary(lang, client).pipe(
+      map((res) => {
+        return { [lang]: res };
+      })
+    );
+  },
+}),
+```
+
+You may subscribe on `languageChange$` and `dictionaryChange$` if needed. **Note** that `loadDictionaries` will not execute when language changes.
+
+**Note**: For more complex scenarios you may use initialization functions with `APP_INITIALIZER` token.
 
 #### Lazy
 
-Load dictionaries for **Lazy** modules a bit trickier.  
-You have to _extend_ dictionaries _(same keys with be replaced with latest added)_.
-First load dynamic dictionaries in the same (almost) as for root.
+Load dictionaries for **Lazy** modules a bit trickier.
 
 ```javascript
 export function getDictionary(lang: string, client: HttpClient) {
@@ -175,9 +196,7 @@ export function getDictionary(lang: string, client: HttpClient) {
   declarations: [...],
   imports: [
     TranslateModule.forChild({
-      // dependencies
       deps: [ HttpClient ],
-
       loadDictionaries: ({ lang, fallbackLang }, client: HttpClient) => {
         return forkJoin([getDictionary(lang, client), getDictionary(fallbackLang, client)]).pipe(
           map((res) => {
@@ -192,7 +211,7 @@ export function getDictionary(lang: string, client: HttpClient) {
 export class DynamicModule {}
 ```
 
-Then resolve them with special `TranslateResolve` resolver that has to be added to every lazy component.
+Then you **must** use resolver `TranslateResolve` to every lazy component to wait for child `loadDictionaries`.
 
 ```javascript
 const routes: Routes = [{ path: '', component: DynamicComponent, resolve: { translate: TranslateResolve } }];
@@ -248,12 +267,11 @@ It might be specially useful to add **logger** or rarely fine-tune translation r
     TranslateModule.forRoot({
       // dependencies
       deps: [ Logger ],
-
       addMiddleware: (logger /* injected dependencies */) => {
        return [
-          (context, next) => {
-            if (context.result.fallingBack) {
-              logger.log(`Translation absent [${context.params.lang}:${context.params.key}]`);
+          ({params, result}, next) => {
+            if (result.fallingBack) {
+              logger.log(`Translation absent [${params.lang}:${params.key}]`);
             }
             next();
           },
