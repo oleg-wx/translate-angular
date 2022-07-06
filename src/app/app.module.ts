@@ -31,9 +31,9 @@ function getDictionary(lang: string, client: HttpClient) {
 
       addMiddleware: (client: HttpClient) => {
         return [
-          (context) => {
-            if (context.result.fallingBack) {
-              console.warn('falling back:', `${context.params.key.toString()}, [${context.params.lang}]`);
+          ({params,result}) => {
+            if (result.fallingBack) {
+              console.warn('falling back:', `${params.key.toString()}, [${params.lang}]`);
             }
           },
         ];
