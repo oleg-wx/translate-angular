@@ -11,7 +11,6 @@ import {
   DictionaryEntry,
 } from 'simply-translate';
 import { FallbackWithDifferentLanguageMiddleware } from 'simply-translate/es/core/middleware/fallback-with-different-language-middleware';
-import { TRANSLATE_CHILD, TranslateChildConfig } from './translate-child-config';
 
 export interface DefaultTranslateConfig {
   lang?: string;
@@ -19,8 +18,13 @@ export interface DefaultTranslateConfig {
   placeholder?: PlaceholderType;
 }
 
-export const DEFAULT_CONFIG = new InjectionToken<DefaultTranslateConfig>('TranslateService DEFAULT_CONFIG');
-export const ROOT_DICTIONARIES = new InjectionToken<Dictionaries>('TranslateService INITIAL_DICTIONARIES');
+interface LangChange {
+  lang: string;
+  oldLang?: string;
+
+  /** @deprecated */
+  fallbackLang?: string;
+}
 
 export abstract class TranslateServiceBase {
   abstract get lang(): string;
@@ -39,13 +43,8 @@ export abstract class TranslateServiceBase {
   abstract extendDictionary(lang: string, dictionary: Dictionary);
 }
 
-interface LangChange {
-  lang: string;
-  oldLang?: string;
-
-  /** @deprecated */
-  fallbackLang?: string;
-}
+export const DEFAULT_CONFIG = new InjectionToken<DefaultTranslateConfig>('TranslateService DEFAULT_CONFIG');
+export const ROOT_DICTIONARIES = new InjectionToken<Dictionaries>('TranslateService INITIAL_DICTIONARIES');
 
 @Injectable()
 export class TranslateRootService implements TranslateServiceBase {
@@ -139,6 +138,15 @@ export class TranslateRootService implements TranslateServiceBase {
     }
   }
 }
+
+export interface TranslateChildConfig {
+  id?: string;
+  dictionaries?: Dictionaries;
+  loadDictionaries?: (opts: { lang: string; fallbackLang: string }, ...deps: any[]) => Observable<Dictionaries>;
+  deps?: any[];
+}
+
+export const TRANSLATE_CHILD = new InjectionToken<TranslateChildConfig>('TranslateService TRANSLATE_CHILD');
 
 @Injectable()
 export class TranslateService implements TranslateServiceBase {

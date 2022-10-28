@@ -1,4 +1,4 @@
-import { Directive, ElementRef, Inject, InjectionToken, Input, OnChanges, OnDestroy, OnInit, Optional } from '@angular/core';
+import { Directive, ElementRef, Inject, InjectionToken, Input, OnChanges, OnDestroy, OnInit, Optional, SimpleChanges } from '@angular/core';
 import { skip, Subscription } from 'rxjs';
 import { DictionaryEntry, TranslateKey } from 'simply-translate';
 import { TranslateService } from './translate.service';
@@ -33,19 +33,10 @@ export class TranslateDirective implements OnInit, OnChanges, OnDestroy {
     this._shouldDetectLangChange = !!(config?.detect ?? _element.nativeElement.hasAttribute('detect'));
   }
 
-  ngOnChanges(): void {
+  ngOnChanges(sch:SimpleChanges): void {
+    console.log(sch);
     if (!this._init) this._innerTextFallback = this._element.nativeElement.innerText;
-
-    if (this._key) {
-      this._element.nativeElement.innerText = this._service.translateTo(
-        this._to ?? this._service.lang!,
-        this._key,
-        this._values,
-        this._fallback ?? this._innerTextFallback
-      );
-    } else {
-      this._element.nativeElement.innerText = this._innerTextFallback || '';
-    }
+    this._changed();
   }
 
   ngOnInit(): void {
@@ -60,13 +51,13 @@ export class TranslateDirective implements OnInit, OnChanges, OnDestroy {
     this._sub.add(
       this._service.languageChange$.pipe(skip(1)).subscribe((lang) => {
         if (!this._to) {
-          this.ngOnChanges();
+          this._changed();
         }
       })
     );
     this._sub.add(
       this._service.dictionaryChange$.pipe(skip(1)).subscribe(() => {
-        this.ngOnChanges();
+        this._changed();
       })
     );
   }
@@ -74,5 +65,18 @@ export class TranslateDirective implements OnInit, OnChanges, OnDestroy {
   ngOnDestroy(): void {
     this._init = true;
     this._sub?.unsubscribe();
+  }
+
+  private _changed(){
+    if (this._key) {
+      this._element.nativeElement.innerText = this._service.translateTo(
+        this._to ?? this._service.lang!,
+        this._key,
+        this._values,
+        this._fallback ?? this._innerTextFallback
+      );
+    } else {
+      this._element.nativeElement.innerText = this._innerTextFallback || '';
+    }
   }
 }

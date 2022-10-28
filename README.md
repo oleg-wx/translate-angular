@@ -20,7 +20,7 @@
 
 ### Basics
 
-Please use link above to learn more about basic interaction, dictionaries, etc.
+Please use link above to learn more about **basic interaction**, dictionaries, pluralization, cases, etc.
 
 ### Install
 
@@ -38,10 +38,24 @@ import { TranslateModule, TranslateService } from 'simply-translate-angular';
 
 ```javascript
 @NgModule({
-    declarations: [AppComponent, AppViewComponent],
-    imports: [
-        TranslateModule.forRoot(...)
-    ]
+  declarations: [AppComponent, AppViewComponent],
+  imports: [
+    TranslateModule.forRoot({
+      // dependencies
+      deps: [ HttpClient ],
+      // language
+      lang: window.navigator.language,
+      fallbackLang: 'ru-RU',
+      // static dictionaries
+      dictionaries:{'ru-RU':{...}}
+      // load dictionaries
+      loadDictionaries:({lang, fallbackLang}, client /* params are injected dependencies received in the same order as they are in deps */) =>{
+        return {
+          [lang]: {...}
+        }
+      }
+    })
+  ]
 });
 ```
 
@@ -56,15 +70,15 @@ See [Load dictionaries](#Load-dictionaries)
 <h2 translate="hello_user" to="ru-RU" [values]="{ user: 'Oleg' }"></h2>
 <!-- use fallback -->
 <h2 translate="hello_user_not_there" [values]="{ user: 'Oleg' }">Hello user</h2>
-<!-- please not that Angular does not like when we use "{" in templates so rather use property in such cases or replace it with $&#123; (and optionally closing bracket with $&#125;) or escape it somehow :) -->
-<h2 translate="hello_user_not_there" [values]="{ user: 'Oleg' }">Hello $&#123;user}</h2>
+<!-- please note that Angular uses curly-braces in templates as well, so prefer use fallback property or replace open bracket with $&#123; (and optionally closing bracket with &#125;) -->
+<h2 translate="hello_user_not_there" [values]="{ user: 'Oleg' }">Hello $&#123;user&#125;</h2>
+<!-- preferred fallback property usage -->
 <h2 translate="hello_user_not_there" [values]="{ user: 'Oleg' }" fallback="Hello ${user}"></h2>
 ```
 
-Directives can detect language change, but it is not by default. Use _[detect]_ property.
+Directives can detect dynamic language change, but it is not by default. Use _[detect]_ property to detect root service language change.
 
 ```html
-<!-- use default language -->
 <h2 translate="hello_user" to="ru-RU" [values]="{ user: 'Oleg' }" detect></h2>
 ```
 
@@ -73,7 +87,6 @@ Directive can use inner text as a fallback.
 ### Use Pipe
 
 ```html
-<!-- use default language -->
 <h2>{{ 'hello_user' | translate: { user: 'Oleg' } }}</h2>
 <!-- use other language -->
 <h2>{{ 'hello_user' | translateTo: 'ru-RU': { user: 'Oleg' } }}</h2>
@@ -84,7 +97,6 @@ Directive can use inner text as a fallback.
 Pipes are pure by default. However if application has dynamic language change you may use special _impure_ directive (it has internal dirty check), it will detect language changes as well as pipe parameters.
 
 ```html
-<!-- use default language -->
 <h2>{{ 'hello_user' | translate$: { user: 'Oleg' } }}</h2>
 ```
 
@@ -107,7 +119,8 @@ export class Component {
 }
 ```
 
-To change language use `TranslateRootService` `lang` property.
+To change language use `TranslateRootService` `lang` property.   
+To detect changes subscribe on `languageChange$` and `dictionaryChange$`. **Note** that `loadDictionaries` method in root settings will not execute when language changes.
 
 ```javascript
 export class Component {
@@ -156,7 +169,7 @@ export function getDictionary(lang: string, client: HttpClient) {
 })
 ```
 
-**Note**: it is probably useful to **hardcode** _fallback dictionary_ in .ts or .json file then import it rather then use http client to download.
+**Note**: it is might be useful to **hardcode** _fallback dictionary_ in .ts or .json file then import it rather then use http client to download.
 
 ```javascript
 import fallback from './translations/fallback';
@@ -178,8 +191,6 @@ TranslateModule.forRoot({
   },
 }),
 ```
-
-You may subscribe on `languageChange$` and `dictionaryChange$` if needed. **Note** that `loadDictionaries` will not execute when language changes.
 
 **Note**: For more complex scenarios you may use initialization functions with `APP_INITIALIZER` token.
 
