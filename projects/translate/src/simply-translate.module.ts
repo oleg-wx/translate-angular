@@ -1,23 +1,22 @@
 import { APP_INITIALIZER, ModuleWithProviders, NgModule } from '@angular/core';
 import { combineLatest, lastValueFrom, Observable, of, tap } from 'rxjs';
 import { Dictionaries, Dictionary, MiddlewareFunc, MiddlewareStatic } from 'simply-translate';
-import { DefaultTranslateConfig, DEFAULT_CONFIG, ROOT_DICTIONARIES, TranslateRootService, TranslateService } from './translate/translate.service';
+import { DefaultTranslateConfig, DEFAULT_CONFIG, ROOT_DICTIONARIES, TranslateChildConfig, TranslateRootService, TranslateService, TranslateServiceBase, TRANSLATE_CHILD } from './translate/translate.service';
 import { TranslatePipe, TranslateToPipe, TranslatePipeDetect } from './translate/translate.pipe';
 import { TranslateDirective } from './translate/translate.directive';
 import { TranslateResolve } from './translate/translate.resolver';
-import { TRANSLATE_CHILD, TranslateChildConfig } from './translate/translate-child-config';
 
 export type AddMiddlewareFunc = (...any) => Array<MiddlewareFunc | MiddlewareStatic>;
 export type LoadDictionariesFunc = (opts: { lang: string; fallbackLang: string }, ...any) => Observable<Record<string, Dictionary>>;
 export type InitFunc = (service: TranslateRootService, ...any) => Observable<Record<string, Dictionary>>;
-export type FinalFunc = (service: TranslateRootService, ...any) => void;
+export type FinalFunc<TService extends TranslateServiceBase> = (service: TService, ...any) => void;
 
 export function factory(
   config: DefaultTranslateConfig,
   init?: InitFunc,
   addMiddlewareFn?: AddMiddlewareFunc,
   loadDictionariesFn?: LoadDictionariesFunc,
-  finalFn?: FinalFunc
+  finalFn?: FinalFunc<TranslateRootService>
 ) {
   const ret = (service: TranslateRootService, ...deps: any[]) => {
     return function () {
@@ -94,7 +93,7 @@ export interface Config extends DefaultTranslateConfig {
   /** @deprecated */
   init?: InitFunc;
   loadDictionaries?: LoadDictionariesFunc;
-  final?: FinalFunc;
+  final?: FinalFunc<TranslateRootService>;
   addMiddleware?: AddMiddlewareFunc;
   dictionaries?: Dictionaries;
   deps?: any[];

@@ -30,6 +30,11 @@ export function getDictionary(lang: string, client: HttpClient) {
           })
         );
       },
+      // final: (service, client: HttpClient) => {
+      //   service.lang.subscribe((lang) => {
+      //     debugger;
+      //   });
+      // },
     }),
     CommonModule,
     DynamicRoutingModule,

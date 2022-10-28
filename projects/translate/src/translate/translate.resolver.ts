@@ -2,8 +2,7 @@ import { Inject, Injectable, Injector, Optional, ProviderToken } from '@angular/
 import { Resolve } from '@angular/router';
 import { isObservable, Observable, of, tap, finalize } from 'rxjs';
 import { Dictionary } from 'simply-translate';
-import { TRANSLATE_CHILD, TranslateChildConfig } from './translate-child-config';
-import { TranslateService } from './translate.service';
+import { TranslateChildConfig, TranslateService, TRANSLATE_CHILD } from './translate.service';
 
 export function translateResolve() {
   return {
