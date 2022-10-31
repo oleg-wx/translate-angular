@@ -2,8 +2,8 @@
   "name": "simply-translate-angular",
   "version": "0.0.0",
   "scripts": {
-    "build:dev": "ng build translate --configuration development && npm run copy_readme",
-    "build:prod": "ng build translate --configuration production && npm run copy_readme",
+    "build:dev": "ng build translate --configuration development && npm run copy:files",
+    "build:prod": "ng build translate --configuration production && npm run copy:files",
     "build:prod:patch": "cd ./projects/translate && npm --no-git-tag-version version patch && cd ../.. && npm run build:prod",
     "publish:prod": "npm run build:prod && cd dist/translate && npm publish && cd ../..",
     "publish:prod:patch": "npm run build:prod:patch && cd dist/translate && npm publish && cd ../..",
@@ -13,7 +13,7 @@
     "restart:all": "npm run build:library:prod && npm run start:demo",
     "test": "ng test translate",
     "e2e": "ng e2e",
-    "copy_readme": "copyfiles ./README.md dist/translate"
+    "copy:files": "copyfiles ./README.md ./LICENSE dist/translate"
   },
   "dependencies": {
     "@angular/animations": "^14.2.8",

@@ -34,7 +34,6 @@ export class TranslateDirective implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnChanges(sch:SimpleChanges): void {
-    console.log(sch);
     if (!this._init) this._innerTextFallback = this._element.nativeElement.innerText;
     this._changed();
   }

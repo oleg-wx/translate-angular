@@ -1,6 +1,6 @@
 {
   "name": "simply-translate-angular",
-  "version": "0.20.0",
+  "version": "0.20.1",
   "dependencies": {
     "tslib": "^2.4.0",
     "simply-translate": "0.20.0",
