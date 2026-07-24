@@ -71,18 +71,18 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "simply-translate:build"
+            "buildTarget": "simply-translate:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "simply-translate:build:production"
+              "buildTarget": "simply-translate:build:production"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "simply-translate:build"
+            "buildTarget": "simply-translate:build"
           }
         },
         "test": {
