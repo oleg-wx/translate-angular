@@ -1,6 +1,7 @@
-import { Pipe, PipeTransform } from '@angular/core';
+import { ChangeDetectorRef, inject, Pipe, PipeTransform } from '@angular/core';
 import { DictionaryEntry, TranslateDynamicProps, TranslateKey } from 'simply-translate';
 import { TranslateService } from './translate.service';
+import { merge } from 'rxjs';
 
 @Pipe({ name: 'translate' })
 export class TranslatePipe implements PipeTransform {
@@ -31,17 +32,25 @@ export class TranslateToPipe implements PipeTransform {
 @Pipe({ name: 'translate$', pure: false })
 export class TranslatePipeDetect extends TranslatePipe {
   private _latestValue: string = '';
-  private _lang: string;
-  private _key: TranslateKey;
-  private _dynOrFb: string | TranslateDynamicProps;
-  private _fb: DictionaryEntry | string;
+  private _lang: string | undefined;
+  private _key!: TranslateKey;
+  private _dynOrFb: string | TranslateDynamicProps | undefined;
+  private _fb: DictionaryEntry | string | undefined;
+  private cdr = inject(ChangeDetectorRef);
 
-  constructor(service: TranslateService) {
+  constructor() {
+    const service = inject(TranslateService);
     super(service);
+
+    merge(service.languageChange$, service.dictionaryChange$)
+// take until
+      .subscribe(() => {
+        this.cdr.markForCheck();
+      });
   }
 
   transform(key: TranslateKey, dynamicOrFallback?: TranslateDynamicProps | string, fallback?: DictionaryEntry | string): string {
-    if (this._lang === this.service.lang && this._key === key && this._key === key && this._dynOrFb === dynamicOrFallback && this._fb === fallback) {
+    if (this._lang === this.service.lang && this._key === key && this._dynOrFb === dynamicOrFallback && this._fb === fallback) {
       return this._latestValue;
     }
 

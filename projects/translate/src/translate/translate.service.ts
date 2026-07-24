@@ -28,7 +28,7 @@ interface LangChange {
 
 export abstract class TranslateServiceBase {
   abstract get lang(): string;
-  abstract get fallbackLang(): string;
+  abstract get fallbackLang(): string | undefined;
 
   abstract translateTo(lang: string, key: TranslateKey): string;
   abstract translateTo(lang: string, key: TranslateKey, fallback: string): string;
@@ -38,9 +38,9 @@ export abstract class TranslateServiceBase {
   abstract translate(key: TranslateKey): string;
   abstract translate(key: TranslateKey, fallback: string): string;
   abstract translate(key: TranslateKey, dynamicValues: TranslateDynamicProps, fallback?: DictionaryEntry | string): string;
-  abstract translate(key: TranslateKey, dynamicValuesOrFallback?: TranslateDynamicProps | string, fallback?: DictionaryEntry | string);
+  abstract translate(key: TranslateKey, dynamicValuesOrFallback?: TranslateDynamicProps | string, fallback?: DictionaryEntry | string): string;
 
-  abstract extendDictionary(lang: string, dictionary: Dictionary);
+  abstract extendDictionary(lang: string, dictionary: Dictionary): void;
 }
 
 export const DEFAULT_CONFIG = new InjectionToken<DefaultTranslateConfig>('TranslateService DEFAULT_CONFIG');
@@ -61,7 +61,7 @@ export class TranslateRootService implements TranslateServiceBase {
     return this._service.pipeline as SimplePipeline;
   }
 
-  public set lang(lang: string) {
+  public set lang(lang: string | undefined) {
     if (this._service.lang === lang) {
       return;
     }
@@ -70,12 +70,12 @@ export class TranslateRootService implements TranslateServiceBase {
     this._langChangeSubj.next({ lang: this.lang, oldLang: oldLang, fallbackLang: this.fallbackLang });
   }
 
-  public get lang(): string {
+  public get lang(): string | undefined {
     return this._service.lang;
   }
 
-  public set fallbackLang(lang: string) {
-    if (this._service.lang === lang) {
+  public set fallbackLang(lang: string | undefined) {
+    if (this._service.lang === lang || this._service.fallbackLang === lang) {
       return;
     }
 
@@ -83,7 +83,7 @@ export class TranslateRootService implements TranslateServiceBase {
     this._addFallbackLangMiddleware(this.pipeline, lang);
   }
 
-  public get fallbackLang(): string {
+  public get fallbackLang(): string | undefined {
     return this._service.fallbackLang;
   }
 
@@ -100,7 +100,7 @@ export class TranslateRootService implements TranslateServiceBase {
     this._service = new Translations(
       rootDictionaries ?? {},
       { placeholder: config?.placeholder, lang: config?.lang, fallbackLang: config?.fallbackLang },
-      pipeline
+      pipeline,
     );
   }
 
@@ -150,9 +150,9 @@ export const TRANSLATE_CHILD = new InjectionToken<TranslateChildConfig>('Transla
 
 @Injectable()
 export class TranslateService implements TranslateServiceBase {
-  private _id: string;
-  private _languageChange$: typeof this._root.languageChange$;
-  private _dictionaryChange$: typeof this._root.dictionaryChange$;
+  private _id: string | undefined;
+  private _languageChange$!: typeof this._root.languageChange$;
+  private _dictionaryChange$!: typeof this._root.dictionaryChange$;
 
   get languageChange$() {
     if (!this._languageChange$) {
@@ -172,15 +172,19 @@ export class TranslateService implements TranslateServiceBase {
     return this._root.lang;
   }
 
-  public get fallbackLang(): string {
+  public get fallbackLang(): string | undefined {
     return this._root.fallbackLang;
   }
 
-  constructor(private _root: TranslateRootService, @Optional() @Inject(TRANSLATE_CHILD) _options?: TranslateChildConfig) {
+  constructor(
+    private _root: TranslateRootService,
+    @Optional() @Inject(TRANSLATE_CHILD) _options?: TranslateChildConfig,
+  ) {
     this._id = _options?.id;
+
     if (_options?.dictionaries) {
       Object.keys(_options.dictionaries).forEach((lang) => {
-        this.extendDictionary(lang, _options.dictionaries[lang]);
+        this.extendDictionary(lang, _options.dictionaries?.[lang]);
       });
     }
   }
