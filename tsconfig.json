@@ -10,7 +10,7 @@
     "moduleResolution": "node",
     "experimentalDecorators": true,
     "importHelpers": true,
-    "target": "es2015",
+    "target": "ES2022",
     "jsx": "react",
     "typeRoots": [
       "node_modules/@types"
@@ -21,9 +21,10 @@
     ],
     "paths": {
       "simply-translate-angular": [
-        "dist/translate",
-      ],
-    }
+        "dist/translate"
+      ]
+    },
+    "useDefineForClassFields": false
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
