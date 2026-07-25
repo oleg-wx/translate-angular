@@ -1,25 +1,17 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { debounceTime, lastValueFrom, map, of, Subject } from 'rxjs';
-import { TranslateRootService, TranslateService, DEFAULT_DIRECTIVE_CONFIG } from '../public_api';
+import { TranslateRootService, TranslateService } from '../public_api';
 import { TranslateModule } from '../simply-translate.module';
 import { tick } from './core/tick';
 
 @Component({
   template: `
-    <div id="d1" translate="hello_user" [values]="{ user: 'Oleg' }" detect></div>
+    <div id="d1" translate="hello_user" [values]="{ user: 'Oleg' }"></div>
     <div id="d2">{{ 'hello_user' | translate$: { user: 'Oleg' } }}</div>
-    <test-component-detect></test-component-detect>
   `,
 })
 export class TestComponent {}
-
-@Component({
-  selector: 'test-component-detect',
-  template: ` <div id="d_d1" translate="hello_user" [values]="{ user: 'Oleg' }"></div> `,
-  providers: [{ provide: DEFAULT_DIRECTIVE_CONFIG, useValue: { detect: true } }],
-})
-export class TestComponentDetect {}
 
 const lang = 'lang';
 const newLang = 'new';
@@ -38,7 +30,7 @@ _wait.next();
 describe('language change detect', () => {
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      declarations: [TestComponent, TestComponentDetect],
+      declarations: [TestComponent],
       imports: [
         TranslateModule.forRoot({
           lang,
@@ -102,7 +94,6 @@ describe('language change detect', () => {
     expect(oldLangEvent).toBe(lang);
 
     expect(element.querySelector<HTMLElement>('#d1').innerText.trim()).toBe('Hello New Oleg');
-    expect(element.querySelector<HTMLElement>('#d_d1').innerText.trim()).toBe('Hello New Oleg');
     expect(element.querySelector<HTMLElement>('#d2').innerText.trim()).toBe('Hello New Oleg');
     sub.unsubscribe();
   });

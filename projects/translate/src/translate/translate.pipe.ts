@@ -1,7 +1,6 @@
-import { ChangeDetectorRef, inject, Pipe, PipeTransform } from '@angular/core';
+import { inject, Pipe, PipeTransform } from '@angular/core';
 import { DictionaryEntry, TranslateDynamicProps, TranslateKey } from 'simply-translate';
 import { TranslateService } from './translate.service';
-import { merge } from 'rxjs';
 
 @Pipe({ name: 'translate' })
 export class TranslatePipe implements PipeTransform {
@@ -32,32 +31,30 @@ export class TranslateToPipe implements PipeTransform {
 @Pipe({ name: 'translate$', pure: false })
 export class TranslatePipeDetect extends TranslatePipe {
   private _latestValue: string = '';
-  private _lang: string | undefined;
   private _key!: TranslateKey;
-  private _dynOrFb: string | TranslateDynamicProps | undefined;
+  private _lastVersion = -1;
+  private _dynOrFb: string = '';
   private _fb: DictionaryEntry | string | undefined;
-  private cdr = inject(ChangeDetectorRef);
 
   constructor() {
     const service = inject(TranslateService);
     super(service);
-
-    merge(service.languageChange$, service.dictionaryChange$)
-// take until
-      .subscribe(() => {
-        this.cdr.markForCheck();
-      });
   }
 
   transform(key: TranslateKey, dynamicOrFallback?: TranslateDynamicProps | string, fallback?: DictionaryEntry | string): string {
-    if (this._lang === this.service.lang && this._key === key && this._dynOrFb === dynamicOrFallback && this._fb === fallback) {
+    const version = this.service.stateVersion();
+
+    const dynOrFb = typeof dynamicOrFallback === 'object' ? JSON.stringify(dynamicOrFallback) : dynamicOrFallback || '';
+
+    if (this._lastVersion === version && this._key === key && this._dynOrFb === dynOrFb && this._fb === fallback) {
       return this._latestValue;
     }
 
-    this._lang = this.service.lang;
     this._key = key;
-    this._dynOrFb = dynamicOrFallback;
+    this._dynOrFb = dynOrFb;
     this._fb = fallback;
+    this._lastVersion = version;
+
     this._latestValue = super.transform(key, dynamicOrFallback, fallback);
 
     return this._latestValue;

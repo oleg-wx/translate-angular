@@ -1,82 +1,106 @@
-import { Directive, ElementRef, Inject, InjectionToken, Input, OnChanges, OnDestroy, OnInit, Optional, SimpleChanges } from '@angular/core';
-import { skip, Subscription } from 'rxjs';
+import { computed, Directive, effect, ElementRef, inject, input, OnDestroy, OnInit, signal } from '@angular/core';
 import { DictionaryEntry, TranslateKey } from 'simply-translate';
 import { TranslateService } from './translate.service';
-
-export interface DefaultTranslateDirectiveConfig {
-  detect?: boolean;
-}
-
-export const DEFAULT_DIRECTIVE_CONFIG = new InjectionToken<DefaultTranslateDirectiveConfig>('TranslateDirective DEFAULT_CONFIG');
 
 @Directive({
   selector: '[translate]',
 })
-export class TranslateDirective implements OnInit, OnChanges, OnDestroy {
-  private _shouldDetectLangChange: boolean = false;
-  private _sub?: Subscription;
-  private _init = false;
-  private _innerTextFallback?: string;
-  @Input('fallback') _fallback?: DictionaryEntry | string;
-  @Input('translate') _key?: TranslateKey;
-  @Input('to') _to?: string;
-  @Input('values') _values?: { [key: string]: string | number };
-  @Input() detect: '' | undefined;
+export class TranslateDirective implements OnInit, OnDestroy {
+  private _element: ElementRef<HTMLElement> = inject(ElementRef<HTMLElement>);
+  private _service: TranslateService = inject(TranslateService);
 
-  constructor(
-    private _element: ElementRef<HTMLElement>,
-    private _service: TranslateService,
-    @Optional()
-    @Inject(DEFAULT_DIRECTIVE_CONFIG)
-    config: DefaultTranslateDirectiveConfig
-  ) {
-    this._shouldDetectLangChange = !!(config?.detect ?? _element.nativeElement.hasAttribute('detect'));
+  private domContent = signal<string>('');
+  private observer: MutationObserver | null = null;
+  private _textNode: Text | null = null;
+
+  fallback = input<DictionaryEntry | string | undefined>(undefined);
+  key = input<TranslateKey | undefined>(undefined, { alias: 'translate' });
+  to = input<string | undefined>(undefined);
+  values = input<{ [key: string]: string | number } | undefined>(undefined);
+
+  constructor() {
+    const finalKey = computed(() => {
+      const boundKey = this.key();
+      if (boundKey !== undefined && boundKey !== '') {
+        return boundKey;
+      }
+      return this.domContent();
+    });
+
+    const translatedText = computed(() => {
+      const activeKey = finalKey();
+      if (!activeKey) return '';
+
+      const fallbackValue = this.fallback() ?? (this.domContent() || undefined);
+      const lang = this.to();
+
+      if (lang) {
+        this._service.stateVersion();
+        return this._service.translateTo(lang, activeKey, this.values() as any, fallbackValue);
+      }
+
+      return this._service.translateSignal(activeKey, this.values() as any, fallbackValue)();
+    });
+
+    effect(() => {
+      const output = translatedText();
+
+      this.observer?.disconnect();
+
+      this._textNode!.data = output;
+
+      this.observer?.observe(this._element.nativeElement, {
+        childList: true,
+        characterData: true,
+        subtree: true,
+      });
+    });
   }
 
-  ngOnChanges(sch:SimpleChanges): void {
-    console.log(sch);
-    if (!this._init) this._innerTextFallback = this._element.nativeElement.innerText;
-    this._changed();
+  ngAfterViewChecked(): void {
+    if (this._textNode) {
+      const currentText = this._textNode.data.trim();
+      if (currentText !== this.domContent()) {
+        this.domContent.set(currentText);
+      }
+    }
   }
 
   ngOnInit(): void {
-    this._init = true;
-    if (this._shouldDetectLangChange) {
-      this._subscribeChanges();
-    }
-  }
+    debugger;
+    this._textNode = this._resolveTextNode();
+    this.domContent.set(this._textNode.data.trim());
 
-  private _subscribeChanges() {
-    this._sub = new Subscription();
-    this._sub.add(
-      this._service.languageChange$.pipe(skip(1)).subscribe((lang) => {
-        if (!this._to) {
-          this._changed();
-        }
-      })
-    );
-    this._sub.add(
-      this._service.dictionaryChange$.pipe(skip(1)).subscribe(() => {
-        this._changed();
-      })
-    );
+    this.observer = new MutationObserver(() => {
+      const currentText = this._textNode!.data.trim();
+      if (currentText !== this.domContent()) {
+        this.domContent.set(currentText);
+      }
+    });
+
+    this.observer.observe(this._element.nativeElement, {
+      childList: true,
+      characterData: true,
+      subtree: true,
+    });
   }
 
   ngOnDestroy(): void {
-    this._init = true;
-    this._sub?.unsubscribe();
+    if (this.observer) {
+      this.observer.disconnect();
+    }
   }
 
-  private _changed(){
-    if (this._key) {
-      this._element.nativeElement.innerText = this._service.translateTo(
-        this._to ?? this._service.lang!,
-        this._key,
-        this._values,
-        this._fallback ?? this._innerTextFallback
-      );
-    } else {
-      this._element.nativeElement.innerText = this._innerTextFallback || '';
+  private _resolveTextNode(): Text {
+    const el = this._element.nativeElement;
+
+    if (el.childNodes.length === 1 && el.firstChild?.nodeType === Node.TEXT_NODE) {
+      return el.firstChild as Text;
     }
+
+    el.textContent = '';
+    const textNode = document.createTextNode('');
+    el.appendChild(textNode);
+    return textNode;
   }
 }

@@ -4,6 +4,14 @@
 
 ### **Breaking changes**
 
+#### (v0.21.0)
+
+- upgraded to Angular 17.
+- directive now **always** reacts to language/dictionary changes; removed the `detect` opt-in property.
+- directive can infer its key from static inner text when `translate` has no value.
+- fixed directive writing translated output to a fresh text node instead of updating the existing one, which broke content bound elsewhere in the same element (e.g. Angular interpolation).
+- added `translateSignal` and `translateObservable` to `TranslateService`.
+
 #### (v0.20.0)
 
 - see [plain JS library changes](https://www.npmjs.com/package/simply-translate#Breaking-changes).
@@ -76,13 +84,9 @@ See [Load dictionaries](#Load-dictionaries)
 <h2 translate="hello_user_not_there" [values]="{ user: 'Oleg' }" fallback="Hello ${user}"></h2>
 ```
 
-Directives can detect dynamic language change, but it is not by default. Use _[detect]_ property to detect root service language change.
+Directives always react to language and dictionary changes automatically, no opt-in needed.
 
-```html
-<h2 translate="hello_user" to="ru-RU" [values]="{ user: 'Oleg' }" detect></h2>
-```
-
-Directive can use inner text as a fallback.
+Directive can also use inner text as an implicit key (when `translate` has no value) or as a fallback (when the key is missing) — but only for **static** content; dynamic keys must be bound with `[translate]="expr"`.
 
 ### Use Pipe
 
@@ -94,11 +98,13 @@ Directive can use inner text as a fallback.
 <h2>{{ 'hello_user_not_there' | translate: { user: 'Oleg' } : 'Hello ${user}'}}</h2>
 ```
 
-Pipes are pure by default. However if application has dynamic language change you may use special _impure_ directive (it has internal dirty check), it will detect language changes as well as pipe parameters.
+Pipes are pure by default. However if application has dynamic language change you may use special _impure_ pipe (it has internal dirty check), it will detect language changes as well as pipe parameters.
 
 ```html
 <h2>{{ 'hello_user' | translate$: { user: 'Oleg' } }}</h2>
 ```
+
+`translate$` is cheap despite being impure: it caches the last language/dictionary version and arguments, and only re-translates when one of them actually changed — not on every check.
 
 ### Use Service
 
@@ -117,6 +123,13 @@ export class Component {
         this.hello = translate.translateTo('ru-RU','hello_user_not_there', { user: 'Oleg' }, 'Hello ${user}')
     }
 }
+```
+
+`translateSignal` and `translateObservable` mirror `translate`'s overloads but return a reactive `Signal<string>` / `Observable<string>` that updates on language or dictionary changes.
+
+```javascript
+helloSignal = translate.translateSignal('hello_user', { user: 'Oleg' }); // Signal<string>
+hello$ = translate.translateObservable('hello_user', { user: 'Oleg' }); // Observable<string>
 ```
 
 To change language use `TranslateRootService` `lang` property.   

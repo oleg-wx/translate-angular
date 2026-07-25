@@ -4,6 +4,8 @@ import { AppComponent } from './app.component';
 import { MoreModule } from './more/more.module';
 import { AppRoutingModule } from './app.routing';
 import { AppTranslateComponent } from './translate.component';
+import { SwitchLangComponent } from './switch-lang/switch-lang.component';
+import { TryDirectiveComponent } from './try-directive/try-directive.component';
 import { map } from 'rxjs/operators';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { Dictionary, TranslateModule } from 'src/_translate.imports';
@@ -16,7 +18,7 @@ function getDictionary(lang: string, client: HttpClient) {
 }
 
 @NgModule({
-  declarations: [AppComponent, AppTranslateComponent],
+  declarations: [AppComponent, AppTranslateComponent, SwitchLangComponent, TryDirectiveComponent],
   imports: [
     HttpClientModule,
     BrowserModule,
