@@ -1,4 +1,4 @@
-import { Pipe, PipeTransform } from '@angular/core';
+import { inject, Pipe, PipeTransform } from '@angular/core';
 import { DictionaryEntry, TranslateDynamicProps, TranslateKey } from 'simply-translate';
 import { TranslateService } from './translate.service';
 
@@ -31,24 +31,30 @@ export class TranslateToPipe implements PipeTransform {
 @Pipe({ name: 'translate$', pure: false })
 export class TranslatePipeDetect extends TranslatePipe {
   private _latestValue: string = '';
-  private _lang: string;
-  private _key: TranslateKey;
-  private _dynOrFb: string | TranslateDynamicProps;
-  private _fb: DictionaryEntry | string;
+  private _key!: TranslateKey;
+  private _lastVersion = -1;
+  private _dynOrFb: string = '';
+  private _fb: DictionaryEntry | string | undefined;
 
-  constructor(service: TranslateService) {
+  constructor() {
+    const service = inject(TranslateService);
     super(service);
   }
 
   transform(key: TranslateKey, dynamicOrFallback?: TranslateDynamicProps | string, fallback?: DictionaryEntry | string): string {
-    if (this._lang === this.service.lang && this._key === key && this._key === key && this._dynOrFb === dynamicOrFallback && this._fb === fallback) {
+    const version = this.service.stateVersion();
+
+    const dynOrFb = typeof dynamicOrFallback === 'object' ? JSON.stringify(dynamicOrFallback) : dynamicOrFallback || '';
+
+    if (this._lastVersion === version && this._key === key && this._dynOrFb === dynOrFb && this._fb === fallback) {
       return this._latestValue;
     }
 
-    this._lang = this.service.lang;
     this._key = key;
-    this._dynOrFb = dynamicOrFallback;
+    this._dynOrFb = dynOrFb;
     this._fb = fallback;
+    this._lastVersion = version;
+
     this._latestValue = super.transform(key, dynamicOrFallback, fallback);
 
     return this._latestValue;

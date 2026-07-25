@@ -1,5 +1,5 @@
 import { Inject, Injectable, Injector, Optional, ProviderToken } from '@angular/core';
-import { Resolve } from '@angular/router';
+
 import { isObservable, Observable, of, tap, finalize } from 'rxjs';
 import { Dictionary } from 'simply-translate';
 import { TranslateChildConfig, TranslateService, TRANSLATE_CHILD } from './translate.service';
@@ -11,7 +11,7 @@ export function translateResolve() {
 }
 
 @Injectable()
-export class TranslateResolve implements Resolve<any> {
+export class TranslateResolve  {
   private _extended?: true | Observable<any>;
   protected readonly extend: () => Observable<any>;
 

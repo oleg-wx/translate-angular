@@ -68,7 +68,7 @@ describe('language change ignore', () => {
     // service = component.service;
   });
 
-  it('should ignore after change', async () => {
+  it('should update directive but ignore pure pipe after change', async () => {
     expect(service.lang).toBe(lang);
     expect(element.querySelector<HTMLElement>('#d1').innerText.trim()).toBe('Hello Oleg');
     expect(element.querySelector<HTMLElement>('#d2').innerText.trim()).toBe('Hello Oleg');
@@ -88,7 +88,7 @@ describe('language change ignore', () => {
     expect(newLangEvent).toBe(newLang);
     expect(oldLangEvent).toBe(lang);
 
-    expect(element.querySelector<HTMLElement>('#d1').innerText.trim()).toBe('Hello Oleg');
+    expect(element.querySelector<HTMLElement>('#d1').innerText.trim()).toBe('Hello New Oleg');
     expect(element.querySelector<HTMLElement>('#d2').innerText.trim()).toBe('Hello Oleg');
   });
 });

@@ -2,29 +2,27 @@
   "compileOnSave": false,
   "compilerOptions": {
     "baseUrl": "./",
-    "downlevelIteration": true,
-    "outDir": "./dist/out-tsc",
+    "outDir": "dist/out-tsc",
     "sourceMap": true,
     "declaration": false,
     "module": "esnext",
     "moduleResolution": "node",
     "experimentalDecorators": true,
     "importHelpers": true,
-    "target": "es2015",
+    "target": "ES2022",
     "jsx": "react",
-    "typeRoots": [
-      "node_modules/@types"
-    ],
-    "lib": [
-      "es2017",
-      "dom"
-    ],
+    "types": ["node"],
+    "lib": ["es2022", "dom"], // Upgraded to match target ES2022
     "paths": {
-      "simply-translate-angular": [
-        "dist/translate",
-      ],
-    }
+      "simply-translate-angular": ["dist/translate"]
+    },
+    "useDefineForClassFields": false
   },
+  // 2. MANDATORY ADDITION: Tell TypeScript which files must consume these types
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.spec.ts"
+  ],
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,

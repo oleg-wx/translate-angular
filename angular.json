@@ -71,18 +71,18 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "simply-translate:build"
+            "buildTarget": "simply-translate:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "simply-translate:build:production"
+              "buildTarget": "simply-translate:build:production"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "simply-translate:build"
+            "buildTarget": "simply-translate:build"
           }
         },
         "test": {
@@ -91,7 +91,7 @@
             "main": "src/test.ts",
             "polyfills": "src/polyfills.ts",
             "tsConfig": "src/tsconfig.spec.json",
-            "karmaConfig": "src/karma.conf.js",
+            "karmaConfig": "src/karma.conf.cjs",
             "styles": [
               "src/styles.scss"
             ],
@@ -167,7 +167,7 @@
           "options": {
             "main": "projects/translate/src/test.ts",
             "tsConfig": "projects/translate/tsconfig.spec.json",
-            "karmaConfig": "projects/translate/karma.conf.js"
+            "karmaConfig": "projects/translate/karma.conf.cjs"
           }
         },
         "lint": {
@@ -184,6 +184,5 @@
         }
       }
     }
-  },
-  "defaultProject": "simply-translate"
+  }
 }
