@@ -1,26 +1,38 @@
 import { APP_INITIALIZER, ModuleWithProviders, NgModule } from '@angular/core';
 import { combineLatest, lastValueFrom, Observable, of, tap } from 'rxjs';
 import { Dictionaries, Dictionary, MiddlewareFunc, MiddlewareStatic } from 'simply-translate';
-import { DefaultTranslateConfig, DEFAULT_CONFIG, ROOT_DICTIONARIES, TranslateChildConfig, TranslateRootService, TranslateService, TranslateServiceBase, TRANSLATE_CHILD } from './translate/translate.service';
+import {
+  DefaultTranslateConfig,
+  DEFAULT_CONFIG,
+  ROOT_DICTIONARIES,
+  TranslateChildConfig,
+  TranslateRootService,
+  TranslateService,
+  TranslateServiceBase,
+  TRANSLATE_CHILD,
+} from './translate/translate.service';
 import { TranslatePipe, TranslateToPipe, TranslatePipeDetect } from './translate/translate.pipe';
 import { TranslateDirective } from './translate/translate.directive';
 import { TranslateResolve } from './translate/translate.resolver';
 
-export type AddMiddlewareFunc = (...any) => Array<MiddlewareFunc | MiddlewareStatic>;
-export type LoadDictionariesFunc = (opts: { lang: string; fallbackLang: string }, ...any) => Observable<Record<string, Dictionary>>;
-export type InitFunc = (service: TranslateRootService, ...any) => Observable<Record<string, Dictionary>>;
-export type FinalFunc<TService extends TranslateServiceBase> = (service: TService, ...any) => void;
+export type AddMiddlewareFunc = (...any: any[]) => Array<MiddlewareFunc | MiddlewareStatic>;
+export type LoadDictionariesFunc = (
+  opts: { lang: string | undefined; fallbackLang: string | undefined },
+  ...any: any[]
+) => Observable<Record<string, Dictionary>>;
+export type InitFunc = (service: TranslateRootService, ...any: any[]) => Observable<Record<string, Dictionary>>;
+export type FinalFunc<TService extends TranslateServiceBase> = (service: TService, ...any: any[]) => void;
 
 export function factory(
   config: DefaultTranslateConfig,
   init?: InitFunc,
   addMiddlewareFn?: AddMiddlewareFunc,
   loadDictionariesFn?: LoadDictionariesFunc,
-  finalFn?: FinalFunc<TranslateRootService>
+  finalFn?: FinalFunc<TranslateRootService>,
 ) {
   const ret = (service: TranslateRootService, ...deps: any[]) => {
     return function () {
-      let customMiddleware: ReturnType<AddMiddlewareFunc> = undefined;
+      let customMiddleware: ReturnType<AddMiddlewareFunc>|undefined = undefined;
       if (addMiddlewareFn) {
         customMiddleware = addMiddlewareFn(...deps);
         // add some middlewares
@@ -43,14 +55,14 @@ export function factory(
                 service.extendDictionary(key, dic[key]);
               });
             });
-          })
+          }),
         );
 
         if (finalFn) {
           result$ = result$.pipe(
             tap(() => {
               finalFn && finalFn(service, ...deps);
-            })
+            }),
           );
         }
 
@@ -62,7 +74,7 @@ export function factory(
           Object.keys(dic).forEach((key) => {
             service.extendDictionary(key, dic[key]);
           });
-        })
+        }),
       );
 
       if (finalFn) {
@@ -70,8 +82,8 @@ export function factory(
           result$.pipe(
             tap(() => {
               finalFn && finalFn(service, ...deps);
-            })
-          )
+            }),
+          ),
         );
       }
 

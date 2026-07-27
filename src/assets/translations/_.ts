@@ -1,7 +1,5 @@
 import { Dictionary, DictionaryEntry } from 'simply-translate';
 
-type DictionaryValue<T = string> = T extends string ? string : T extends Dictionary ? T : DictionaryEntry;
-
 export interface TestDictionary extends Dictionary {
   welcome_to_app: DictionaryValue;
   hello_user: DictionaryValue;

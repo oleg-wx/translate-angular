@@ -27,7 +27,7 @@ interface LangChange {
 }
 
 export abstract class TranslateServiceBase {
-  abstract get lang(): string;
+  abstract get lang(): string | undefined;
   abstract get fallbackLang(): string | undefined;
 
   abstract translateTo(lang: string, key: TranslateKey): string;

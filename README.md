@@ -143,6 +143,52 @@ export class Component {
 }
 ```
 
+### Use TranslateProxy
+
+For typed, autocompleted access to your dictionary keys (instead of passing string keys to `TranslateService`), extend `TranslateProxy<T>` with an interface describing your dictionary shape.
+
+```typescript
+import { Injectable } from '@angular/core';
+import { TranslateProxy } from 'simply-translate-angular';
+
+interface AppDictionary {
+  hello_user: string;
+  namespace: {
+    hello_user: string;
+  };
+}
+
+@Injectable()
+export class AppTranslate extends TranslateProxy<AppDictionary> {}
+```
+
+Inject it like any other service and read keys off `object`. Every leaf key is callable (mirrors `translate`), and carries `.Signal()` / `.$()` companions that mirror `translateSignal` / `translateObservable`:
+
+```typescript
+@Component({
+  ...
+})
+export class MyComponent {
+  constructor(private translate: AppTranslate) {
+    // like translate.translate('hello_user', { user: 'Oleg' })
+    this.hello = translate.object.hello_user({ user: 'Oleg' });
+
+    // reactive Signal<string>, like translate.translateSignal(...)
+    this.helloSignal = translate.object.hello_user.Signal({ user: 'Oleg' });
+
+    // reactive Observable<string>, like translate.translateObservable(...)
+    this.hello$ = translate.object.hello_user.$({ user: 'Oleg' });
+
+    // nested keys work the same way
+    this.nsHello = translate.object.namespace.hello_user({ user: 'Oleg' });
+  }
+}
+```
+
+Each key also stringifies to its full dotted path — `` `${translate.object.namespace.hello_user}` === 'namespace.hello_user' `` — useful when you need the key itself (logging, passing to another API) rather than its translation.
+
+**Restriction:** `Signal` and `$` are reserved property names — `TranslateProxy` uses them on every key to expose the reactive accessors above. A dictionary key literally named `Signal` or `$` (at any nesting level) will be shadowed by these accessors and become unreachable through `object`. Avoid naming dictionary keys `Signal` or `$`.
+
 ### Load dictionaries
 
 #### Root
