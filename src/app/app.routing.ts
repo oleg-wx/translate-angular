@@ -3,12 +3,13 @@ import { RouterModule, Routes } from '@angular/router';
 import { AppTranslateComponent } from './translate.component';
 import { SwitchLangComponent } from './switch-lang/switch-lang.component';
 import { TryDirectiveComponent } from './try-directive/try-directive.component';
+import { TryProxyComponent } from './try-proxy/try-proxy.component';
 
 const routes: Routes = [
     { path: 'translate', component: AppTranslateComponent },
-    { path: 'translate', component: AppTranslateComponent },
     { path: 'switch-lang', component: SwitchLangComponent },
     { path: 'try-directive', component: TryDirectiveComponent },
+    { path: 'try-proxy', component: TryProxyComponent },
     { path: 'dynamic', loadChildren: ()=>import('./dynamic/dynamic.module').then((m) => m.DynamicModule) },
     { path: 'another-dynamic', loadChildren: ()=>import('./another-dynamic/dynamic.module').then((m) => m.AnotherDynamicModule) },
     // {path:'dynamic', loadChildren:'app/dynamic/dynamic.module#DynamicModule'}

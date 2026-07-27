@@ -266,7 +266,7 @@ export class TranslateService implements TranslateServiceBase {
   translateSignal(key: TranslateKey, dynamicValues: Signal<TranslateDynamicProps>, fallback?: DictionaryEntry | string): Signal<string>;
   translateSignal(
     key: TranslateKey,
-    dynamicValuesOrFallback?: TranslateDynamicProps | string | Signal<any>,
+    dynamicValuesOrFallback?: Signal<any> | TranslateDynamicProps | string,
     fallback?: DictionaryEntry | string,
   ): Signal<string> {
     return this._root.translateSignal(this.getChildKey(key), dynamicValuesOrFallback as any, fallback);

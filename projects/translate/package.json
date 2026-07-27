@@ -1,6 +1,6 @@
 {
   "name": "simply-translate-angular",
-  "version": "0.21.0",
+  "version": "0.21.2",
   "type": "module",
   "dependencies": {
     "tslib": "^2.4.0",
@@ -10,7 +10,13 @@
   "peerDependencies": {
     "@angular/common": ">= 17.0.0",
     "@angular/core": ">= 17.0.0",
-    "@angular/compiler": ">= 17.0.0"
+    "@angular/compiler": ">= 17.0.0",
+    "typescript": ">= 5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
   },
   "repository": {
     "type": "git",
