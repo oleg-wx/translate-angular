@@ -67,7 +67,6 @@ export class TranslateDirective implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    debugger;
     this._textNode = this._resolveTextNode();
     this.domContent.set(this._textNode.data.trim());
 
