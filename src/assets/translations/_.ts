@@ -1,4 +1,4 @@
-import { Dictionary, DictionaryEntry } from 'simply-translate';
+import { Dictionary, DictionaryValue } from 'projects/translate/src/public_api';
 
 export interface TestDictionary extends Dictionary {
   welcome_to_app: DictionaryValue;

@@ -225,7 +225,7 @@ export class TranslateService implements TranslateServiceBase {
 
   stateVersion = computed(() => this._root.stateVersion());
 
-  public get lang(): string {
+  public get lang(): string | undefined {
     return this._root.lang;
   }
 

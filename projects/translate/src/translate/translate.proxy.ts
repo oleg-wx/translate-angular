@@ -16,10 +16,10 @@ export type ProxyDictionary<T extends Dictionary> = {
 export type DictionaryValue<T = string> = T extends string ? string : T extends Dictionary ? T : DictionaryEntry;
 
 @Injectable()
-export abstract class TranslateProxy<T extends Dictionary> extends TranslateService {
-  private _service = inject(TranslateService);
+export abstract class TranslateProxy<T extends Dictionary> {
   private _cache: any = {};
 
+  readonly service = inject(TranslateService);
   readonly object: ProxyDictionary<T> = this.createLazyProxy<T>([], this._cache);
 
   private createLazyProxy<T>(fullPath: string[], cache: any): any {
@@ -27,27 +27,22 @@ export abstract class TranslateProxy<T extends Dictionary> extends TranslateServ
       return cache.$$proxy;
     }
 
-    let observableCache: Observable<string> | undefined;
-    let signalCache: Signal<string> | undefined;
-
     const targetNode = (dynamicProps?: TranslateDynamicProps) => {
-      return this._service.translate(fullPath, dynamicProps!);
+      return this.service.translate(fullPath, dynamicProps!);
     };
 
     targetNode.toString = () => fullPath.join('.');
     targetNode.valueOf = () => fullPath;
 
-    targetNode.$ = (dynamicProps?: TranslateDynamicProps | Observable<TranslateDynamicProps>) => {
-      return (observableCache ??= this._service.translateObservable(fullPath, dynamicProps as any));
-    };
-
-    targetNode.Signal = (dynamicProps?: TranslateDynamicProps | Signal<TranslateDynamicProps>) => {
-      return (signalCache ??= this._service.translateSignal(fullPath, dynamicProps as any));
-    };
-
     cache.$$proxy = new Proxy(targetNode, {
       get: (target, prop) => {
-        if (typeof prop === 'symbol' || prop === 'then' || prop === 'toString' || prop === 'valueOf' || prop === '$' || prop === 'Signal') {
+        if (prop === '$') {
+          return ((target as any).$ ??= this.createObservableAccessor(fullPath));
+        }
+        if (prop === 'Signal') {
+          return ((target as any).Signal ??= this.createSignalAccessor(fullPath));
+        }
+        if (typeof prop === 'symbol' || prop === 'then' || prop === 'toString' || prop === 'valueOf') {
           return (target as any)[prop];
         }
 
@@ -58,5 +53,39 @@ export abstract class TranslateProxy<T extends Dictionary> extends TranslateServ
     });
 
     return cache.$$proxy;
+  }
+
+  private createObservableAccessor(fullPath: string[]) {
+    let noArgsCache: Observable<string> | undefined;
+    const cache = new WeakMap<object, Observable<string>>();
+
+    return (dynamicProps?: TranslateDynamicProps | Observable<TranslateDynamicProps>) => {
+      if (dynamicProps === undefined) {
+        return (noArgsCache ??= this.service.translateObservable(fullPath));
+      }
+      let cached = cache.get(dynamicProps);
+      if (!cached) {
+        cached = this.service.translateObservable(fullPath, dynamicProps as any);
+        cache.set(dynamicProps, cached);
+      }
+      return cached;
+    };
+  }
+
+  private createSignalAccessor(fullPath: string[]) {
+    let noArgsCache: Signal<string> | undefined;
+    const cache = new WeakMap<object, Signal<string>>();
+
+    return (dynamicProps?: TranslateDynamicProps | Signal<TranslateDynamicProps>) => {
+      if (dynamicProps === undefined) {
+        return (noArgsCache ??= this.service.translateSignal(fullPath));
+      }
+      let cached = cache.get(dynamicProps);
+      if (!cached) {
+        cached = this.service.translateSignal(fullPath, dynamicProps as any);
+        cache.set(dynamicProps, cached);
+      }
+      return cached;
+    };
   }
 }
