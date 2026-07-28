@@ -1,0 +1,91 @@
+import { inject, Injectable, Signal } from '@angular/core';
+import { Observable } from 'rxjs';
+import { Dictionary, DictionaryEntry, TranslateDynamicProps } from 'simply-translate';
+import { TranslateService } from './translate.service';
+
+type TranslationFunction = {
+  (dynamicProps?: TranslateDynamicProps): string;
+  Signal: (dynamicProps?: TranslateDynamicProps | Signal<TranslateDynamicProps>) => Signal<string>;
+  $: (dynamicProps?: TranslateDynamicProps | Observable<TranslateDynamicProps>) => Observable<string>;
+} & string;
+
+export type ProxyDictionary<T extends Dictionary> = {
+  [K in keyof T]: T[K] extends Dictionary ? ProxyDictionary<T[K]> : TranslationFunction;
+};
+
+export type DictionaryValue<T = string> = T extends string ? string : T extends Dictionary ? T : DictionaryEntry;
+
+@Injectable()
+export abstract class TranslateProxy<T extends Dictionary> {
+  private _cache: any = {};
+
+  readonly service = inject(TranslateService);
+  readonly object: ProxyDictionary<T> = this.createLazyProxy<T>([], this._cache);
+
+  private createLazyProxy<T>(fullPath: string[], cache: any): any {
+    if (cache.$$proxy) {
+      return cache.$$proxy;
+    }
+
+    const targetNode = (dynamicProps?: TranslateDynamicProps) => {
+      return this.service.translate(fullPath, dynamicProps!);
+    };
+
+    targetNode.toString = () => fullPath.join('.');
+    targetNode.valueOf = () => fullPath;
+
+    cache.$$proxy = new Proxy(targetNode, {
+      get: (target, prop) => {
+        if (prop === '$') {
+          return ((target as any).$ ??= this.createObservableAccessor(fullPath));
+        }
+        if (prop === 'Signal') {
+          return ((target as any).Signal ??= this.createSignalAccessor(fullPath));
+        }
+        if (typeof prop === 'symbol' || prop === 'then' || prop === 'toString' || prop === 'valueOf') {
+          return (target as any)[prop];
+        }
+
+        const propStr = String(prop);
+        const nextPath = [...fullPath, propStr];
+        return this.createLazyProxy(nextPath, (cache[propStr] ??= {}));
+      },
+    });
+
+    return cache.$$proxy;
+  }
+
+  private createObservableAccessor(fullPath: string[]) {
+    let noArgsCache: Observable<string> | undefined;
+    const cache = new WeakMap<object, Observable<string>>();
+
+    return (dynamicProps?: TranslateDynamicProps | Observable<TranslateDynamicProps>) => {
+      if (dynamicProps === undefined) {
+        return (noArgsCache ??= this.service.translateObservable(fullPath));
+      }
+      let cached = cache.get(dynamicProps);
+      if (!cached) {
+        cached = this.service.translateObservable(fullPath, dynamicProps as any);
+        cache.set(dynamicProps, cached);
+      }
+      return cached;
+    };
+  }
+
+  private createSignalAccessor(fullPath: string[]) {
+    let noArgsCache: Signal<string> | undefined;
+    const cache = new WeakMap<object, Signal<string>>();
+
+    return (dynamicProps?: TranslateDynamicProps | Signal<TranslateDynamicProps>) => {
+      if (dynamicProps === undefined) {
+        return (noArgsCache ??= this.service.translateSignal(fullPath));
+      }
+      let cached = cache.get(dynamicProps);
+      if (!cached) {
+        cached = this.service.translateSignal(fullPath, dynamicProps as any);
+        cache.set(dynamicProps, cached);
+      }
+      return cached;
+    };
+  }
+}

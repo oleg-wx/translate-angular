@@ -1,5 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import { effect, NgModule } from '@angular/core';
 import { AppComponent } from './app.component';
 import { MoreModule } from './more/more.module';
 import { AppRoutingModule } from './app.routing';
@@ -12,13 +12,14 @@ import { Dictionary, TranslateModule } from 'src/_translate.imports';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { ComponentsModule } from './components/components.module';
+import { TryProxyComponent } from './try-proxy/try-proxy.component';
 
 function getDictionary(lang: string, client: HttpClient) {
   return client.get<Dictionary>(`/assets/translations/${lang}.json`);
 }
 
 @NgModule({
-  declarations: [AppComponent, AppTranslateComponent, SwitchLangComponent, TryDirectiveComponent],
+  declarations: [AppComponent, AppTranslateComponent, SwitchLangComponent, TryDirectiveComponent, TryProxyComponent],
   imports: [
     HttpClientModule,
     BrowserModule,
@@ -33,7 +34,7 @@ function getDictionary(lang: string, client: HttpClient) {
 
       addMiddleware: (client: HttpClient) => {
         return [
-          ({params,result}) => {
+          ({ params, result }) => {
             if (result.fallingBack) {
               console.warn('falling back:', `${params.key.toString()}, [${params.lang}]`);
             }
@@ -44,8 +45,9 @@ function getDictionary(lang: string, client: HttpClient) {
       loadDictionaries: ({ lang, fallbackLang }, client: HttpClient) => {
         return forkJoin([getDictionary(lang, client), getDictionary('ru-RU', client)]).pipe(
           map(([current, fallback]) => {
+            debugger;
             return { [lang]: current, 'ru-RU': fallback };
-          })
+          }),
         );
       },
     }),
@@ -56,4 +58,16 @@ function getDictionary(lang: string, client: HttpClient) {
   exports: [],
   bootstrap: [AppComponent],
 })
-export class AppModule {}
+export class AppModule {
+  constructor() {
+    // this.translate.object.namespace.hello_user.$().subscribe();
+
+    // this.translate.object.i_have_been_here_count.$({ count: 10 }).subscribe((res) => {
+    //   console.log('Translate', res);
+    // });
+
+    // effect(() => {
+    //   console.log('Signal', this.a());
+    // });
+  }
+}

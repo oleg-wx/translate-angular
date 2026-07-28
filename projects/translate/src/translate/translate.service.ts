@@ -27,7 +27,7 @@ interface LangChange {
 }
 
 export abstract class TranslateServiceBase {
-  abstract get lang(): string;
+  abstract get lang(): string | undefined;
   abstract get fallbackLang(): string | undefined;
 
   abstract translateTo(lang: string, key: TranslateKey): string;
@@ -225,7 +225,7 @@ export class TranslateService implements TranslateServiceBase {
 
   stateVersion = computed(() => this._root.stateVersion());
 
-  public get lang(): string {
+  public get lang(): string | undefined {
     return this._root.lang;
   }
 
@@ -266,7 +266,7 @@ export class TranslateService implements TranslateServiceBase {
   translateSignal(key: TranslateKey, dynamicValues: Signal<TranslateDynamicProps>, fallback?: DictionaryEntry | string): Signal<string>;
   translateSignal(
     key: TranslateKey,
-    dynamicValuesOrFallback?: TranslateDynamicProps | string | Signal<any>,
+    dynamicValuesOrFallback?: Signal<any> | TranslateDynamicProps | string,
     fallback?: DictionaryEntry | string,
   ): Signal<string> {
     return this._root.translateSignal(this.getChildKey(key), dynamicValuesOrFallback as any, fallback);

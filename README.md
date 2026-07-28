@@ -7,6 +7,7 @@
 #### (v0.21.0)
 
 - upgraded to Angular 17.
+- introduced new [`TranslateProxy`](#Use-TranslateProxy) for typed, autocompleted dictionary access.
 - directive now **always** reacts to language/dictionary changes; removed the `detect` opt-in property.
 - directive can infer its key from static inner text when `translate` has no value.
 - fixed directive writing translated output to a fresh text node instead of updating the existing one, which broke content bound elsewhere in the same element (e.g. Angular interpolation).
@@ -142,6 +143,64 @@ export class Component {
   }
 }
 ```
+
+### Use TranslateProxy
+
+For typed, autocompleted access to your dictionary keys (instead of passing string keys to `TranslateService`), extend `TranslateProxy<T>` with an interface describing your dictionary shape.
+
+```typescript
+import { Injectable } from '@angular/core';
+import { TranslateProxy } from 'simply-translate-angular';
+
+interface AppDictionary {
+  hello_user: string;
+  namespace: {
+    hello_user: string;
+  };
+}
+
+@Injectable()
+export class AppTranslate extends TranslateProxy<AppDictionary> {}
+```
+
+Inject it like any other service and read keys off `object`. Every leaf key is callable (mirrors `translate`), and carries `.Signal()` / `.$()` companions that mirror `translateSignal` / `translateObservable`:
+
+```typescript
+@Component({
+  ...
+})
+export class MyComponent {
+  constructor(private translate: AppTranslate) {
+    // like translate.translate('hello_user', { user: 'Oleg' })
+    this.hello = translate.object.hello_user({ user: 'Oleg' });
+
+    // reactive Signal<string>, like translate.translateSignal(...)
+    this.helloSignal = translate.object.hello_user.Signal({ user: 'Oleg' });
+
+    // reactive Observable<string>, like translate.translateObservable(...)
+    this.hello$ = translate.object.hello_user.$({ user: 'Oleg' });
+
+    // nested keys work the same way
+    this.nsHello = translate.object.namespace.hello_user({ user: 'Oleg' });
+  }
+}
+```
+
+Each key also stringifies to its full dotted path — `` `${translate.object.namespace.hello_user}` === 'namespace.hello_user' `` — useful when you need the key itself (logging, passing to another API) rather than its translation.
+
+**Warning — dynamic props with `.Signal()` / `.$()`:** the returned `Signal`/`Observable` is cached per `dynamicProps` reference (keyed by identity, not by value). A plain object always stays reactive to **language/dictionary** changes, but is a fixed snapshot of its own properties — it will never update if you mutate the object later, and passing a fresh object literal on every call (e.g. inline in a template) defeats the cache, allocating a new `Signal`/`Observable` each time. If the dynamic values themselves change over time, pass a `Signal<TranslateDynamicProps>` or `Observable<TranslateDynamicProps>` instead, and keep reusing the **same** reference so the cache can pick it up:
+
+```typescript
+// reactive to changing values — pass a stable Signal/Observable reference
+const params = signal({ user: 'Oleg' });
+this.helloSignal = translate.object.hello_user.Signal(params);
+params.set({ user: 'Dana' }); // helloSignal updates automatically
+
+// static values, but still reactive to language/dictionary changes
+this.helloSignal = translate.object.hello_user.Signal({ user: 'Oleg' });
+```
+
+**Restriction:** `Signal` and `$` are reserved property names — `TranslateProxy` uses them on every key to expose the reactive accessors above. A dictionary key literally named `Signal` or `$` (at any nesting level) will be shadowed by these accessors and become unreachable through `object`. Avoid naming dictionary keys `Signal` or `$`.
 
 ### Load dictionaries
 

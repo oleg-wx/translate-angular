@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "build:dev": "ng build translate --configuration development && npm run copy_readme",
-    "build:prod": "ng build translate --configuration production && npm run copy_readme",
+    "build:dev": "ng build translate --configuration development && npm run copy_readme && npm run copy_npmrc",
+    "build:prod": "ng build translate --configuration production && npm run copy_readme && npm run copy_npmrc",
     "build:prod:patch": "cd ./projects/translate && npm --no-git-tag-version version patch && cd ../.. && npm run build:prod",
     "publish:prod": "npm run build:prod && cd dist/translate && npm publish && cd ../..",
     "publish:prod:patch": "npm run build:prod:patch && cd dist/translate && npm publish && cd ../..",
@@ -14,7 +14,8 @@
     "restart:all": "npm run build:library:prod && npm run start:demo",
     "test": "ng test translate",
     "e2e": "ng e2e",
-    "copy_readme": "copyfiles ./README.md dist/translate"
+    "copy_readme": "copyfiles ./README.md dist/translate",
+    "copy_npmrc": "copyfiles -f ./projects/translate/.npmrc dist/translate"
   },
   "dependencies": {
     "@angular/animations": "^17.3.12",
