@@ -7,9 +7,11 @@ import { Namespace, String as Str, TranslateSchema } from '../translate/schema';
 import { TranslateProxy } from '../translate/translate.proxy';
 
 const testSchema = TranslateSchema({
-  hello_user: Str(),
+  hello_user: Str<{ user: string }>(),
+  strict_user: Str<{ user: string }>(),
+  no_params: Str(),
   namespace: Namespace({
-    hello_user: Str(),
+    hello_user: Str<{ user: string }>(),
   }),
 });
 
@@ -21,10 +23,14 @@ const newLang = 'new';
 const dic = {
   [lang]: {
     hello_user: 'Hello ${user}',
+    strict_user: 'Strict ${user}',
+    no_params: 'No params needed',
     namespace: { hello_user: 'NS Hello ${user}' },
   },
   [newLang]: {
     hello_user: 'Hello New ${user}',
+    strict_user: 'Strict New ${user}',
+    no_params: 'No params needed (new)',
     namespace: { hello_user: 'NS Hello New ${user}' },
   },
 };
@@ -63,14 +69,14 @@ describe('TranslateProxy', () => {
   });
 
   it('caches the observable returned by $()', () => {
-    const obs1 = proxy.object.hello_user.$();
-    const obs2 = proxy.object.hello_user.$();
+    const obs1 = proxy.object.no_params.$();
+    const obs2 = proxy.object.no_params.$();
     expect(obs1).toBe(obs2);
   });
 
   it('caches the signal returned by Signal()', () => {
-    const sig1 = proxy.object.hello_user.Signal();
-    const sig2 = proxy.object.hello_user.Signal();
+    const sig1 = proxy.object.no_params.Signal();
+    const sig2 = proxy.object.no_params.Signal();
     expect(sig1).toBe(sig2);
   });
 
@@ -179,5 +185,32 @@ describe('TranslateProxy', () => {
 
   it('does not look like a thenable', () => {
     expect((proxy.object.hello_user as any).then).toBeUndefined();
+  });
+
+  it('narrows the call signature, .Signal(), and .$() to the params declared on the schema leaf', () => {
+    expect(proxy.object.strict_user({ user: 'Oleg' })).toBe('Strict Oleg');
+    expect(proxy.object.strict_user.Signal({ user: 'Oleg' })()).toBe('Strict Oleg');
+    expect(proxy.object.strict_user).toBeTruthy();
+
+    // @ts-expect-error strict_user requires { user: string } — a number isn't assignable to it
+    proxy.object.strict_user({ user: 42 });
+    // @ts-expect-error same shape is enforced on .Signal(...)
+    proxy.object.strict_user.Signal({ user: 42 });
+    // @ts-expect-error same shape is enforced on .$(...)
+    proxy.object.strict_user.$({ user: 42 });
+    // @ts-expect-error { nope: true } doesn't satisfy the required { user: string } shape
+    proxy.object.strict_user({ nope: true });
+    // @ts-expect-error omitting the argument entirely is not allowed once TParams is declared
+    proxy.object.strict_user();
+  });
+
+  it('a leaf declared with a bare Str()/Value() takes no dynamic props at all', () => {
+    expect(proxy.object.no_params()).toBe('No params needed');
+    expect(proxy.object.no_params.Signal()()).toBe('No params needed');
+
+    // @ts-expect-error no_params has no declared TParams, so it must not accept an argument
+    proxy.object.no_params({ user: 'Oleg' });
+    // @ts-expect-error same restriction applies to .Signal(...)
+    proxy.object.no_params.Signal({ user: 'Oleg' });
   });
 });

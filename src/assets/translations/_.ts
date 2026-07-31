@@ -2,20 +2,20 @@ import { Namespace, String, TranslateSchema, Value } from 'projects/translate/sr
 
 export const testDictionary = TranslateSchema({
   welcome_to_app: String(),
-  hello_user: String(),
+  hello_user: String<{user?: string}>(),
 
   hello_world: String(),
   goodbye_world: String(),
 
   namespace: Namespace({
     value: String(),
-    hello_user: Value(),
+    hello_user: Value<{user?: string}>(),
     user: Value(),
   }),
 
-  i_have_been_here_count: Value(),
+  i_have_been_here_count: Value<{count: number; days: number}>(),
 
-  day_since_new_year: Value(),
+  day_since_new_year: Value<{days: number}>(),
 
   for_fallback: Value(),
 

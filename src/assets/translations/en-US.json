@@ -45,12 +45,12 @@
     "plural": {
       "days": [
         ["=1", "one day since"],
-        ["<1", "day of"],
+        ["<1", "a first day of"],
         [">365", "more then year since that"],
         [">360", "almost an year"],
         [">181", "more then six months since"],
         [">93", "more then three months since"],
-        ["_", "$# days"]
+        ["_", "$# days since"]
       ]
     }
   },

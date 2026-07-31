@@ -1,17 +1,28 @@
 import { inject, Injectable, Signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Dictionary, DictionaryEntry, TranslateDynamicProps } from 'simply-translate';
+import type { BaseNode, NamespaceNode, SchemaShape, TranslateSchemaNode } from './schema/schema.types';
 import { TranslateService } from './translate.service';
-import type { TranslateSchemaNode, InferTranslateSchemaType } from './schema';
 
-type TranslationFunction = {
-  (dynamicProps?: TranslateDynamicProps): string;
-  Signal: (dynamicProps?: TranslateDynamicProps | Signal<TranslateDynamicProps>) => Signal<string>;
-  $: (dynamicProps?: TranslateDynamicProps | Observable<TranslateDynamicProps>) => Observable<string>;
-} & string;
+type TranslationFunction<TParams = undefined> = (TParams extends undefined
+  ? {
+      (): string;
+      Signal: () => Signal<string>;
+      $: () => Observable<string>;
+    }
+  : {
+      (dynamicProps: TParams): string;
+      Signal: (dynamicProps: TParams | Signal<TParams>) => Signal<string>;
+      $: (dynamicProps: TParams | Observable<TParams>) => Observable<string>;
+    }) &
+  string;
 
-export type ProxyDictionary<T extends Dictionary> = {
-  [K in keyof T]: T[K] extends Dictionary ? ProxyDictionary<T[K]> : TranslationFunction;
+export type ProxyDictionary<Shape extends SchemaShape> = {
+  [K in keyof Shape]: Shape[K] extends NamespaceNode<infer ChildShape>
+    ? ProxyDictionary<ChildShape>
+    : Shape[K] extends BaseNode<infer TParams>
+      ? TranslationFunction<TParams>
+      : never;
 };
 
 export type DictionaryValue<T = string> = T extends string ? string : T extends Dictionary ? T : DictionaryEntry;
@@ -21,7 +32,7 @@ export abstract class TranslateProxy<S extends TranslateSchemaNode> {
   private _cache: any = {};
 
   readonly service = inject(TranslateService);
-  readonly object: ProxyDictionary<InferTranslateSchemaType<S>> = this.createLazyProxy([], this._cache);
+  readonly object: ProxyDictionary<S['shape']> = this.createLazyProxy([], this._cache);
 
   private createLazyProxy(fullPath: string[], cache: any): any {
     if (cache.$$proxy) {
