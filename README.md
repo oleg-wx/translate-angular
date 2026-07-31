@@ -157,11 +157,12 @@ For typed, autocompleted access to your dictionary keys, describe your dictionar
 import { Namespace, String, TranslateSchema, Value } from 'simply-translate-angular';
 
 export const appSchema = TranslateSchema({
-  hello_user: String(),
+  hello_user: String<{ user: string }>(),
+  about: String(),
   namespace: Namespace({
-    hello_user: String(),
+    hello_user: String<{ user: string }>(),
   }),
-  with_plural_params: Value(),
+  visit_count: Value<{ count: number }>(),
 });
 
 export type AppSchema = typeof appSchema;
@@ -179,7 +180,12 @@ export class AppTranslate extends TranslateProxy<AppSchema> {}
 
 `TranslateProxy` takes the schema itself as its type parameter — the dictionary type is inferred from it via `InferTranslateSchemaType`. `TranslateProxy` only ever needs `AppSchema`'s **type**, never `appSchema`'s runtime value, so import it with `import type`: TypeScript erases `import type` entirely at compile time, keeping the schema-building code (and everything it imports) out of your app's bundle unless something else in it also needs the actual schema object at runtime — e.g. to call `validateDictionary`. See [Validating dictionaries with a schema](#validating-dictionaries-with-a-schema) for the full builder API (`String`, `Value`, `Namespace`) and for validating your JSON dictionaries against the same schema at runtime.
 
-Inject it like any other service and read keys off `object`. Every leaf key is callable (mirrors `translate`), and carries `.Signal()` / `.$()` companions that mirror `translateSignal` / `translateObservable`:
+Inject it like any other service and read keys off `object`. Every leaf key is callable (mirrors `translate`), and carries `.Signal()` / `.$()` companions that mirror `translateSignal` / `translateObservable`.
+
+**The params each of these accepts comes entirely from how the schema leaf was declared:**
+
+- `String()` / `Value()`, called with no type argument — the leaf takes **no dynamic props at all**. The call, `.Signal()`, and `.$()` all become zero-argument — passing anything is a compile error.
+- `String<TParams>()` / `Value<TParams>()` — the leaf **requires** exactly `TParams`, everywhere. Omitting the argument, passing `undefined`, or passing the wrong shape are all compile errors.
 
 ```typescript
 @Component({
@@ -198,13 +204,18 @@ export class MyComponent {
 
     // nested keys work the same way
     this.nsHello = translate.object.namespace.hello_user({ user: 'Oleg' });
+
+    // `about` was declared with String() (no type argument) -> zero-argument call
+    this.about = translate.object.about();
+    // translate.object.about({ user: 'Oleg' });    // compile error: `about` takes no params
+    // translate.object.hello_user();                // compile error: `hello_user` requires { user: string }
   }
 }
 ```
 
 Each key also stringifies to its full dotted path — `` `${translate.object.namespace.hello_user}` === 'namespace.hello_user' `` — useful when you need the key itself (logging, passing to another API) rather than its translation.
 
-**Warning — dynamic props with `.Signal()` / `.$()`:** the returned `Signal`/`Observable` is cached per `dynamicProps` reference (keyed by identity, not by value). A plain object always stays reactive to **language/dictionary** changes, but is a fixed snapshot of its own properties — it will never update if you mutate the object later, and passing a fresh object literal on every call (e.g. inline in a template) defeats the cache, allocating a new `Signal`/`Observable` each time. If the dynamic values themselves change over time, pass a `Signal<TranslateDynamicProps>` or `Observable<TranslateDynamicProps>` instead, and keep reusing the **same** reference so the cache can pick it up:
+**Warning — dynamic props with `.Signal()` / `.$()`:** the returned `Signal`/`Observable` is cached per `dynamicProps` reference (keyed by identity, not by value). A plain object always stays reactive to **language/dictionary** changes, but is a fixed snapshot of its own properties — it will never update if you mutate the object later, and passing a fresh object literal on every call (e.g. inline in a template) defeats the cache, allocating a new `Signal`/`Observable` each time. If the dynamic values themselves change over time, pass a `Signal`/`Observable` of that same params shape instead, and keep reusing the **same** reference so the cache can pick it up:
 
 ```typescript
 // reactive to changing values — pass a stable Signal/Observable reference
