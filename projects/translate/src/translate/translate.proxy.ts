@@ -1,9 +1,8 @@
 import { inject, Injectable, Signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Dictionary, DictionaryEntry, TranslateDynamicProps } from 'simply-translate';
-import { InferTranslateSchemaType } from './schema/infer-schema-type';
-import { TranslateSchemaNode } from './schema/schema.types';
 import { TranslateService } from './translate.service';
+import type { TranslateSchemaNode, InferTranslateSchemaType } from './schema';
 
 type TranslationFunction = {
   (dynamicProps?: TranslateDynamicProps): string;

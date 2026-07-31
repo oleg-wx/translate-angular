@@ -67,6 +67,26 @@ describe('schema', () => {
     expect(errors).toEqual([{ path: ['only_root_key'], message: 'unexpected key not declared in schema' }]);
   });
 
+  it('does not report a missing key allowed via allowedMissing', () => {
+    const { welcome_to_app, ...rest } = validDictionary;
+    expect(validateDictionary(testSchema, rest, { allowedMissing: { welcome_to_app: 'not translated yet' } })).toEqual([]);
+  });
+
+  it('does not report an orphan key allowed via allowedOrphans', () => {
+    const errors = validateDictionary(testSchema, { ...validDictionary, only_root_key: 'Only in the Root' }, { allowedOrphans: { only_root_key: true } });
+    expect(errors).toEqual([]);
+  });
+
+  it('matches allowedMissing/allowedOrphans on the full dotted path, not just the leaf key', () => {
+    const { namespace, ...rest } = validDictionary;
+    const errors = validateDictionary(
+      testSchema,
+      { ...rest, namespace: { value: namespace.value, hello_user: namespace.hello_user } },
+      { allowedMissing: { user: true } },
+    );
+    expect(errors).toEqual([{ path: ['namespace', 'user'], message: 'missing key' }]);
+  });
+
   it('reports a wrong type on a strict string leaf', () => {
     const errors = validateDictionary(testSchema, { ...validDictionary, welcome_to_app: 42 });
     expect(errors).toEqual([{ path: ['welcome_to_app'], message: 'expected string, got number' }]);

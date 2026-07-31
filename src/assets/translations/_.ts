@@ -21,3 +21,5 @@ export const testDictionary = TranslateSchema({
 
   same_key: Value(),
 });
+
+export type TestDictionary = typeof testDictionary;

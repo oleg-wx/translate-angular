@@ -5,7 +5,7 @@
 ### **Breaking changes**
 
 #### (v0.21.10)
-- `TranslateProxy<T>` now takes a schema (`typeof yourSchema`) instead of a hand-written `Dictionary` interface — see [Use TranslateProxy](#Use-TranslateProxy).
+- `TranslateProxy<T>` now takes a schema type (`typeof yourSchema`) instead of a hand-written `Dictionary` interface — see [Use TranslateProxy](#Use-TranslateProxy).
 - added schema-first dictionary definitions (`TranslateSchema`, `String`, `Value`, `Namespace`) and runtime validation (`validateDictionary`, `assertValidDictionary`) — see [Validating dictionaries with a schema](#validating-dictionaries-with-a-schema).
 
 #### (v0.21.0)
@@ -153,22 +153,31 @@ export class Component {
 For typed, autocompleted access to your dictionary keys, describe your dictionary shape with `TranslateSchema` and extend `TranslateProxy<typeof yourSchema>`.
 
 ```typescript
-import { Injectable } from '@angular/core';
-import { Namespace, String, TranslateProxy, TranslateSchema, Value } from 'simply-translate-angular';
+// app.schema.ts
+import { Namespace, String, TranslateSchema, Value } from 'simply-translate-angular';
 
-const appSchema = TranslateSchema({
+export const appSchema = TranslateSchema({
   hello_user: String(),
   namespace: Namespace({
     hello_user: String(),
   }),
-  with_plural_params: Value()
+  with_plural_params: Value(),
 });
 
-@Injectable()
-export class AppTranslate extends TranslateProxy<typeof appSchema> {}
+export type AppSchema = typeof appSchema;
 ```
 
-`TranslateProxy` takes the schema itself as its type parameter — the dictionary type is inferred from it via `InferTranslateSchemaType`. See [Validating dictionaries with a schema](#validating-dictionaries-with-a-schema) for the full builder API (`String`, `Value`, `Namespace`) and for validating your JSON dictionaries against the same schema at runtime.
+```typescript
+// app.translate.ts
+import { Injectable } from '@angular/core';
+import { TranslateProxy } from 'simply-translate-angular';
+import type { AppSchema } from './app.schema';
+
+@Injectable()
+export class AppTranslate extends TranslateProxy<AppSchema> {}
+```
+
+`TranslateProxy` takes the schema itself as its type parameter — the dictionary type is inferred from it via `InferTranslateSchemaType`. `TranslateProxy` only ever needs `AppSchema`'s **type**, never `appSchema`'s runtime value, so import it with `import type`: TypeScript erases `import type` entirely at compile time, keeping the schema-building code (and everything it imports) out of your app's bundle unless something else in it also needs the actual schema object at runtime — e.g. to call `validateDictionary`. See [Validating dictionaries with a schema](#validating-dictionaries-with-a-schema) for the full builder API (`String`, `Value`, `Namespace`) and for validating your JSON dictionaries against the same schema at runtime.
 
 Inject it like any other service and read keys off `object`. Every leaf key is callable (mirrors `translate`), and carries `.Signal()` / `.$()` companions that mirror `translateSignal` / `translateObservable`:
 
@@ -243,6 +252,15 @@ const errors = validateDictionary(appSchema, parsedJson);
 
 // or throw with a formatted message if invalid — handy in a startup check or a build/CI script
 assertValidDictionary(appSchema, parsedJson, 'en-US.json');
+```
+
+Some keys are legitimately allowed to diverge between the schema and a given language file — a translation that isn't ready yet, or a root-only fallback key. Rather than silently ignoring every missing/extra key, list the exceptions explicitly (with a reason) via `allowedMissing` / `allowedOrphans`, keyed by the same dotted path shown in `SchemaValidationError.path`:
+
+```typescript
+const errors = validateDictionary(appSchema, parsedJson, {
+  allowedMissing: { 'namespace.hello_user': 'translation pending, falls back to en-US' },
+  allowedOrphans: { only_root_key: 'root-only fallback key, intentionally absent from other languages' },
+});
 ```
 
 ### Load dictionaries
