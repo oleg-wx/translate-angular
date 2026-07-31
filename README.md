@@ -408,6 +408,12 @@ For rare cases you may use `id` parameter for Lazy loaded module, that allows ha
 })
 ```
 
+#### Per-proxy (`applyLoader`)
+
+A `TranslateProxy` subclass can load its own per-language dictionary by overriding `applyLoader()`, without any `forChild()`/`NgModule` wrapper — each language may be a plain object, a `Promise`, an `Observable`, or a URL string fetched via `HttpClient`, and only the *current* language loads eagerly; any other language loads on demand the first time you switch to it.
+
+**Caveat:** unlike `forChild()`'s `id`-based key prefixing, `applyLoader()` does not namespace keys — every proxy's dictionary is merged flat into the same per-language dictionary. If more than one proxy uses `applyLoader()`, wrap each one's own schema in a top-level `Namespace({...})` (named after that feature) to avoid colliding with another proxy's keys.
+
 ### Pipeline
 
 **(experimental)**

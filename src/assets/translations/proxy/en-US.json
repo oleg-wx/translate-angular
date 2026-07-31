@@ -1,22 +1,22 @@
 {
   "proxy": {
-    "welcome_to_app": "Welcome to Translation Testing Application",
-    "hello_user": "Hello $&{user?namespace.user}!",
+    "welcome_to_app": "[Proxy] Welcome to Translation Testing Application",
+    "hello_user": "[Proxy] Hello $&{user?namespace.user}!",
 
-    "hello_world": "Hello World",
+    "hello_world": "[Proxy] Hello World",
     "goodbye_world": {
-      "value": "Goodbye World",
+      "value": "[Proxy] Goodbye World",
       "description": "When you want to say goodbye to the world"
     },
 
     "namespace": {
-      "value": "Namespace translated",
-      "hello_user": "Hello again, $&{user?namespace.user}!",
-      "user": "User"
+      "value": "[Proxy] Namespace translated",
+      "hello_user": "[Proxy] Hello again, $&{user?namespace.user}!",
+      "user": "[Proxy] User"
     },
 
     "i_have_been_here_count": {
-      "value": "$!{count} ${days}",
+      "value": "[Proxy] $!{count} ${days}",
       "cases": {
         "count": [
           ["!!", "I've been here ${count}"],
@@ -42,7 +42,7 @@
     },
 
     "day_since_new_year": {
-      "value": "It is ${days} New Year",
+      "value": "[Proxy] It is ${days} New Year",
       "plural": {
         "days": [
           ["=1", "one day since"],
@@ -56,9 +56,9 @@
       }
     },
 
-    "for_fallback": "Fallback",
+    "for_fallback": "[Proxy] Fallback",
 
-    "same_key": "Same in the Root",
-    "only_root_key": "Only in the Root"
+    "same_key": "[Proxy] Same in the Root",
+    "only_root_key": "[Proxy] Only in the Root"
   }
 }
