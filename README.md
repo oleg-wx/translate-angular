@@ -4,6 +4,10 @@
 
 ### **Breaking changes**
 
+#### (v0.21.10)
+- `TranslateProxy<T>` now takes a schema (`typeof yourSchema`) instead of a hand-written `Dictionary` interface — see [Use TranslateProxy](#Use-TranslateProxy).
+- added schema-first dictionary definitions (`TranslateSchema`, `String`, `Value`, `Namespace`) and runtime validation (`validateDictionary`, `assertValidDictionary`) — see [Validating dictionaries with a schema](#validating-dictionaries-with-a-schema).
+
 #### (v0.21.0)
 
 - upgraded to Angular 17.
@@ -146,22 +150,25 @@ export class Component {
 
 ### Use TranslateProxy
 
-For typed, autocompleted access to your dictionary keys (instead of passing string keys to `TranslateService`), extend `TranslateProxy<T>` with an interface describing your dictionary shape.
+For typed, autocompleted access to your dictionary keys, describe your dictionary shape with `TranslateSchema` and extend `TranslateProxy<typeof yourSchema>`.
 
 ```typescript
 import { Injectable } from '@angular/core';
-import { TranslateProxy } from 'simply-translate-angular';
+import { Namespace, String, TranslateProxy, TranslateSchema, Value } from 'simply-translate-angular';
 
-interface AppDictionary {
-  hello_user: string;
-  namespace: {
-    hello_user: string;
-  };
-}
+const appSchema = TranslateSchema({
+  hello_user: String(),
+  namespace: Namespace({
+    hello_user: String(),
+  }),
+  with_plural_params: Value()
+});
 
 @Injectable()
-export class AppTranslate extends TranslateProxy<AppDictionary> {}
+export class AppTranslate extends TranslateProxy<typeof appSchema> {}
 ```
+
+`TranslateProxy` takes the schema itself as its type parameter — the dictionary type is inferred from it via `InferTranslateSchemaType`. See [Validating dictionaries with a schema](#validating-dictionaries-with-a-schema) for the full builder API (`String`, `Value`, `Namespace`) and for validating your JSON dictionaries against the same schema at runtime.
 
 Inject it like any other service and read keys off `object`. Every leaf key is callable (mirrors `translate`), and carries `.Signal()` / `.$()` companions that mirror `translateSignal` / `translateObservable`:
 
@@ -201,6 +208,42 @@ this.helloSignal = translate.object.hello_user.Signal({ user: 'Oleg' });
 ```
 
 **Restriction:** `Signal` and `$` are reserved property names — `TranslateProxy` uses them on every key to expose the reactive accessors above. A dictionary key literally named `Signal` or `$` (at any nesting level) will be shadowed by these accessors and become unreachable through `object`. Avoid naming dictionary keys `Signal` or `$`.
+
+### Validating dictionaries with a schema
+
+`TranslateSchema` describes a dictionary once and gives you both the static type (via `InferTranslateSchemaType`, used internally by `TranslateProxy`) and a runtime validator for your actual JSON dictionary files — so a language file that's missing a key, has an extra key, or has the wrong shape fails loudly instead of silently falling back at runtime.
+
+Build a schema with three node builders:
+
+- `String()` — a leaf that must be a plain string.
+- `Value()` — a leaf that may be a string, a `DictionaryEntry` (`{ value, plural?, cases?, description? }`), or a nested dictionary.
+- `Namespace({...})` — a nested dictionary with a fixed, known shape.
+
+```typescript
+import { Namespace, String, TranslateSchema, Value } from 'simply-translate-angular';
+
+export const appSchema = TranslateSchema({
+  welcome_to_app: String(),
+  goodbye_world: Value(), // string, or { value, description } etc.
+  namespace: Namespace({
+    hello_user: Value(),
+  }),
+});
+
+export type AppDictionary = InferTranslateSchemaType<typeof appSchema>;
+```
+
+Validate a loaded dictionary (e.g. a parsed JSON file) against the schema:
+
+```typescript
+import { assertValidDictionary, validateDictionary } from 'simply-translate-angular';
+
+// returns a list of { path, message } issues, empty when valid
+const errors = validateDictionary(appSchema, parsedJson);
+
+// or throw with a formatted message if invalid — handy in a startup check or a build/CI script
+assertValidDictionary(appSchema, parsedJson, 'en-US.json');
+```
 
 ### Load dictionaries
 

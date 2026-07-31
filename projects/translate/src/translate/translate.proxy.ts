@@ -1,6 +1,8 @@
 import { inject, Injectable, Signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Dictionary, DictionaryEntry, TranslateDynamicProps } from 'simply-translate';
+import { InferTranslateSchemaType } from './schema/infer-schema-type';
+import { TranslateSchemaNode } from './schema/schema.types';
 import { TranslateService } from './translate.service';
 
 type TranslationFunction = {
@@ -16,13 +18,13 @@ export type ProxyDictionary<T extends Dictionary> = {
 export type DictionaryValue<T = string> = T extends string ? string : T extends Dictionary ? T : DictionaryEntry;
 
 @Injectable()
-export abstract class TranslateProxy<T extends Dictionary> {
+export abstract class TranslateProxy<S extends TranslateSchemaNode> {
   private _cache: any = {};
 
   readonly service = inject(TranslateService);
-  readonly object: ProxyDictionary<T> = this.createLazyProxy<T>([], this._cache);
+  readonly object: ProxyDictionary<InferTranslateSchemaType<S>> = this.createLazyProxy([], this._cache);
 
-  private createLazyProxy<T>(fullPath: string[], cache: any): any {
+  private createLazyProxy(fullPath: string[], cache: any): any {
     if (cache.$$proxy) {
       return cache.$$proxy;
     }

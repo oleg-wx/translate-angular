@@ -3,18 +3,18 @@ import { TestBed } from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs';
 import { TranslateRootService } from '../public_api';
 import { TranslateModule } from '../simply-translate.module';
+import { Namespace, String as Str, TranslateSchema } from '../translate/schema';
 import { TranslateProxy } from '../translate/translate.proxy';
 
-interface TestDict {
-  [key: string]: any;
-  hello_user: string;
-  namespace: {
-    hello_user: string;
-  };
-}
+const testSchema = TranslateSchema({
+  hello_user: Str(),
+  namespace: Namespace({
+    hello_user: Str(),
+  }),
+});
 
 @Injectable()
-class TestTranslateProxy extends TranslateProxy<TestDict> {}
+class TestTranslateProxy extends TranslateProxy<typeof testSchema> {}
 
 const lang = 'lang';
 const newLang = 'new';
