@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { Dictionary, DictionaryEntry, TranslateDynamicProps } from 'simply-translate';
 import type { BaseNode, NamespaceNode, SchemaShape, TranslateSchemaNode } from './schema/schema.types';
 import { TranslateService } from './translate.service';
-import { TranslateLoader, TranslateLoaderDictionaries } from './loader/translate.loader';
+import { TranslateLoader, TranslateLoaderDictionaries, TranslateLoaderSupport } from './loader/translate.loader';
 import { TranslateLoaderCache } from './loader/translate.loader-cache';
 import { HttpClient } from '@angular/common/http';
 
@@ -31,7 +31,7 @@ export type ProxyDictionary<Shape extends SchemaShape> = {
 export type DictionaryValue<T = string> = T extends string ? string : T extends Dictionary ? T : DictionaryEntry;
 
 @Injectable()
-export abstract class TranslateProxy<S extends TranslateSchemaNode> implements OnDestroy {
+export abstract class TranslateProxy<S extends TranslateSchemaNode> implements OnDestroy, Partial<TranslateLoaderSupport> {
   private _cache: any = {};
 
   readonly service = inject(TranslateService);
@@ -47,7 +47,8 @@ export abstract class TranslateProxy<S extends TranslateSchemaNode> implements O
     }
   }
 
-  protected applyLoader?(): { id: string; dictionaries: TranslateLoaderDictionaries };
+  applyLoader?(): { id: string; dictionaries: TranslateLoaderDictionaries };
+  onLoaderError?(args: { lang: string; id: string; error: any }): void;
 
   private _load(id: string, dictionaries: TranslateLoaderDictionaries) {
     this._id = id;
@@ -55,6 +56,9 @@ export abstract class TranslateProxy<S extends TranslateSchemaNode> implements O
     if (this._id) {
       this._loader = new TranslateLoader(inject(TranslateLoaderCache), inject(HttpClient), this.service, this._id, this._dictionaries);
       this._loader.init();
+      this._loader.errors$.subscribe((error) => {
+        this.onLoaderError?.(error);
+      });
     }
   }
 
@@ -124,7 +128,7 @@ export abstract class TranslateProxy<S extends TranslateSchemaNode> implements O
       return cached;
     };
   }
-  
+
   ngOnDestroy(): void {
     this._loader?.remove();
   }

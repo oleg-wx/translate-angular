@@ -1,6 +1,6 @@
 import { Component, computed, signal } from '@angular/core';
 import { TranslateRootService } from 'src/_translate.imports';
-import { TranslateProxyCommon } from '../translate.proxy';
+import { TranslateProxyCommon } from './translate.proxy';
 
 @Component({
   selector: 'app-try-proxy',

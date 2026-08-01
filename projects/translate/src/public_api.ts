@@ -4,6 +4,7 @@ export * from './translate/translate.resolver';
 export * from './translate/translate.service';
 export * from './translate/translate.proxy';
 export * from './translate/schema';
+export { TranslateLoaderSupport, TranslateLoaderDictionaries, TranslateLoaderDictionary } from './translate/loader/translate.loader';
 export * from './simply-translate.module';
 export { TranslateChildConfig } from './translate/translate.service';
 export {

@@ -133,17 +133,20 @@ describe('TranslateLoader', () => {
   });
 
   it('clears the cache on a failed load so a later attempt retries', () => {
-    const consoleError = spyOn(console, 'error');
-
     const failed = createLoader('id1', { [lang]: '/assets/id1.json' });
+    const errors: { lang: string; id: string; error: unknown }[] = [];
+    failed.errors$.subscribe((e) => errors.push(e));
+
     httpMock.expectOne('/assets/id1.json').error(new ProgressEvent('error'));
 
     expect(failed.getProcess()).toBeUndefined();
+    expect(errors.length).toBe(1);
+    expect(errors[0].lang).toBe(lang);
+    expect(errors[0].id).toBe('id1');
 
     createLoader('id1', { [lang]: '/assets/id1.json' });
     httpMock.expectOne('/assets/id1.json').flush({ hello_user: 'Hello ${user}' });
 
     expect(root.translate('hello_user', { user: 'Oleg' })).toBe('Hello Oleg');
-    expect(consoleError).toHaveBeenCalled();
   });
 });
