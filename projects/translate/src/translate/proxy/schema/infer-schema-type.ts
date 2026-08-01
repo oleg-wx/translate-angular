@@ -1,6 +1,5 @@
 import { Dictionary } from 'simply-translate';
-import { DictionaryValue } from '../translate.proxy';
-import { NamespaceNode, SchemaNode, SchemaShape, TranslateSchemaNode } from './schema.types';
+import { DictionaryValue, NamespaceNode, SchemaNode, SchemaShape, TranslateSchemaNode } from './schema.types';
 
 type InferNode<Node extends SchemaNode> = Node extends { kind: 'string' }
   ? string

@@ -2,7 +2,7 @@ import { inject, Injectable, OnDestroy, Signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Dictionary, DictionaryEntry, TranslateDynamicProps } from 'simply-translate';
 import type { BaseNode, NamespaceNode, SchemaShape, TranslateSchemaNode } from './schema/schema.types';
-import { TranslateService } from './translate.service';
+import { TranslateService } from '../translate.service';
 import { TranslateLoader, TranslateLoaderDictionaries, TranslateLoaderSupport } from './loader/translate.loader';
 import { TranslateLoaderCache } from './loader/translate.loader-cache';
 import { HttpClient } from '@angular/common/http';
@@ -27,8 +27,6 @@ export type ProxyDictionary<Shape extends SchemaShape> = {
       ? TranslationFunction<TParams>
       : never;
 };
-
-export type DictionaryValue<T = string> = T extends string ? string : T extends Dictionary ? T : DictionaryEntry;
 
 @Injectable()
 export abstract class TranslateProxy<S extends TranslateSchemaNode> implements OnDestroy, Partial<TranslateLoaderSupport> {

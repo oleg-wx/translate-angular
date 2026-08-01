@@ -24,7 +24,7 @@
   "include": [
     "src/**/*.ts",
     "src/**/*.spec.ts",
-    "projects/translate/src/translate/translate.proxy.ts"
+    "projects/translate/src/translate/proxy/translate.proxy.ts"
   ],
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

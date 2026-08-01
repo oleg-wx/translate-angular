@@ -34,7 +34,7 @@ export class TryProxyComponent {
   selectedLang = this.root.lang;
   dynamicKey = 'hello_world';
   protected t9nProxy = this.translateCommon.object.proxy;
-  countDaysValue = signal(0);
+  countDaysValue = signal<number>(undefined as unknown as number);
   countDays = this.t9nProxy.day_since_new_year.Signal(computed(() => ({ days: this.countDaysValue() })));
 
   constructor(

@@ -10,7 +10,7 @@
     "publish:prod:patch": "npm run build:prod:patch && cd dist/translate && npm publish && cd ../..",
     "build:demo:dev": "ng build --configuration development",
     "build:demo:prod": "node --max-old-space-size=8192 ./node_modules/@angular/cli/bin/ng build --configuration production --aot",
-    "start:demo": "ng serve --port 4801 --live-reload false",
+    "start:demo": "ng serve --port 4800 --live-reload false",
     "restart:all": "npm run build:library:prod && npm run start:demo",
     "test": "ng test translate",
     "e2e": "ng e2e",

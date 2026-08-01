@@ -3,15 +3,15 @@ import { TestBed } from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs';
 import { TranslateRootService } from '../public_api';
 import { TranslateModule } from '../simply-translate.module';
-import { Namespace, String as Str, TranslateSchema } from '../translate/schema';
-import { TranslateProxy } from '../translate/translate.proxy';
+import { Namespace, StringProp as Str, StringParam, TranslateSchema } from '../translate/proxy/schema';
+import { TranslateProxy } from '../translate/proxy/translate.proxy';
 
 const testSchema = TranslateSchema({
-  hello_user: Str<{ user: string }>(),
-  strict_user: Str<{ user: string }>(),
+  hello_user: Str({ params: { user: StringParam } }),
+  strict_user: Str({ params: { user: StringParam } }),
   no_params: Str(),
   namespace: Namespace({
-    hello_user: Str<{ user: string }>(),
+    hello_user: Str({ params: { user: StringParam } }),
   }),
 });
 

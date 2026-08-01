@@ -1,23 +1,23 @@
 import { Dictionary } from 'simply-translate';
-import { InferTranslateSchemaType, Namespace, String, TranslateSchema, Value, validateDictionary } from '../translate/schema';
+import { InferTranslateSchemaType, Namespace, NumberParam, StringProp, StringParam, TranslateSchema, ValueProp, validateDictionary } from '../translate/proxy/schema';
 
 const testSchema = TranslateSchema({
-  welcome_to_app: String(),
-  hello_user: String(),
+  welcome_to_app: StringProp(),
+  hello_user: StringProp({ params: { user: StringParam } }),
 
-  hello_world: Value(),
-  goodbye_world: Value(),
+  hello_world: ValueProp(),
+  goodbye_world: ValueProp(),
 
   namespace: Namespace({
-    value: String(),
-    hello_user: Value(),
-    user: Value(),
+    value: StringProp(),
+    hello_user: ValueProp({ params: { user: StringParam } }),
+    user: ValueProp(),
   }),
 
-  i_have_been_here_count: Value(),
-  day_since_new_year: Value(),
-  for_fallback: Value(),
-  same_key: Value(),
+  i_have_been_here_count: ValueProp({ params: { count: NumberParam, days: NumberParam } }),
+  day_since_new_year: ValueProp({ params: { days: NumberParam } }),
+  for_fallback: ValueProp(),
+  same_key: ValueProp(),
 });
 
 type TestDictionary = InferTranslateSchemaType<typeof testSchema>;
@@ -113,7 +113,7 @@ describe('schema', () => {
   it('recurses into a namespace and reports nested errors with a full path', () => {
     const errors = validateDictionary(testSchema, {
       ...validDictionary,
-      namespace: { value: 'Namespace translated', hello_user: 'Hello again!' },
+      namespace: { value: 'Namespace translated', hello_user: 'Hello again, ${user}!' },
     });
     expect(errors).toEqual([{ path: ['namespace', 'user'], message: 'missing key' }]);
   });
@@ -121,5 +121,31 @@ describe('schema', () => {
   it('rejects a non-object dictionary', () => {
     expect(validateDictionary(testSchema, null)).toEqual([{ path: [], message: 'expected a dictionary object, got null' }]);
     expect(validateDictionary(testSchema, 'nope')).toEqual([{ path: [], message: 'expected a dictionary object, got string' }]);
+  });
+
+  it('reports a missing placeholder for a declared param', () => {
+    const errors = validateDictionary(testSchema, { ...validDictionary, hello_user: 'Hello there' });
+    expect(errors).toEqual([{ path: ['hello_user'], message: 'missing placeholder for param "user"' }]);
+  });
+
+  it('reports an unexpected placeholder when the node declares no params', () => {
+    const errors = validateDictionary(testSchema, { ...validDictionary, welcome_to_app: 'Welcome, ${name}!' });
+    expect(errors).toEqual([{ path: ['welcome_to_app'], message: 'unexpected placeholder "name", not declared in schema params' }]);
+  });
+
+  it('accepts a required placeholder that only appears inside a plural/cases result string', () => {
+    const errors = validateDictionary(testSchema, {
+      ...validDictionary,
+      day_since_new_year: { value: 'x', plural: { count: [['=1', 'Just ${days} day']] } },
+    });
+    expect(errors).toEqual([]);
+  });
+
+  it('supports the "single" placeholder syntax via the `placeholder` option', () => {
+    const singleSchema = TranslateSchema({ greeting: StringProp({ params: { user: StringParam } }) });
+    expect(validateDictionary(singleSchema, { greeting: 'Hello {user}!' }, { placeholder: 'single' })).toEqual([]);
+    expect(validateDictionary(singleSchema, { greeting: 'Hello {user}!' })).toEqual([
+      { path: ['greeting'], message: 'missing placeholder for param "user"' },
+    ]);
   });
 });

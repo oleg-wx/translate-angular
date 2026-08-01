@@ -1,6 +1,6 @@
 import { from, Observable, shareReplay, Subject, Subscription } from 'rxjs';
 import { Dictionary } from 'simply-translate';
-import { TranslateService } from '../translate.service';
+import { TranslateService } from '../../translate.service';
 import { TranslateLoaderCache } from './translate.loader-cache';
 import { HttpClient } from '@angular/common/http';
 
