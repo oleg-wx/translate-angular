@@ -14,6 +14,7 @@ import {
 import { TranslatePipe, TranslateToPipe, TranslatePipeDetect } from './translate/translate.pipe';
 import { TranslateDirective } from './translate/translate.directive';
 import { TranslateResolve } from './translate/translate.resolver';
+import { TranslateLoaderCache } from './translate/loader/translate.loader-cache';
 
 export type AddMiddlewareFunc = (...any: any[]) => Array<MiddlewareFunc | MiddlewareStatic>;
 export type LoadDictionariesFunc = (
@@ -146,6 +147,7 @@ export class TranslateModule {
         TranslateRootService,
         TranslateService,
         TranslateResolve,
+        TranslateLoaderCache,
         {
           provide: TRANSLATE_CHILD,
           useValue: {},

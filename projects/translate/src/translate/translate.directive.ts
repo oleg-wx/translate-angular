@@ -1,17 +1,18 @@
-import { computed, Directive, effect, ElementRef, inject, input, OnDestroy, OnInit, signal } from '@angular/core';
+import { computed, Directive, effect, ElementRef, inject, input, OnInit, signal } from '@angular/core';
 import { DictionaryEntry, TranslateKey } from 'simply-translate';
 import { TranslateService } from './translate.service';
 
 @Directive({
   selector: '[translate]',
 })
-export class TranslateDirective implements OnInit, OnDestroy {
+export class TranslateDirective implements OnInit {
   private _element: ElementRef<HTMLElement> = inject(ElementRef<HTMLElement>);
   private _service: TranslateService = inject(TranslateService);
 
   private domContent = signal<string>('');
-  private observer: MutationObserver | null = null;
   private _textNode: Text | null = null;
+  private _lastOutput: string | null = null;
+  private _initialContent = '';
 
   fallback = input<DictionaryEntry | string | undefined>(undefined);
   key = input<TranslateKey | undefined>(undefined, { alias: 'translate' });
@@ -28,39 +29,36 @@ export class TranslateDirective implements OnInit, OnDestroy {
     });
 
     const translatedText = computed(() => {
+      const lang = this.to();
+      this._service.stateVersion();
+
       const activeKey = finalKey();
+      const fallbackValue = this.fallback() ?? (this._initialContent || undefined);
+
+      const values = this.values();
+
       if (!activeKey) return '';
 
-      const fallbackValue = this.fallback() ?? (this.domContent() || undefined);
-      const lang = this.to();
-
       if (lang) {
-        this._service.stateVersion();
-        return this._service.translateTo(lang, activeKey, this.values() as any, fallbackValue);
+        return this._service.translateTo(lang, activeKey, values as any, fallbackValue);
       }
 
-      return this._service.translateSignal(activeKey, this.values() as any, fallbackValue)();
+      return this._service.translate(activeKey, values as any, fallbackValue);
     });
 
     effect(() => {
       const output = translatedText();
-
-      this.observer?.disconnect();
-
       this._textNode!.data = output;
-
-      this.observer?.observe(this._element.nativeElement, {
-        childList: true,
-        characterData: true,
-        subtree: true,
-      });
+      this._lastOutput = output;
     });
   }
 
   ngAfterViewChecked(): void {
     if (this._textNode) {
       const currentText = this._textNode.data.trim();
-      if (currentText !== this.domContent()) {
+      // Skip a DOM read that's just our own last translated output reflected back —
+      // otherwise the implicit key/fallback gets contaminated with a stale translation.
+      if (currentText !== this.domContent() && currentText !== this._lastOutput) {
         this.domContent.set(currentText);
       }
     }
@@ -68,26 +66,8 @@ export class TranslateDirective implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this._textNode = this._resolveTextNode();
-    this.domContent.set(this._textNode.data.trim());
-
-    this.observer = new MutationObserver(() => {
-      const currentText = this._textNode!.data.trim();
-      if (currentText !== this.domContent()) {
-        this.domContent.set(currentText);
-      }
-    });
-
-    this.observer.observe(this._element.nativeElement, {
-      childList: true,
-      characterData: true,
-      subtree: true,
-    });
-  }
-
-  ngOnDestroy(): void {
-    if (this.observer) {
-      this.observer.disconnect();
-    }
+    this._initialContent = this._textNode.data.trim();
+    this.domContent.set(this._initialContent);
   }
 
   private _resolveTextNode(): Text {

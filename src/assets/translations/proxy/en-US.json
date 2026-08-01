@@ -1,0 +1,64 @@
+{
+  "proxy": {
+    "welcome_to_app": "[Proxy] Welcome to Translation Testing Application",
+    "hello_user": "[Proxy] Hello $&{user?namespace.user}!",
+
+    "hello_world": "[Proxy] Hello World",
+    "goodbye_world": {
+      "value": "[Proxy] Goodbye World",
+      "description": "When you want to say goodbye to the world"
+    },
+
+    "namespace": {
+      "value": "[Proxy] Namespace translated",
+      "hello_user": "[Proxy] Hello again, $&{user?namespace.user}!",
+      "user": "[Proxy] User"
+    },
+
+    "i_have_been_here_count": {
+      "value": "[Proxy] $!{count} ${days}",
+      "cases": {
+        "count": [
+          ["!!", "I've been here ${count}"],
+          ["!", "I've not been here"]
+        ]
+      },
+      "plural": {
+        "count": [
+          ["=0", "... not even once"],
+          ["=1", "once"],
+          ["=2", "twice"],
+          ["in [3,4,5]", "few times"],
+          ["<100", "many times"],
+          ["_", "$# times"]
+        ],
+        "days": [
+          ["=0", "today"],
+          ["=1", "last day"],
+          ["<4", "last few days"],
+          ["_", "for a while"]
+        ]
+      }
+    },
+
+    "day_since_new_year": {
+      "value": "[Proxy] It is ${days} New Year",
+      "plural": {
+        "days": [
+          ["=1", "one day since"],
+          ["<1", "a first day of"],
+          [">365", "more then year since that"],
+          [">360", "almost an year"],
+          [">181", "more then six months since"],
+          [">93", "more then three months since"],
+          ["_", "$# days since"]
+        ]
+      }
+    },
+
+    "for_fallback": "[Proxy] Fallback",
+
+    "same_key": "[Proxy] Same in the Root",
+    "only_root_key": "[Proxy] Only in the Root"
+  }
+}

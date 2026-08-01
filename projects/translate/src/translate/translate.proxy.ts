@@ -1,28 +1,68 @@
-import { inject, Injectable, Signal } from '@angular/core';
+import { inject, Injectable, OnDestroy, Signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Dictionary, DictionaryEntry, TranslateDynamicProps } from 'simply-translate';
+import type { BaseNode, NamespaceNode, SchemaShape, TranslateSchemaNode } from './schema/schema.types';
 import { TranslateService } from './translate.service';
+import { TranslateLoader, TranslateLoaderDictionaries, TranslateLoaderSupport } from './loader/translate.loader';
+import { TranslateLoaderCache } from './loader/translate.loader-cache';
+import { HttpClient } from '@angular/common/http';
 
-type TranslationFunction = {
-  (dynamicProps?: TranslateDynamicProps): string;
-  Signal: (dynamicProps?: TranslateDynamicProps | Signal<TranslateDynamicProps>) => Signal<string>;
-  $: (dynamicProps?: TranslateDynamicProps | Observable<TranslateDynamicProps>) => Observable<string>;
-} & string;
+type TranslationFunction<TParams = undefined> = (TParams extends undefined
+  ? {
+      (): string;
+      Signal: () => Signal<string>;
+      $: () => Observable<string>;
+    }
+  : {
+      (dynamicProps: TParams): string;
+      Signal: (dynamicProps: TParams | Signal<TParams>) => Signal<string>;
+      $: (dynamicProps: TParams | Observable<TParams>) => Observable<string>;
+    }) &
+  string;
 
-export type ProxyDictionary<T extends Dictionary> = {
-  [K in keyof T]: T[K] extends Dictionary ? ProxyDictionary<T[K]> : TranslationFunction;
+export type ProxyDictionary<Shape extends SchemaShape> = {
+  [K in keyof Shape]: Shape[K] extends NamespaceNode<infer ChildShape>
+    ? ProxyDictionary<ChildShape>
+    : Shape[K] extends BaseNode<infer TParams>
+      ? TranslationFunction<TParams>
+      : never;
 };
 
 export type DictionaryValue<T = string> = T extends string ? string : T extends Dictionary ? T : DictionaryEntry;
 
 @Injectable()
-export abstract class TranslateProxy<T extends Dictionary> {
+export abstract class TranslateProxy<S extends TranslateSchemaNode> implements OnDestroy, Partial<TranslateLoaderSupport> {
   private _cache: any = {};
 
   readonly service = inject(TranslateService);
-  readonly object: ProxyDictionary<T> = this.createLazyProxy<T>([], this._cache);
+  readonly object: ProxyDictionary<S['shape']> = this.createLazyProxy([], this._cache);
+  private _id?: string;
+  private _dictionaries?: Record<string, Dictionary | Promise<Dictionary> | Observable<Dictionary> | string>;
+  private _loader?: TranslateLoader;
 
-  private createLazyProxy<T>(fullPath: string[], cache: any): any {
+  constructor() {
+    const loaderInfo = this.applyLoader?.();
+    if (loaderInfo) {
+      this._load(loaderInfo.id, loaderInfo.dictionaries);
+    }
+  }
+
+  applyLoader?(): { id: string; dictionaries: TranslateLoaderDictionaries };
+  onLoaderError?(args: { lang: string; id: string; error: any }): void;
+
+  private _load(id: string, dictionaries: TranslateLoaderDictionaries) {
+    this._id = id;
+    this._dictionaries = dictionaries ?? {};
+    if (this._id) {
+      this._loader = new TranslateLoader(inject(TranslateLoaderCache), inject(HttpClient), this.service, this._id, this._dictionaries);
+      this._loader.init();
+      this._loader.errors$.subscribe((error) => {
+        this.onLoaderError?.(error);
+      });
+    }
+  }
+
+  private createLazyProxy(fullPath: string[], cache: any): any {
     if (cache.$$proxy) {
       return cache.$$proxy;
     }
@@ -87,5 +127,9 @@ export abstract class TranslateProxy<T extends Dictionary> {
       }
       return cached;
     };
+  }
+
+  ngOnDestroy(): void {
+    this._loader?.remove();
   }
 }

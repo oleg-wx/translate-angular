@@ -45,7 +45,6 @@ function getDictionary(lang: string, client: HttpClient) {
       loadDictionaries: ({ lang, fallbackLang }, client: HttpClient) => {
         return forkJoin([getDictionary(lang, client), getDictionary('ru-RU', client)]).pipe(
           map(([current, fallback]) => {
-            debugger;
             return { [lang]: current, 'ru-RU': fallback };
           }),
         );
