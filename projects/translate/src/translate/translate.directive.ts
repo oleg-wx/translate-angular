@@ -12,6 +12,7 @@ export class TranslateDirective implements OnInit {
   private domContent = signal<string>('');
   private _textNode: Text | null = null;
   private _lastOutput: string | null = null;
+  private _initialContent = '';
 
   fallback = input<DictionaryEntry | string | undefined>(undefined);
   key = input<TranslateKey | undefined>(undefined, { alias: 'translate' });
@@ -32,7 +33,7 @@ export class TranslateDirective implements OnInit {
       this._service.stateVersion();
 
       const activeKey = finalKey();
-      const fallbackValue = this.fallback();
+      const fallbackValue = this.fallback() ?? (this._initialContent || undefined);
 
       const values = this.values();
 
@@ -65,7 +66,8 @@ export class TranslateDirective implements OnInit {
 
   ngOnInit(): void {
     this._textNode = this._resolveTextNode();
-    this.domContent.set(this._textNode.data.trim());
+    this._initialContent = this._textNode.data.trim();
+    this.domContent.set(this._initialContent);
   }
 
   private _resolveTextNode(): Text {
