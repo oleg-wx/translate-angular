@@ -410,7 +410,36 @@ For rare cases you may use `id` parameter for Lazy loaded module, that allows ha
 
 #### Per-proxy (`applyLoader`)
 
-A `TranslateProxy` subclass can load its own per-language dictionary by overriding `applyLoader()`, without any `forChild()`/`NgModule` wrapper — each language may be a plain object, a `Promise`, an `Observable`, or a URL string fetched via `HttpClient`, and only the *current* language loads eagerly; any other language loads on demand the first time you switch to it.
+A `TranslateProxy` subclass can load its own per-language dictionary by overriding `applyLoader()`, without any `forChild()`/`NgModule` wrapper — each language may be a plain object, a `Promise`, an `Observable`, or a URL string fetched via `HttpClient`, and only the *current* language loads eagerly; any other language loads on demand the first time you switch to it. Implement the `TranslateLoaderSupport` interface to get both `applyLoader()` and the optional `onLoaderError()` hook typed:
+
+```typescript
+import { Injectable } from '@angular/core';
+import { Dictionary } from 'simply-translate';
+import { TranslateLoaderSupport, TranslateProxy } from 'simply-translate-angular';
+import type { AppSchema } from './app.schema';
+
+@Injectable({ providedIn: 'root' })
+export class AppTranslate extends TranslateProxy<AppSchema> implements TranslateLoaderSupport {
+  applyLoader() {
+    return {
+      id: 'app',
+      dictionaries: {
+        // dynamic import() — code-split into its own lazy chunk, fetched when this proxy is first constructed
+        'en-US': import('./translations/en-US.json').then((m) => m.default as unknown as Dictionary),
+        // URL string — fetched via HttpClient the first time this language becomes active
+        'ru-RU': '/assets/translations/ru-RU.json',
+      },
+    };
+  }
+
+  // optional — called whenever a language fails to load; omit it and failures stay silent
+  onLoaderError({ lang, id, error }: { lang: string; id: string; error: unknown }): void {
+    console.error(`Failed to load '${id}' (${lang})`, error);
+  }
+}
+```
+
+`onLoaderError` is the only thing the library ever surfaces on a failed load — there's no default `console.error` of its own, so implement it if you want failures to be visible at all.
 
 **Caveat:** unlike `forChild()`'s `id`-based key prefixing, `applyLoader()` does not namespace keys — every proxy's dictionary is merged flat into the same per-language dictionary. If more than one proxy uses `applyLoader()`, wrap each one's own schema in a top-level `Namespace({...})` (named after that feature) to avoid colliding with another proxy's keys.
 
