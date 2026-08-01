@@ -8,7 +8,7 @@ import { TranslateRootService } from 'src/_translate.imports';
       <option *ngFor="let lang of langs" [value]="lang">{{ lang }}</option>
     </select>
 
-    <!-- <h3>Key inferred from static DOM content</h3>
+    <h3>Key inferred from static DOM content</h3>
     <div translate>hello_world</div>
 
     <h3>Key and value from attributes</h3>
@@ -34,7 +34,7 @@ import { TranslateRootService } from 'src/_translate.imports';
     ></div>
 
     <h3>No key, no fallback, no content</h3>
-    <div translate></div> -->
+    <div translate></div>
 
     ---
     <h2>Dynamic content</h2>

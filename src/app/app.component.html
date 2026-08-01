@@ -13,8 +13,8 @@
 </nav>
 
 <header>
-  <h1 translate="welcome_to_app" e2e="welcome-to-app"></h1>
-  <h2 translate="hello_user" [values]="{ user: nameInput.value || undefined }" e2e="hello-user"></h2>
+  <h1>{{ 'welcome_to_app' | translate }}</h1>
+  <h2>{{ 'hello_user' | translate$: { user: nameInput.value } }}</h2>
 
   <div>
     <label for="nameinput">Your Name:</label>
@@ -27,4 +27,3 @@
 </article>
 
 <h6>Same key: <b [translate]="'same_key'"></b></h6>
-

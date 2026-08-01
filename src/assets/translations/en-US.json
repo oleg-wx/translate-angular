@@ -1,64 +1,63 @@
 {
-  "proxy": {
-    "welcome_to_app": "Welcome to Translation Testing Application",
-    "hello_user": "Hello $&{user?namespace.user}!",
 
-    "hello_world": "Hello World",
-    "goodbye_world": {
-      "value": "Goodbye World",
-      "description": "When you want to say goodbye to the world"
+  "welcome_to_app": "Welcome to Translation Testing Application",
+  "hello_user": "Hello $&{user?namespace.user}!",
+
+  "hello_world": "Hello World",
+  "goodbye_world": {
+    "value": "Goodbye World",
+    "description": "When you want to say goodbye to the world"
+  },
+
+  "namespace": {
+    "value": "Namespace translated",
+    "hello_user": "Hello again, $&{user?namespace.user}!",
+    "user": "User"
+  },
+
+  "i_have_been_here_count": {
+    "value": "$!{count} ${days}",
+    "cases": {
+      "count": [
+        ["!!", "I've been here ${count}"],
+        ["!", "I've not been here"]
+      ]
     },
+    "plural": {
+      "count": [
+        ["=0", "... not even once"],
+        ["=1", "once"],
+        ["=2", "twice"],
+        ["in [3,4,5]", "few times"],
+        ["<100", "many times"],
+        ["_", "$# times"]
+      ],
+      "days": [
+        ["=0", "today"],
+        ["=1", "last day"],
+        ["<4", "last few days"],
+        ["_", "for a while"]
+      ]
+    }
+  },
 
-    "namespace": {
-      "value": "Namespace translated",
-      "hello_user": "Hello again, $&{user?namespace.user}!",
-      "user": "User"
-    },
+  "day_since_new_year": {
+    "value": "It is ${days} New Year",
+    "plural": {
+      "days": [
+        ["=1", "one day since"],
+        ["<1", "a first day of"],
+        [">365", "more then year since that"],
+        [">360", "almost an year"],
+        [">181", "more then six months since"],
+        [">93", "more then three months since"],
+        ["_", "$# days since"]
+      ]
+    }
+  },
 
-    "i_have_been_here_count": {
-      "value": "$!{count} ${days}",
-      "cases": {
-        "count": [
-          ["!!", "I've been here ${count}"],
-          ["!", "I've not been here"]
-        ]
-      },
-      "plural": {
-        "count": [
-          ["=0", "... not even once"],
-          ["=1", "once"],
-          ["=2", "twice"],
-          ["in [3,4,5]", "few times"],
-          ["<100", "many times"],
-          ["_", "$# times"]
-        ],
-        "days": [
-          ["=0", "today"],
-          ["=1", "last day"],
-          ["<4", "last few days"],
-          ["_", "for a while"]
-        ]
-      }
-    },
+  "for_fallback": "Fallback",
 
-    "day_since_new_year": {
-      "value": "It is ${days} New Year",
-      "plural": {
-        "days": [
-          ["=1", "one day since"],
-          ["<1", "a first day of"],
-          [">365", "more then year since that"],
-          [">360", "almost an year"],
-          [">181", "more then six months since"],
-          [">93", "more then three months since"],
-          ["_", "$# days since"]
-        ]
-      }
-    },
-
-    "for_fallback": "Fallback",
-
-    "same_key": "Same in the Root",
-    "only_root_key": "Only in the Root"
-  }
+  "same_key": "Same in the Root",
+  "only_root_key": "Only in the Root"
 }
