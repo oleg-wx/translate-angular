@@ -2,9 +2,11 @@ export * from './translate/translate.directive';
 export * from './translate/translate.pipe';
 export * from './translate/translate.resolver';
 export * from './translate/translate.service';
-export * from './translate/translate.proxy';
-export * from './translate/schema';
-export { TranslateLoaderSupport, TranslateLoaderDictionaries, TranslateLoaderDictionary } from './translate/loader/translate.loader';
+export * from './translate/proxy/translate.proxy';
+export * from './translate/proxy/schema';
+export { TranslateLoaderSupport, TranslateLoaderDictionaries, TranslateLoaderDictionary } from './translate/proxy/loader/translate.loader';
+export { TranslateLoaderCache } from './translate/proxy/loader/translate.loader-cache';
+export { translateLoaderResolver } from './translate/proxy/loader/translate.loader.resolver';
 export * from './simply-translate.module';
 export { TranslateChildConfig } from './translate/translate.service';
 export {

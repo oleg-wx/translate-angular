@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
-import { TranslateProxy } from '../../../projects/translate/src/translate/translate.proxy';
-import type { TestDictionary } from 'src/assets/translations/proxy/_';
+import type { TestDictionary } from 'src/app/try-proxy/schema';
 import { Dictionary } from 'simply-translate';
-import { TranslateLoaderSupport } from 'projects/translate/src/translate/loader/translate.loader';
+import { TranslateLoaderSupport, TranslateProxy } from 'projects/translate/src/public_api';
 
 @Injectable({ providedIn: 'root' })
 export class TranslateProxyCommon extends TranslateProxy<TestDictionary> implements TranslateLoaderSupport {

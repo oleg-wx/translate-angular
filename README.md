@@ -6,7 +6,7 @@
 
 #### (v0.21.10)
 - `TranslateProxy<T>` now takes a schema type (`typeof yourSchema`) instead of a hand-written `Dictionary` interface — see [Use TranslateProxy](#Use-TranslateProxy).
-- added schema-first dictionary definitions (`TranslateSchema`, `String`, `Value`, `Namespace`) and runtime validation (`validateDictionary`, `assertValidDictionary`) — see [Validating dictionaries with a schema](#validating-dictionaries-with-a-schema).
+- added schema-first dictionary definitions (`TranslateSchema`, `StringProp`, `ValueProp`, `Namespace`) and runtime validation (`validateDictionary`, `assertValidDictionary`), including placeholder-usage checks against each leaf's declared `params` — see [Validating dictionaries with a schema](#validating-dictionaries-with-a-schema).
 
 #### (v0.21.0)
 
@@ -154,19 +154,21 @@ For typed, autocompleted access to your dictionary keys, describe your dictionar
 
 ```typescript
 // app.schema.ts
-import { Namespace, String, TranslateSchema, Value } from 'simply-translate-angular';
+import { Namespace, NumberParam, StringParam, StringProp, TranslateSchema, ValueProp } from 'simply-translate-angular';
 
 export const appSchema = TranslateSchema({
-  hello_user: String<{ user: string }>(),
-  about: String(),
+  hello_user: StringProp({ params: { user: StringParam } }),
+  about: StringProp(),
   namespace: Namespace({
-    hello_user: String<{ user: string }>(),
+    hello_user: StringProp({ params: { user: StringParam } }),
   }),
-  visit_count: Value<{ count: number }>(),
+  visit_count: ValueProp({ params: { count: NumberParam } }),
 });
 
 export type AppSchema = typeof appSchema;
 ```
+
+(Named `StringProp`/`ValueProp` rather than `String`/`Value` to avoid shadowing the globals of the same name.)
 
 ```typescript
 // app.translate.ts
@@ -178,14 +180,16 @@ import type { AppSchema } from './app.schema';
 export class AppTranslate extends TranslateProxy<AppSchema> {}
 ```
 
-`TranslateProxy` takes the schema itself as its type parameter — the dictionary type is inferred from it via `InferTranslateSchemaType`. `TranslateProxy` only ever needs `AppSchema`'s **type**, never `appSchema`'s runtime value, so import it with `import type`: TypeScript erases `import type` entirely at compile time, keeping the schema-building code (and everything it imports) out of your app's bundle unless something else in it also needs the actual schema object at runtime — e.g. to call `validateDictionary`. See [Validating dictionaries with a schema](#validating-dictionaries-with-a-schema) for the full builder API (`String`, `Value`, `Namespace`) and for validating your JSON dictionaries against the same schema at runtime.
+`TranslateProxy` takes the schema itself as its type parameter — the dictionary type is inferred from it via `InferTranslateSchemaType`. `TranslateProxy` only ever needs `AppSchema`'s **type**, never `appSchema`'s runtime value, so import it with `import type`: TypeScript erases `import type` entirely at compile time, keeping the schema-building code (and everything it imports) out of your app's bundle unless something else in it also needs the actual schema object at runtime — e.g. to call `validateDictionary`. See [Validating dictionaries with a schema](#validating-dictionaries-with-a-schema) for the full builder API (`StringProp`, `ValueProp`, `Namespace`) and for validating your JSON dictionaries against the same schema at runtime.
 
 Inject it like any other service and read keys off `object`. Every leaf key is callable (mirrors `translate`), and carries `.Signal()` / `.$()` companions that mirror `translateSignal` / `translateObservable`.
 
 **The params each of these accepts comes entirely from how the schema leaf was declared:**
 
-- `String()` / `Value()`, called with no type argument — the leaf takes **no dynamic props at all**. The call, `.Signal()`, and `.$()` all become zero-argument — passing anything is a compile error.
-- `String<TParams>()` / `Value<TParams>()` — the leaf **requires** exactly `TParams`, everywhere. Omitting the argument, passing `undefined`, or passing the wrong shape are all compile errors.
+- `StringProp()` / `ValueProp()`, called with no `params` — the leaf takes **no dynamic props at all**. The call, `.Signal()`, and `.$()` all become zero-argument — passing anything is a compile error.
+- `StringProp({ params: {...} })` / `ValueProp({ params: {...} })` — the leaf **requires** exactly the shape described by `params`, everywhere. Omitting the argument, passing `undefined`, or passing the wrong shape are all compile errors.
+
+`params` is a flat map of prop name → either an actual default value (e.g. `user: 'Guest'`, `count: 0`) or, when there's no natural default, the `StringParam` / `NumberParam` markers. Either way the value is only ever used to infer that prop's type (`string`/`number`) and to read its name — nothing about it is used at runtime beyond that. Params are intentionally flat (`string`/`number` only, no nesting) to match what dynamic props can actually be.
 
 ```typescript
 @Component({
@@ -205,7 +209,7 @@ export class MyComponent {
     // nested keys work the same way
     this.nsHello = translate.object.namespace.hello_user({ user: 'Oleg' });
 
-    // `about` was declared with String() (no type argument) -> zero-argument call
+    // `about` was declared with StringProp() (no params) -> zero-argument call
     this.about = translate.object.about();
     // translate.object.about({ user: 'Oleg' });    // compile error: `about` takes no params
     // translate.object.hello_user();                // compile error: `hello_user` requires { user: string }
@@ -235,18 +239,18 @@ this.helloSignal = translate.object.hello_user.Signal({ user: 'Oleg' });
 
 Build a schema with three node builders:
 
-- `String()` — a leaf that must be a plain string.
-- `Value()` — a leaf that may be a string, a `DictionaryEntry` (`{ value, plural?, cases?, description? }`), or a nested dictionary.
+- `StringProp()` — a leaf that must be a plain string.
+- `ValueProp()` — a leaf that may be a string, a `DictionaryEntry` (`{ value, plural?, cases?, description? }`), or a nested dictionary.
 - `Namespace({...})` — a nested dictionary with a fixed, known shape.
 
 ```typescript
-import { Namespace, String, TranslateSchema, Value } from 'simply-translate-angular';
+import { Namespace, StringProp, TranslateSchema, ValueProp } from 'simply-translate-angular';
 
 export const appSchema = TranslateSchema({
-  welcome_to_app: String(),
-  goodbye_world: Value(), // string, or { value, description } etc.
+  welcome_to_app: StringProp(),
+  goodbye_world: ValueProp(), // string, or { value, description } etc.
   namespace: Namespace({
-    hello_user: Value(),
+    hello_user: ValueProp(),
   }),
 });
 
@@ -272,6 +276,29 @@ const errors = validateDictionary(appSchema, parsedJson, {
   allowedMissing: { 'namespace.hello_user': 'translation pending, falls back to en-US' },
   allowedOrphans: { only_root_key: 'root-only fallback key, intentionally absent from other languages' },
 });
+```
+
+#### Placeholder validation
+
+When a leaf declares `params` (see [Use TranslateProxy](#Use-TranslateProxy)), `validateDictionary` also checks that every declared param actually shows up as a `${name}` placeholder somewhere in the translation — and flags any placeholder that *isn't* declared. "Somewhere" covers the leaf's `value` as well as every `plural`/`cases` result string, since `simply-translate` re-scans a chosen plural/case result for further placeholders:
+
+```typescript
+const appSchema = TranslateSchema({
+  hello_user: StringProp({ params: { user: StringParam } }),
+  about: StringProp(),
+});
+
+validateDictionary(appSchema, { hello_user: 'Hello there', about: 'Welcome' });
+// [{ path: ['hello_user'], message: 'missing placeholder for param "user"' }]
+
+validateDictionary(appSchema, { hello_user: 'Hello ${user}!', about: 'Welcome, ${name}!' });
+// [{ path: ['about'], message: 'unexpected placeholder "name", not declared in schema params' }]
+```
+
+If your app uses a non-default `placeholder` style (`'single'` `{user}` / `'double'` `{{user}}`, see [`TranslateModule.forRoot`](#Initialize)), pass the same value so the checks recognize the right syntax:
+
+```typescript
+validateDictionary(appSchema, parsedJson, { placeholder: 'single' });
 ```
 
 ### Load dictionaries
