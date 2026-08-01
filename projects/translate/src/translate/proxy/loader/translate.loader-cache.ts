@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Dictionary } from 'simply-translate';
 
-@Injectable()
+@Injectable({providedIn: 'root'})
 export class TranslateLoaderCache {
   private readonly cache: Partial<Record<string, Dictionary | Observable<Dictionary>>> = {};
 
