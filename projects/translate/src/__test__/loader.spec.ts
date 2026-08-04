@@ -15,8 +15,15 @@ describe('TranslateLoader', () => {
   let root: TranslateRootService;
   let httpMock: HttpTestingController;
 
-  function createLoader(id: string, dictionaries: TranslateLoaderDictionaries): TranslateLoader {
-    const loader = new TranslateLoader(TestBed.inject(TranslateLoaderCache), TestBed.inject(HttpClient), TestBed.inject(TranslateService), id, dictionaries);
+  function createLoader(id: string, dictionaries: TranslateLoaderDictionaries, preloadLangs?: string[]): TranslateLoader {
+    const loader = new TranslateLoader(
+      TestBed.inject(TranslateLoaderCache),
+      TestBed.inject(HttpClient),
+      TestBed.inject(TranslateService),
+      id,
+      dictionaries,
+      preloadLangs,
+    );
     loader.init();
     return loader;
   }
@@ -129,6 +136,105 @@ describe('TranslateLoader', () => {
     root.lang = newLang;
 
     expect(httpMock.match('/assets/id1.new.json').length).toBe(0);
+  });
+
+  it('does not load any other language on its own — only the active one', () => {
+    createLoader('id1', {
+      [lang]: { hello_user: 'Hello ${user}' },
+      [newLang]: '/assets/id1.new.json',
+    });
+
+    expect(httpMock.match('/assets/id1.new.json').length).toBe(0);
+  });
+
+  describe('preloadLangs (declared upfront via applyLoader)', () => {
+    it('loads every declared language immediately, not just the active one', () => {
+      createLoader(
+        'id1',
+        {
+          [lang]: { hello_user: 'Hello ${user}' },
+          [newLang]: { hello_user: 'Hello Preloaded ${user}' },
+        },
+        [newLang],
+      );
+
+      // `newLang` is available immediately, without switching to it.
+      expect(root.translateTo(newLang, 'hello_user', { user: 'Oleg' })).toBe('Hello Preloaded Oleg');
+    });
+
+    it('fetches every declared language over HTTP upfront, alongside the active language', () => {
+      createLoader(
+        'id1',
+        {
+          [lang]: '/assets/id1.json',
+          [newLang]: '/assets/id1.preload.json',
+        },
+        [newLang],
+      );
+
+      httpMock.expectOne('/assets/id1.json').flush({ hello_user: 'Hello ${user}' });
+      httpMock.expectOne('/assets/id1.preload.json').flush({ hello_user: 'Hello Preloaded ${user}' });
+
+      expect(root.translateTo(newLang, 'hello_user', { user: 'Oleg' })).toBe('Hello Preloaded Oleg');
+    });
+
+    it('does not try to load a declared language the proxy has no dictionary for', () => {
+      createLoader('id1', { [lang]: { hello_user: 'Hello ${user}' } }, [newLang]);
+
+      expect(httpMock.match('/assets/id1.preload.json').length).toBe(0);
+    });
+  });
+
+  describe('preloadLang() (ad hoc, called explicitly)', () => {
+    it('loads a language on demand without switching to it', () => {
+      const loader = createLoader('id1', {
+        [lang]: { hello_user: 'Hello ${user}' },
+        [newLang]: { hello_user: 'Hello Preloaded ${user}' },
+      });
+
+      loader.preloadLang(newLang);
+
+      expect(root.translateTo(newLang, 'hello_user', { user: 'Oleg' })).toBe('Hello Preloaded Oleg');
+    });
+
+    it('is a no-op for a language the loader has no dictionary for', () => {
+      const loader = createLoader('id1', { [lang]: { hello_user: 'Hello ${user}' } });
+
+      loader.preloadLang(newLang);
+
+      expect(httpMock.match('/assets/id1.new.json').length).toBe(0);
+    });
+  });
+
+  describe('ready$', () => {
+    it('emits once a language is grafted synchronously', () => {
+      // Constructed but not init()'d yet, so we can subscribe before the synchronous initial load fires.
+      const loader = new TranslateLoader(
+        TestBed.inject(TranslateLoaderCache),
+        TestBed.inject(HttpClient),
+        TestBed.inject(TranslateService),
+        'id1',
+        { [lang]: { hello_user: 'Hello ${user}' } },
+      );
+      const ready: { lang: string; id: string }[] = [];
+      loader.ready$.subscribe((e) => ready.push(e));
+
+      loader.init();
+      loader.preloadLang(newLang);
+      // Nothing to report for `newLang` — no dictionary declared for it — only the initial load fires.
+
+      expect(ready).toEqual([{ lang, id: 'id1' }]);
+    });
+
+    it('emits once an async source resolves', () => {
+      const loader = createLoader('id1', { [lang]: '/assets/id1.json' });
+      const ready: { lang: string; id: string }[] = [];
+      loader.ready$.subscribe((e) => ready.push(e));
+
+      httpMock.expectOne('/assets/id1.json').flush({ hello_user: 'Hello ${user}' });
+
+      expect(ready).toEqual([{ lang, id: 'id1' }]);
+    });
   });
 
   it('clears the cache on a failed load so a later attempt retries', () => {

@@ -269,14 +269,18 @@ const errors = validateDictionary(appSchema, parsedJson);
 assertValidDictionary(appSchema, parsedJson, 'en-US.json');
 ```
 
-Some keys are legitimately allowed to diverge between the schema and a given language file — a translation that isn't ready yet, or a root-only fallback key. Rather than silently ignoring every missing/extra key, list the exceptions explicitly (with a reason) via `allowedMissing` / `allowedOrphans`, keyed by the same dotted path shown in `SchemaValidationError.path`:
+Some keys are legitimately allowed to diverge between the schema and a given language file — a translation that isn't ready yet, or a root-only fallback key. Rather than silently ignoring every missing/extra key, list the exceptions explicitly via `allowedErrors`, keyed by the same dotted path shown in `SchemaValidationError.path`. Each entry names the kind of error tolerated there — `'missing'`, `'orphan'`, `'params'`, or `'any'` (whichever check applies) — either as a bare string, or as `{ kind, reason? }` if you want to document why:
 
 ```typescript
 const errors = validateDictionary(appSchema, parsedJson, {
-  allowedMissing: { 'namespace.hello_user': 'translation pending, falls back to en-US' },
-  allowedOrphans: { only_root_key: 'root-only fallback key, intentionally absent from other languages' },
+  allowedErrors: {
+    'namespace.hello_user': { kind: 'missing', reason: 'translation pending, falls back to en-US' },
+    only_root_key: 'orphan', // root-only fallback key, intentionally absent from other languages
+  },
 });
 ```
+
+The kind has to match the check that would otherwise fire at that path — allowing `'orphan'` on a path that's actually reported as `'missing'` still errors. `'params'` is blanket per-path: it silences every placeholder mismatch at that key (see [Placeholder validation](#placeholder-validation)), not individual param names.
 
 #### Placeholder validation
 
@@ -437,7 +441,7 @@ For rare cases you may use `id` parameter for Lazy loaded module, that allows ha
 
 #### Per-proxy (`applyLoader`)
 
-A `TranslateProxy` subclass can load its own per-language dictionary by overriding `applyLoader()`, without any `forChild()`/`NgModule` wrapper — each language may be a plain object, a `Promise`, an `Observable`, or a URL string fetched via `HttpClient`, and only the *current* language loads eagerly; any other language loads on demand the first time you switch to it. Implement the `TranslateLoaderSupport` interface to get both `applyLoader()` and the optional `onLoaderError()` hook typed:
+A `TranslateProxy` subclass can load its own per-language dictionary by overriding `applyLoader()`, without any `forChild()`/`NgModule` wrapper — each language may be a plain object, a `Promise`, an `Observable`, or a URL string fetched via `HttpClient`. Only the *active* language loads eagerly by default; anything else loads on demand the first time you switch to it — unless you ask for it upfront, either declaratively via `preloadLangs`, or on demand via `preloadLang()`. Implement the `TranslateLoaderSupport` interface to get `applyLoader()` and the optional `onLoaderReady()` / `onLoaderError()` hooks typed:
 
 ```typescript
 import { Injectable } from '@angular/core';
@@ -456,7 +460,14 @@ export class AppTranslate extends TranslateProxy<AppSchema> implements Translate
         // URL string — fetched via HttpClient the first time this language becomes active
         'ru-RU': '/assets/translations/ru-RU.json',
       },
+      // loaded immediately alongside the active language, not lazily on switch — e.g. your fallback language
+      preloadLangs: [this.service.fallbackLang].filter((lang): lang is string => !!lang),
     };
+  }
+
+  // optional — called whenever a language finishes loading successfully
+  onLoaderReady({ lang, id }: { lang: string; id: string }): void {
+    console.log(`Loaded '${id}' (${lang})`);
   }
 
   // optional — called whenever a language fails to load; omit it and failures stay silent
@@ -466,7 +477,13 @@ export class AppTranslate extends TranslateProxy<AppSchema> implements Translate
 }
 ```
 
-`onLoaderError` is the only thing the library ever surfaces on a failed load — there's no default `console.error` of its own, so implement it if you want failures to be visible at all.
+Both hooks are opt-in — there's no default `console.log`/`console.error` of its own, so implement `onLoaderError` if you want failures to be visible at all.
+
+Beyond `preloadLangs`, call the proxy's own `preloadLang(lang)` whenever you want a language warmed up ahead of time for some other reason (e.g. a language the user is likely to switch to next) — it's a no-op if the proxy has no dictionary entry for `lang`:
+
+```typescript
+appTranslate.preloadLang('de-DE');
+```
 
 **Caveat:** unlike `forChild()`'s `id`-based key prefixing, `applyLoader()` does not namespace keys — every proxy's dictionary is merged flat into the same per-language dictionary. If more than one proxy uses `applyLoader()`, wrap each one's own schema in a top-level `Namespace({...})` (named after that feature) to avoid colliding with another proxy's keys.
 

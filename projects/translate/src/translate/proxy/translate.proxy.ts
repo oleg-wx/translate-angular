@@ -41,19 +41,39 @@ export abstract class TranslateProxy<S extends TranslateSchemaNode> implements O
   constructor() {
     const loaderInfo = this.applyLoader?.();
     if (loaderInfo) {
-      this._load(loaderInfo.id, loaderInfo.dictionaries);
+      this._load(loaderInfo.id, loaderInfo.dictionaries, loaderInfo.preloadLangs);
     }
   }
 
-  applyLoader?(): { id: string; dictionaries: TranslateLoaderDictionaries };
+  applyLoader?(): { id: string; dictionaries: TranslateLoaderDictionaries; preloadLangs?: string[] };
+  onLoaderReady?(args: { lang: string; id: string }): void;
   onLoaderError?(args: { lang: string; id: string; error: any }): void;
 
-  private _load(id: string, dictionaries: TranslateLoaderDictionaries) {
+  /**
+   * Loads this proxy's dictionary for `lang` right away, without waiting for the app to switch to it.
+   * Nothing is preloaded automatically — declare known languages upfront via `applyLoader()`'s
+   * `preloadLangs`, and call this for anything ad hoc. A no-op if this proxy has no loader.
+   */
+  preloadLang(lang: string | undefined): void {
+    this._loader?.preloadLang(lang);
+  }
+
+  private _load(id: string, dictionaries: TranslateLoaderDictionaries, preloadLangs?: string[]) {
     this._id = id;
     this._dictionaries = dictionaries ?? {};
     if (this._id) {
-      this._loader = new TranslateLoader(inject(TranslateLoaderCache), inject(HttpClient), this.service, this._id, this._dictionaries);
+      this._loader = new TranslateLoader(
+        inject(TranslateLoaderCache),
+        inject(HttpClient),
+        this.service,
+        this._id,
+        this._dictionaries,
+        preloadLangs ?? [],
+      );
       this._loader.init();
+      this._loader.ready$.subscribe((info) => {
+        this.onLoaderReady?.(info);
+      });
       this._loader.errors$.subscribe((error) => {
         this.onLoaderError?.(error);
       });

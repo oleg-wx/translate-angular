@@ -1,5 +1,14 @@
 import { Dictionary } from 'simply-translate';
-import { InferTranslateSchemaType, Namespace, NumberParam, StringProp, StringParam, TranslateSchema, ValueProp, validateDictionary } from '../translate/proxy/schema';
+import {
+  InferTranslateSchemaType,
+  Namespace,
+  NumberParam,
+  StringProp,
+  StringParam,
+  TranslateSchema,
+  ValueProp,
+  validateDictionary,
+} from '../translate/proxy/schema';
 
 const testSchema = TranslateSchema({
   welcome_to_app: StringProp(),
@@ -62,29 +71,68 @@ describe('schema', () => {
     expect(validateDictionary(testSchema, rest)).toEqual([{ path: ['welcome_to_app'], message: 'missing key' }]);
   });
 
+  it('pass cases', () => {
+    const dict = {
+      ...validDictionary,
+      i_have_been_here_count: { value: '${days}', cases: { count: [['!!', 'value']] }, plural: { count: [['=0', 'value']] } },
+    };
+    expect(validateDictionary(testSchema, dict)).toEqual([]);
+  });
+
   it('reports an unexpected key not declared in the schema', () => {
     const errors = validateDictionary(testSchema, { ...validDictionary, only_root_key: 'Only in the Root' });
     expect(errors).toEqual([{ path: ['only_root_key'], message: 'unexpected key not declared in schema' }]);
   });
 
-  it('does not report a missing key allowed via allowedMissing', () => {
+  it('does not report a missing key allowed via allowedErrors', () => {
     const { welcome_to_app, ...rest } = validDictionary;
-    expect(validateDictionary(testSchema, rest, { allowedMissing: { welcome_to_app: 'not translated yet' } })).toEqual([]);
+    expect(validateDictionary(testSchema, rest, { allowedErrors: { welcome_to_app: 'missing' } })).toEqual([]);
   });
 
-  it('does not report an orphan key allowed via allowedOrphans', () => {
-    const errors = validateDictionary(testSchema, { ...validDictionary, only_root_key: 'Only in the Root' }, { allowedOrphans: { only_root_key: true } });
+  it('does not report a missing key allowed via allowedErrors with a documented reason', () => {
+    const { welcome_to_app, ...rest } = validDictionary;
+    expect(validateDictionary(testSchema, rest, { allowedErrors: { welcome_to_app: { kind: 'missing', reason: 'not translated yet' } } })).toEqual([]);
+  });
+
+  it('does not report an orphan key allowed via allowedErrors', () => {
+    const errors = validateDictionary(testSchema, { ...validDictionary, only_root_key: 'Only in the Root' }, { allowedErrors: { only_root_key: 'orphan' } });
     expect(errors).toEqual([]);
   });
 
-  it('matches allowedMissing/allowedOrphans on the full dotted path, not just the leaf key', () => {
+  it('matches allowedErrors on the full dotted path, not just the leaf key', () => {
     const { namespace, ...rest } = validDictionary;
     const errors = validateDictionary(
       testSchema,
       { ...rest, namespace: { value: namespace.value, hello_user: namespace.hello_user } },
-      { allowedMissing: { user: true } },
+      { allowedErrors: { user: 'missing' } },
     );
     expect(errors).toEqual([{ path: ['namespace', 'user'], message: 'missing key' }]);
+  });
+
+  it('suppresses the error once allowed via the full dotted path', () => {
+    const { namespace, ...rest } = validDictionary;
+    const errors = validateDictionary(
+      testSchema,
+      { ...rest, namespace: { value: namespace.value, hello_user: namespace.hello_user } },
+      { allowedErrors: { 'namespace.user': 'missing' } },
+    );
+    expect(errors).toEqual([]);
+  });
+
+  it('does not allow a path whose error kind does not match the allowed kind', () => {
+    const { welcome_to_app, ...rest } = validDictionary;
+    const errors = validateDictionary(testSchema, rest, { allowedErrors: { welcome_to_app: 'orphan' } });
+    expect(errors).toEqual([{ path: ['welcome_to_app'], message: 'missing key' }]);
+  });
+
+  it('"any" tolerates whichever check applies at that path', () => {
+    const { welcome_to_app, ...rest } = validDictionary;
+    expect(validateDictionary(testSchema, rest, { allowedErrors: { welcome_to_app: 'any' } })).toEqual([]);
+  });
+
+  it('"params" blanket-allows every placeholder mismatch at that path', () => {
+    const errors = validateDictionary(testSchema, { ...validDictionary, hello_user: 'Hello there ${extra}' }, { allowedErrors: { hello_user: 'params' } });
+    expect(errors).toEqual([]);
   });
 
   it('reports a wrong type on a strict string leaf', () => {
@@ -144,8 +192,6 @@ describe('schema', () => {
   it('supports the "single" placeholder syntax via the `placeholder` option', () => {
     const singleSchema = TranslateSchema({ greeting: StringProp({ params: { user: StringParam } }) });
     expect(validateDictionary(singleSchema, { greeting: 'Hello {user}!' }, { placeholder: 'single' })).toEqual([]);
-    expect(validateDictionary(singleSchema, { greeting: 'Hello {user}!' })).toEqual([
-      { path: ['greeting'], message: 'missing placeholder for param "user"' },
-    ]);
+    expect(validateDictionary(singleSchema, { greeting: 'Hello {user}!' })).toEqual([{ path: ['greeting'], message: 'missing placeholder for param "user"' }]);
   });
 });

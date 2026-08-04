@@ -6,16 +6,17 @@ export interface SchemaValidationError {
   message: string;
 }
 
+export type SchemaAllowedKind = 'missing' | 'orphan' | 'params' | 'any';
+
 /**
- * Dotted path (matching `SchemaValidationError.path.join('.')`) -> `true`, or a string documenting why it's allowed.
+ * Dotted path (matching `SchemaValidationError.path.join('.')`) -> the kind of error tolerated there
+ * (`'any'` tolerates whichever check applies), optionally with a `reason` documenting why.
+ * `'params'` is blanket per-path: it silences every placeholder mismatch at that path, not individual names.
  */
-export type SchemaAllowanceMap = Record<string, true | string>;
+export type SchemaAllowanceMap = Record<string, SchemaAllowedKind | { kind: SchemaAllowedKind; reason?: string }>;
 
 export interface ValidateDictionaryOptions {
-  /** Schema keys allowed to be missing from the dictionary, e.g. a translation not filled in yet for this language. */
-  allowedMissing?: SchemaAllowanceMap;
-  /** Dictionary keys allowed to be absent from the schema, e.g. a root-only fallback key. */
-  allowedOrphans?: SchemaAllowanceMap;
+  allowedErrors?: SchemaAllowanceMap;
   /** Placeholder syntax the dictionaries use — must match the `placeholder` passed to `TranslateModule.forRoot`. */
   placeholder?: PlaceholderType;
 }
@@ -57,7 +58,15 @@ function collectMapPlaceholders(map: Record<string, unknown>, pattern: RegExp, f
   }
 }
 
-function checkParams(found: Set<string>, required: readonly string[] | undefined, path: string[], errors: SchemaValidationError[]): void {
+function checkParams(
+  found: Set<string>,
+  required: readonly string[] | undefined,
+  path: string[],
+  errors: SchemaValidationError[],
+  allowedErrors: SchemaAllowanceMap | undefined,
+): void {
+  if (isAllowed(allowedErrors, path, 'params')) return;
+
   const requiredSet = new Set(required ?? []);
   for (const name of requiredSet) {
     if (!found.has(name)) {
@@ -104,7 +113,7 @@ function validateShape(
   for (const key of Object.keys(shape)) {
     const childPath = [...path, key];
     if (!(key in obj)) {
-      if (!isAllowed(options.allowedMissing, childPath)) {
+      if (!isAllowed(options.allowedErrors, childPath, 'missing')) {
         errors.push({ path: childPath, message: 'missing key' });
       }
       continue;
@@ -114,15 +123,19 @@ function validateShape(
   for (const key of Object.keys(obj)) {
     if (!(key in shape)) {
       const childPath = [...path, key];
-      if (!isAllowed(options.allowedOrphans, childPath)) {
+      if (!isAllowed(options.allowedErrors, childPath, 'orphan')) {
         errors.push({ path: childPath, message: 'unexpected key not declared in schema' });
       }
     }
   }
 }
 
-function isAllowed(allowances: SchemaAllowanceMap | undefined, path: string[]): boolean {
-  return allowances !== undefined && path.join('.') in allowances;
+function isAllowed(allowances: SchemaAllowanceMap | undefined, path: string[], kind: SchemaAllowedKind): boolean {
+  if (!allowances) return false;
+  const entry = allowances[path.join('.')];
+  if (entry === undefined) return false;
+  const allowedKind = typeof entry === 'string' ? entry : entry.kind;
+  return allowedKind === kind || allowedKind === 'any';
 }
 
 function validateNode(
@@ -139,7 +152,7 @@ function validateNode(
         errors.push({ path, message: `expected string, got ${describe(value)}` });
         return;
       }
-      checkParams(collectPlaceholders(value, pattern), node.paramNames, path, errors);
+      checkParams(collectPlaceholders(value, pattern), node.paramNames, path, errors, options.allowedErrors);
       return;
     case 'namespace':
       if (!isPlainObject(value)) {
@@ -149,7 +162,7 @@ function validateNode(
       validateShape(node.shape, value, path, errors, options, pattern);
       return;
     case 'value':
-      validateDictionaryValue(value, node.paramNames, pattern, path, errors);
+      validateDictionaryValue(value, node.paramNames, pattern, path, errors, options.allowedErrors);
       return;
   }
 }
@@ -160,18 +173,19 @@ function validateDictionaryValue(
   pattern: RegExp,
   path: string[],
   errors: SchemaValidationError[],
+  allowedErrors: SchemaAllowanceMap | undefined,
 ): void {
   if (typeof value === 'string') {
-    checkParams(collectPlaceholders(value, pattern), paramNames, path, errors);
+    checkParams(collectPlaceholders(value, pattern), paramNames, path, errors, allowedErrors);
     return;
   }
   if (isPlainObject(value)) {
     if ('value' in value) {
-      validateDictionaryEntry(value, paramNames, pattern, path, errors);
+      validateDictionaryEntry(value, paramNames, pattern, path, errors, allowedErrors);
       return;
     }
     for (const [key, child] of Object.entries(value)) {
-      validateDictionaryValue(child, paramNames, pattern, [...path, key], errors);
+      validateDictionaryValue(child, paramNames, pattern, [...path, key], errors, allowedErrors);
     }
     return;
   }
@@ -184,6 +198,7 @@ function validateDictionaryEntry(
   pattern: RegExp,
   path: string[],
   errors: SchemaValidationError[],
+  allowedErrors: SchemaAllowanceMap | undefined,
 ): void {
   const found = new Set<string>();
 
@@ -209,7 +224,7 @@ function validateDictionaryEntry(
     errors.push({ path: [...path, 'description'], message: `expected string, got ${describe(entry['description'])}` });
   }
 
-  checkParams(found, paramNames, path, errors);
+  checkParams(found, paramNames, path, errors, allowedErrors);
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {

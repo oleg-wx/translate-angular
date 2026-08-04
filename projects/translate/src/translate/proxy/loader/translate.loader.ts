@@ -8,7 +8,8 @@ export type TranslateLoaderDictionary = Dictionary | Promise<Dictionary> | Obser
 export type TranslateLoaderDictionaries = Record<string, TranslateLoaderDictionary>;
 
 export interface TranslateLoaderSupport{
-  applyLoader(): { id: string; dictionaries: TranslateLoaderDictionaries };
+  applyLoader(): { id: string; dictionaries: TranslateLoaderDictionaries; preloadLangs?: string[] };
+  onLoaderReady?(args: { lang: string; id: string }): void;
   onLoaderError?(args: { lang: string; id: string; error: any }): void;
 }
 
@@ -19,21 +20,35 @@ export class TranslateLoader {
     private service: TranslateService,
     readonly id: string,
     readonly dictionaries: TranslateLoaderDictionaries,
+    readonly preloadLangs: readonly string[] = [],
   ) {}
 
   private _subs?: Subscription;
+  readonly _readySub = new Subject<{ lang: string; id: string }>();
+  readonly ready$ = this._readySub.asObservable();
   readonly _errorsSub = new Subject<{ lang: string; id: string; error: any }>();
   readonly errors$ = this._errorsSub.asObservable();
 
   init() {
-    if (!this._subs && this.service.lang && this.dictionaries[this.service.lang]) {
-      this.importLang(this.service.lang, this.id);
+    if (!this._subs) {
+      this.preloadLang(this.service.lang);
+      this.preloadLangs.forEach((lang) => this.preloadLang(lang));
     }
 
     this._subs = this.service.languageChange$.pipe().subscribe((_lang) => {
-      const lang = _lang.lang;
-      this.importLang(lang, this.id);
+      this.preloadLang(_lang.lang);
     });
+  }
+
+  /**
+   * Loads this loader's dictionary for `lang` right away, without waiting for the app to switch to it —
+   * e.g. the fallback language, or any other language you want warmed up ahead of time. A no-op if this
+   * loader has no dictionary declared for `lang`, or it's already loaded/in-flight.
+   */
+  preloadLang(lang: string | undefined): void {
+    if (lang && this.dictionaries[lang]) {
+      this.importLang(lang, this.id);
+    }
   }
 
   remove() {
@@ -61,6 +76,7 @@ export class TranslateLoader {
     if (!(typeof dic === 'string' || dic instanceof Promise || dic instanceof Observable)) {
       this.cache.set(lang, this.id, dic);
       this.service.extendDictionary(lang, dic);
+      this._readySub.next({ lang, id });
 
       return;
     }
@@ -72,6 +88,7 @@ export class TranslateLoader {
       next: (dictionary) => {
         this.cache.set(lang, this.id, dictionary);
         this.service.extendDictionary(lang, dictionary);
+        this._readySub.next({ lang, id });
       },
       error: (error) => {
         this.cache.clear(lang, this.id);
