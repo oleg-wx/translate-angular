@@ -38,8 +38,11 @@ export type DictionaryValue<T = string> = T extends string ? string : T extends 
 // (string | number only, no nesting) to match `TranslateDynamicProps` and keep placeholder validation simple.
 export const StringParam: unique symbol = Symbol('StringParam');
 export const NumberParam: unique symbol = Symbol('NumberParam');
+// Nullable variants — same as above, but the param's inferred type also accepts `null`.
+export const StringNullableParam: unique symbol = Symbol('StringNullableParam');
+export const NumberNullableParam: unique symbol = Symbol('NumberNullableParam');
 
-export type ParamMarker = typeof StringParam | typeof NumberParam;
+export type ParamMarker = typeof StringParam | typeof NumberParam | typeof StringNullableParam | typeof NumberNullableParam;
 
 /** A param's declared value: an actual default (`string`/`number`), or a marker when there's no sensible default. */
 export type ParamValue = string | number | ParamMarker;
@@ -50,10 +53,14 @@ type InferParamValue<V extends ParamValue> = V extends typeof StringParam
   ? string
   : V extends typeof NumberParam
     ? number
-    : V extends string
-      ? string
-      : V extends number
-        ? number
-        : never;
+    : V extends typeof StringNullableParam
+      ? string | null
+      : V extends typeof NumberNullableParam
+        ? number | null
+        : V extends string
+          ? string
+          : V extends number
+            ? number
+            : never;
 
 export type InferParams<P extends Params> = { [K in keyof P]: InferParamValue<P[K]> };
