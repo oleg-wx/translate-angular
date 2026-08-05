@@ -6,16 +6,20 @@ export interface SchemaValidationError {
   message: string;
 }
 
+export type SchemaAllowedKind = 'missing' | 'orphan' | 'params' | 'any';
+
 /**
- * Dotted path (matching `SchemaValidationError.path.join('.')`) -> `true`, or a string documenting why it's allowed.
+ * Dotted path (matching `SchemaValidationError.path.join('.')`) -> the kind of error tolerated there
+ * (`'any'` tolerates whichever check applies), optionally with a `reason` documenting why.
+ * `'params'` is blanket per-path: it silences every placeholder mismatch at that path, not individual names.
+ *
+ * A key ending in `.*` (e.g. `'namespace.*'`) allows the whole namespace: it matches that path itself and
+ * everything nested under it, instead of enumerating every leaf individually.
  */
-export type SchemaAllowanceMap = Record<string, true | string>;
+export type SchemaAllowanceMap = Record<string, SchemaAllowedKind | { kind: SchemaAllowedKind; reason?: string }>;
 
 export interface ValidateDictionaryOptions {
-  /** Schema keys allowed to be missing from the dictionary, e.g. a translation not filled in yet for this language. */
-  allowedMissing?: SchemaAllowanceMap;
-  /** Dictionary keys allowed to be absent from the schema, e.g. a root-only fallback key. */
-  allowedOrphans?: SchemaAllowanceMap;
+  allowedErrors?: SchemaAllowanceMap;
   /** Placeholder syntax the dictionaries use — must match the `placeholder` passed to `TranslateModule.forRoot`. */
   placeholder?: PlaceholderType;
 }
@@ -45,9 +49,12 @@ function collectPlaceholders(value: string, pattern: RegExp): Set<string> {
 
 // `plural`/`cases` maps are keyed by prop name, each holding `[matcher, resultText, testFn?]` options —
 // `resultText` (index 1) can itself reference placeholders (including other params), since
-// `simply-translate` re-scans a chosen plural/case result for further `{...}` substitutions.
+// `simply-translate` re-scans a chosen plural/case result for further `{...}` substitutions. The map's own
+// keys count too: picking a plural/case bucket reads `dynamicProps[key]` at runtime, so that param is "used"
+// even when no branch's result text ever literally interpolates `${key}`.
 function collectMapPlaceholders(map: Record<string, unknown>, pattern: RegExp, found: Set<string>): void {
-  for (const options of Object.values(map)) {
+  for (const [key, options] of Object.entries(map)) {
+    found.add(key);
     if (!Array.isArray(options)) continue;
     for (const option of options) {
       if (Array.isArray(option) && typeof option[1] === 'string') {
@@ -57,7 +64,15 @@ function collectMapPlaceholders(map: Record<string, unknown>, pattern: RegExp, f
   }
 }
 
-function checkParams(found: Set<string>, required: readonly string[] | undefined, path: string[], errors: SchemaValidationError[]): void {
+function checkParams(
+  found: Set<string>,
+  required: readonly string[] | undefined,
+  path: string[],
+  errors: SchemaValidationError[],
+  allowedErrors: SchemaAllowanceMap | undefined,
+): void {
+  if (isAllowed(allowedErrors, path, 'params')) return;
+
   const requiredSet = new Set(required ?? []);
   for (const name of requiredSet) {
     if (!found.has(name)) {
@@ -104,7 +119,7 @@ function validateShape(
   for (const key of Object.keys(shape)) {
     const childPath = [...path, key];
     if (!(key in obj)) {
-      if (!isAllowed(options.allowedMissing, childPath)) {
+      if (!isAllowed(options.allowedErrors, childPath, 'missing')) {
         errors.push({ path: childPath, message: 'missing key' });
       }
       continue;
@@ -114,15 +129,33 @@ function validateShape(
   for (const key of Object.keys(obj)) {
     if (!(key in shape)) {
       const childPath = [...path, key];
-      if (!isAllowed(options.allowedOrphans, childPath)) {
+      if (!isAllowed(options.allowedErrors, childPath, 'orphan')) {
         errors.push({ path: childPath, message: 'unexpected key not declared in schema' });
       }
     }
   }
 }
 
-function isAllowed(allowances: SchemaAllowanceMap | undefined, path: string[]): boolean {
-  return allowances !== undefined && path.join('.') in allowances;
+function isAllowed(allowances: SchemaAllowanceMap | undefined, path: string[], kind: SchemaAllowedKind): boolean {
+  if (!allowances) return false;
+  const dotted = path.join('.');
+  const entry = allowances[dotted] ?? findNamespaceAllowance(allowances, dotted);
+  if (entry === undefined) return false;
+  const allowedKind = typeof entry === 'string' ? entry : entry.kind;
+  return allowedKind === kind || allowedKind === 'any';
+}
+
+// Matches a `'namespace.*'` entry against `dotted` itself or anything nested under it — e.g. `'namespace.*'`
+// covers both `namespace` and `namespace.child`, without listing every leaf.
+function findNamespaceAllowance(allowances: SchemaAllowanceMap, dotted: string): SchemaAllowanceMap[string] | undefined {
+  for (const key of Object.keys(allowances)) {
+    if (!key.endsWith('.*')) continue;
+    const prefix = key.slice(0, -2);
+    if (dotted === prefix || dotted.startsWith(`${prefix}.`)) {
+      return allowances[key];
+    }
+  }
+  return undefined;
 }
 
 function validateNode(
@@ -139,7 +172,7 @@ function validateNode(
         errors.push({ path, message: `expected string, got ${describe(value)}` });
         return;
       }
-      checkParams(collectPlaceholders(value, pattern), node.paramNames, path, errors);
+      checkParams(collectPlaceholders(value, pattern), node.paramNames, path, errors, options.allowedErrors);
       return;
     case 'namespace':
       if (!isPlainObject(value)) {
@@ -149,7 +182,7 @@ function validateNode(
       validateShape(node.shape, value, path, errors, options, pattern);
       return;
     case 'value':
-      validateDictionaryValue(value, node.paramNames, pattern, path, errors);
+      validateDictionaryValue(value, node.paramNames, pattern, path, errors, options.allowedErrors);
       return;
   }
 }
@@ -160,18 +193,19 @@ function validateDictionaryValue(
   pattern: RegExp,
   path: string[],
   errors: SchemaValidationError[],
+  allowedErrors: SchemaAllowanceMap | undefined,
 ): void {
   if (typeof value === 'string') {
-    checkParams(collectPlaceholders(value, pattern), paramNames, path, errors);
+    checkParams(collectPlaceholders(value, pattern), paramNames, path, errors, allowedErrors);
     return;
   }
   if (isPlainObject(value)) {
     if ('value' in value) {
-      validateDictionaryEntry(value, paramNames, pattern, path, errors);
+      validateDictionaryEntry(value, paramNames, pattern, path, errors, allowedErrors);
       return;
     }
     for (const [key, child] of Object.entries(value)) {
-      validateDictionaryValue(child, paramNames, pattern, [...path, key], errors);
+      validateDictionaryValue(child, paramNames, pattern, [...path, key], errors, allowedErrors);
     }
     return;
   }
@@ -184,6 +218,7 @@ function validateDictionaryEntry(
   pattern: RegExp,
   path: string[],
   errors: SchemaValidationError[],
+  allowedErrors: SchemaAllowanceMap | undefined,
 ): void {
   const found = new Set<string>();
 
@@ -209,7 +244,7 @@ function validateDictionaryEntry(
     errors.push({ path: [...path, 'description'], message: `expected string, got ${describe(entry['description'])}` });
   }
 
-  checkParams(found, paramNames, path, errors);
+  checkParams(found, paramNames, path, errors, allowedErrors);
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {

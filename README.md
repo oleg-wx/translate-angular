@@ -4,6 +4,11 @@
 
 ### **Breaking changes**
 
+#### (v0.21.20)
+- per-proxy loading is now configured with the `@TranslateProxyLoader` decorator instead of implementing the `TranslateLoaderSupport` interface by hand — see [Per-proxy (`TranslateProxyLoader`)](#per-proxy-loader).
+- added `onLoaderReady?(args: { lang, id })` alongside `onLoaderError?()` — fires whenever a language finishes loading successfully.
+- `TranslateProxyLoader` gained a public `preloadLangs` and `preloadFallbackLang`.
+
 #### (v0.21.10)
 - `TranslateProxy<T>` now takes a schema type (`typeof yourSchema`) instead of a hand-written `Dictionary` interface — see [Use TranslateProxy](#Use-TranslateProxy).
 - added schema-first dictionary definitions (`TranslateSchema`, `StringProp`, `ValueProp`, `Namespace`) and runtime validation (`validateDictionary`, `assertValidDictionary`), including placeholder-usage checks against each leaf's declared `params` — see [Validating dictionaries with a schema](#validating-dictionaries-with-a-schema).
@@ -225,7 +230,7 @@ Each key also stringifies to its full dotted path — `` `${translate.object.nam
 // reactive to changing values — pass a stable Signal/Observable reference
 const params = signal({ user: 'Oleg' });
 this.helloSignal = translate.object.hello_user.Signal(params);
-params.set({ user: 'Dana' }); // helloSignal updates automatically
+params.set({ user: 'John' }); // helloSignal updates automatically
 
 // static values, but still reactive to language/dictionary changes
 this.helloSignal = translate.object.hello_user.Signal({ user: 'Oleg' });
@@ -269,12 +274,24 @@ const errors = validateDictionary(appSchema, parsedJson);
 assertValidDictionary(appSchema, parsedJson, 'en-US.json');
 ```
 
-Some keys are legitimately allowed to diverge between the schema and a given language file — a translation that isn't ready yet, or a root-only fallback key. Rather than silently ignoring every missing/extra key, list the exceptions explicitly (with a reason) via `allowedMissing` / `allowedOrphans`, keyed by the same dotted path shown in `SchemaValidationError.path`:
+Some keys are legitimately allowed to diverge between the schema and a given language file — a translation that isn't ready yet, or a root-only fallback key. Rather than silently ignoring every missing/extra key, list the exceptions explicitly via `allowedErrors`, keyed by the same dotted path shown in `SchemaValidationError.path`. Each entry names the kind of error tolerated there — `'missing'`, `'orphan'`, `'params'`, or `'any'` (whichever check applies) — either as a bare string, or as `{ kind, reason? }` if you want to document why:
 
 ```typescript
 const errors = validateDictionary(appSchema, parsedJson, {
-  allowedMissing: { 'namespace.hello_user': 'translation pending, falls back to en-US' },
-  allowedOrphans: { only_root_key: 'root-only fallback key, intentionally absent from other languages' },
+  allowedErrors: {
+    'namespace.hello_user': { kind: 'missing', reason: 'translation pending, falls back to en-US' },
+    only_root_key: 'orphan', // root-only fallback key, intentionally absent from other languages
+  },
+});
+```
+
+The kind has to match the check that would otherwise fire at that path — allowing `'orphan'` on a path that's actually reported as `'missing'` still errors. `'params'` is blanket per-path: it silences every placeholder mismatch at that key (see [Placeholder validation](#placeholder-validation)), not individual param names.
+
+A key ending in `.*` allows a whole namespace at once, instead of enumerating every leaf under it — `'namespace.*'` matches `namespace` itself and everything nested under it:
+
+```typescript
+validateDictionary(appSchema, parsedJson, {
+  allowedErrors: { 'namespace.*': 'missing' }, // an entire namespace not translated yet for this language
 });
 ```
 
@@ -405,7 +422,7 @@ const routes: Routes = [{ path: '', component: DynamicComponent, resolve: { tran
 export class DynamicRoutingModule {}
 ```
 
-For rare cases you may use `id` parameter for Lazy loaded module, that allows having different values with same key.  
+**Deprecated: Under consideration of removing**: For rare cases you may use `id` parameter for Lazy loaded module, that allows having different values with same key.  
 "Lazy" values will be available only for lazy modules with that special `id`.
 
 ```javascript
@@ -435,40 +452,76 @@ For rare cases you may use `id` parameter for Lazy loaded module, that allows ha
 })
 ```
 
-#### Per-proxy (`applyLoader`)
+#### Per-proxy (`per-proxy-loader`)
 
-A `TranslateProxy` subclass can load its own per-language dictionary by overriding `applyLoader()`, without any `forChild()`/`NgModule` wrapper — each language may be a plain object, a `Promise`, an `Observable`, or a URL string fetched via `HttpClient`, and only the *current* language loads eagerly; any other language loads on demand the first time you switch to it. Implement the `TranslateLoaderSupport` interface to get both `applyLoader()` and the optional `onLoaderError()` hook typed:
+A `TranslateProxy` subclass can load its own per-language dictionary, without any `forChild()`/`NgModule` wrapper — each language may be a plain object, a `Promise`, an `Observable`, or a URL string fetched via `HttpClient`. Only the *active* language loads eagerly by default; anything else loads on demand the first time you switch to it, unless you ask for it upfront via `preloadLangs`/`preloadFallbackLang`, or on demand via `preloadLang()`. Configure it with the `@TranslateProxyLoader(config)` decorator:
 
 ```typescript
 import { Injectable } from '@angular/core';
-import { Dictionary } from 'simply-translate';
-import { TranslateLoaderSupport, TranslateProxy } from 'simply-translate-angular';
+import { TranslateProxy, TranslateProxyLoader } from 'simply-translate-angular';
 import type { AppSchema } from './app.schema';
 
 @Injectable({ providedIn: 'root' })
-export class AppTranslate extends TranslateProxy<AppSchema> implements TranslateLoaderSupport {
-  applyLoader() {
-    return {
-      id: 'app',
-      dictionaries: {
-        // dynamic import() — code-split into its own lazy chunk, fetched when this proxy is first constructed
-        'en-US': import('./translations/en-US.json').then((m) => m.default as unknown as Dictionary),
-        // URL string — fetched via HttpClient the first time this language becomes active
-        'ru-RU': '/assets/translations/ru-RU.json',
-      },
-    };
+@TranslateProxyLoader({
+  id: 'app',
+  dictionaries: {
+    // dynamic import() — code-split into its own lazy chunk, fetched when this proxy is first constructed
+    'en-US': import('./translations/en-US.json').then((m) => m.default),
+    // URL string — fetched via HttpClient the first time this language becomes active
+    'ru-RU': '/assets/translations/ru-RU.json',
+  },
+  preloadFallbackLang: true, // also load `service.fallbackLang` upfront, not just the active language
+})
+export class AppTranslate extends TranslateProxy<AppSchema> {
+  // optional — fires whenever a language finishes loading successfully
+  onLoaderReady({ lang, id }: { lang: string; id: string }): void {
+    console.log(`Loaded '${id}' (${lang})`);
   }
 
-  // optional — called whenever a language fails to load; omit it and failures stay silent
+  // optional — fires whenever a language fails to load; omit it and failures stay silent
   onLoaderError({ lang, id, error }: { lang: string; id: string; error: unknown }): void {
     console.error(`Failed to load '${id}' (${lang})`, error);
   }
 }
 ```
 
-`onLoaderError` is the only thing the library ever surfaces on a failed load — there's no default `console.error` of its own, so implement it if you want failures to be visible at all.
+Beyond `preloadLangs`/`preloadFallbackLang`, call the proxy's own `preloadLang(lang)` whenever you want a language warmed up ad hoc (e.g. a language the user is likely to switch to next) — it's a no-op if the proxy has no dictionary entry for `lang`:
 
-**Caveat:** unlike `forChild()`'s `id`-based key prefixing, `applyLoader()` does not namespace keys — every proxy's dictionary is merged flat into the same per-language dictionary. If more than one proxy uses `applyLoader()`, wrap each one's own schema in a top-level `Namespace({...})` (named after that feature) to avoid colliding with another proxy's keys.
+```typescript
+appTranslate.preloadLang('de-DE');
+```
+
+**Caveat:** unlike `forChild()`'s `id`-based key prefixing, this does not namespace keys — every proxy's dictionary is merged flat into the same per-language dictionary. If more than one proxy loads its own dictionary, wrap each one's own schema in a top-level `Namespace({...})` (named after that feature) to avoid colliding with another proxy's keys.
+
+##### Sharing a dictionary between proxies (`extends`)
+
+`@TranslateProxyLoader`'s real value beyond being declarative is `extends` — sharing one proxy's dictionary with another, so common strings (`ok`, `no`, generic labels, ...) don't have to be redeclared and reloaded by every feature that needs them:
+
+```typescript
+import { StringProp, TranslateSchema } from 'simply-translate-angular';
+
+const commonSchema = TranslateSchema({ ok: StringProp(), no: StringProp() });
+
+@Injectable({ providedIn: 'root' })
+@TranslateProxyLoader({ id: 'common', dictionaries: { 'en-US': { ok: 'Ok', no: 'No' } } })
+export class CommonTranslate extends TranslateProxy<typeof commonSchema> {}
+
+// spread the shared shape in — schemas are plain objects, so this is ordinary composition (see
+// [Validating dictionaries with a schema](#validating-dictionaries-with-a-schema)), nothing `extends`-specific
+const featureSchema = TranslateSchema({ ...commonSchema.shape, title: StringProp() });
+
+@Injectable({ providedIn: 'root' })
+@TranslateProxyLoader({
+  id: 'feature',
+  extends: [CommonTranslate],
+  dictionaries: { 'en-US': { title: 'Title' } },
+})
+export class FeatureTranslate extends TranslateProxy<typeof featureSchema & typeof commonSchema> {}
+```
+
+Injecting `FeatureTranslate` alone is enough — `feature.object.ok` and `feature.object.title` both resolve, without ever injecting `CommonTranslate` anywhere. `extends` takes **class references**, forces to actually `inject` that class.
+
+Two things `extends` does *not* do: it doesn't derive `FeatureTranslate`'s schema type for you (spread the shape in by hand, as above — `extends` only affects runtime loading), and it doesn't forward `CommonTranslate`'s own `onLoaderReady`/`onLoaderError` to `FeatureTranslate`, `extends` never constructs a `CommonTranslate` instance of its own beyond what DI already gives you.
 
 ### Pipeline
 
