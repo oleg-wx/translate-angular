@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { Dictionary, DictionaryEntry, TranslateDynamicProps } from 'simply-translate';
 import type { BaseNode, NamespaceNode, SchemaShape, TranslateSchemaNode } from './schema/schema.types';
 import { TranslateService } from '../translate.service';
-import { TranslateLoader, TranslateLoaderDictionaries, TranslateLoaderSupport } from './loader/translate.loader';
+import { APPLY_LOADER, ApplyLoaderFn, TranslateLoader, TranslateLoaderDictionaries, TranslateLoaderSupport } from './loader/translate.loader';
 import { TranslateLoaderCache } from './loader/translate.loader-cache';
 import { HttpClient } from '@angular/common/http';
 
@@ -39,13 +39,14 @@ export abstract class TranslateProxy<S extends TranslateSchemaNode> implements O
   private _loader?: TranslateLoader;
 
   constructor() {
-    const loaderInfo = this.applyLoader?.();
+    const loaderInfo = this[APPLY_LOADER]?.();
     if (loaderInfo) {
       this._load(loaderInfo.id, loaderInfo.dictionaries, loaderInfo.preloadLangs);
     }
   }
 
-  applyLoader?(): { id: string; dictionaries: TranslateLoaderDictionaries; preloadLangs?: string[] };
+  /** Set by `@TranslateProxyLoader` — not meant to be implemented directly. */
+  [APPLY_LOADER]?: ApplyLoaderFn;
   onLoaderReady?(args: { lang: string; id: string }): void;
   onLoaderError?(args: { lang: string; id: string; error: any }): void;
 

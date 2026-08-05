@@ -12,6 +12,9 @@ export type SchemaAllowedKind = 'missing' | 'orphan' | 'params' | 'any';
  * Dotted path (matching `SchemaValidationError.path.join('.')`) -> the kind of error tolerated there
  * (`'any'` tolerates whichever check applies), optionally with a `reason` documenting why.
  * `'params'` is blanket per-path: it silences every placeholder mismatch at that path, not individual names.
+ *
+ * A key ending in `.*` (e.g. `'namespace.*'`) allows the whole namespace: it matches that path itself and
+ * everything nested under it, instead of enumerating every leaf individually.
  */
 export type SchemaAllowanceMap = Record<string, SchemaAllowedKind | { kind: SchemaAllowedKind; reason?: string }>;
 
@@ -46,9 +49,12 @@ function collectPlaceholders(value: string, pattern: RegExp): Set<string> {
 
 // `plural`/`cases` maps are keyed by prop name, each holding `[matcher, resultText, testFn?]` options —
 // `resultText` (index 1) can itself reference placeholders (including other params), since
-// `simply-translate` re-scans a chosen plural/case result for further `{...}` substitutions.
+// `simply-translate` re-scans a chosen plural/case result for further `{...}` substitutions. The map's own
+// keys count too: picking a plural/case bucket reads `dynamicProps[key]` at runtime, so that param is "used"
+// even when no branch's result text ever literally interpolates `${key}`.
 function collectMapPlaceholders(map: Record<string, unknown>, pattern: RegExp, found: Set<string>): void {
-  for (const options of Object.values(map)) {
+  for (const [key, options] of Object.entries(map)) {
+    found.add(key);
     if (!Array.isArray(options)) continue;
     for (const option of options) {
       if (Array.isArray(option) && typeof option[1] === 'string') {
@@ -132,10 +138,24 @@ function validateShape(
 
 function isAllowed(allowances: SchemaAllowanceMap | undefined, path: string[], kind: SchemaAllowedKind): boolean {
   if (!allowances) return false;
-  const entry = allowances[path.join('.')];
+  const dotted = path.join('.');
+  const entry = allowances[dotted] ?? findNamespaceAllowance(allowances, dotted);
   if (entry === undefined) return false;
   const allowedKind = typeof entry === 'string' ? entry : entry.kind;
   return allowedKind === kind || allowedKind === 'any';
+}
+
+// Matches a `'namespace.*'` entry against `dotted` itself or anything nested under it — e.g. `'namespace.*'`
+// covers both `namespace` and `namespace.child`, without listing every leaf.
+function findNamespaceAllowance(allowances: SchemaAllowanceMap, dotted: string): SchemaAllowanceMap[string] | undefined {
+  for (const key of Object.keys(allowances)) {
+    if (!key.endsWith('.*')) continue;
+    const prefix = key.slice(0, -2);
+    if (dotted === prefix || dotted.startsWith(`${prefix}.`)) {
+      return allowances[key];
+    }
+  }
+  return undefined;
 }
 
 function validateNode(

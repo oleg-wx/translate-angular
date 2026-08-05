@@ -184,9 +184,53 @@ describe('schema', () => {
   it('accepts a required placeholder that only appears inside a plural/cases result string', () => {
     const errors = validateDictionary(testSchema, {
       ...validDictionary,
-      day_since_new_year: { value: 'x', plural: { count: [['=1', 'Just ${days} day']] } },
+      day_since_new_year: { value: 'x', plural: { days: [['=1', 'Just ${days} day']] } },
     });
     expect(errors).toEqual([]);
+  });
+
+  it('credits a plural/cases map key itself as a used param, even with no literal placeholder', () => {
+    // `cases`/`plural` are keyed by the param name they switch on — selecting a bucket "uses" that param
+    // just as reading `dynamicProps[name]` does, even if no branch's result text ever interpolates it.
+    const errors = validateDictionary(testSchema, {
+      ...validDictionary,
+      i_have_been_here_count: { value: '${days}', cases: { count: [['!!', 'value']] }, plural: { count: [['=0', 'value']] } },
+    });
+    expect(errors).toEqual([]);
+  });
+
+  it('still flags a plural/cases map key that is not declared in schema params', () => {
+    const errors = validateDictionary(testSchema, {
+      ...validDictionary,
+      day_since_new_year: { value: '${days}', plural: { days: [['=1', 'value']], bogus: [['=1', 'value']] } },
+    });
+    expect(errors).toEqual([{ path: ['day_since_new_year'], message: 'unexpected placeholder "bogus", not declared in schema params' }]);
+  });
+
+  it('allows every error under a namespace via a "namespace.*" wildcard', () => {
+    const errors = validateDictionary(testSchema, { ...validDictionary, namespace: {} }, { allowedErrors: { 'namespace.*': 'missing' } });
+    expect(errors).toEqual([]);
+  });
+
+  it('a namespace wildcard also covers the namespace key itself, not just its children', () => {
+    const { namespace, ...rest } = validDictionary;
+    const errors = validateDictionary(testSchema, rest, { allowedErrors: { 'namespace.*': 'missing' } });
+    expect(errors).toEqual([]);
+  });
+
+  it('a namespace wildcard does not leak outside that namespace', () => {
+    const { namespace, welcome_to_app, ...rest } = validDictionary;
+    const errors = validateDictionary(testSchema, { ...rest, namespace: {} }, { allowedErrors: { 'namespace.*': 'missing' } });
+    expect(errors).toEqual([{ path: ['welcome_to_app'], message: 'missing key' }]);
+  });
+
+  it('a namespace wildcard still requires the matching kind', () => {
+    const errors = validateDictionary(testSchema, { ...validDictionary, namespace: {} }, { allowedErrors: { 'namespace.*': 'orphan' } });
+    expect(errors).toEqual([
+      { path: ['namespace', 'value'], message: 'missing key' },
+      { path: ['namespace', 'hello_user'], message: 'missing key' },
+      { path: ['namespace', 'user'], message: 'missing key' },
+    ]);
   });
 
   it('supports the "single" placeholder syntax via the `placeholder` option', () => {

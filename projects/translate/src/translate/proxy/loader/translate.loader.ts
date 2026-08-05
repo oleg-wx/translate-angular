@@ -8,10 +8,18 @@ export type TranslateLoaderDictionary = Dictionary | Promise<Dictionary> | Obser
 export type TranslateLoaderDictionaries = Record<string, TranslateLoaderDictionary>;
 
 export interface TranslateLoaderSupport{
-  applyLoader(): { id: string; dictionaries: TranslateLoaderDictionaries; preloadLangs?: string[] };
   onLoaderReady?(args: { lang: string; id: string }): void;
   onLoaderError?(args: { lang: string; id: string; error: any }): void;
 }
+
+/**
+ * Internal protocol between `TranslateProxy` and `@TranslateProxyLoader`. Not part of the public API —
+ * loader config is only ever meant to be supplied via the decorator, so this is a symbol rather than a
+ * named method, to keep it off `TranslateLoaderSupport` and out of reach of anything but the decorator.
+ */
+export const APPLY_LOADER: unique symbol = Symbol('applyLoader');
+
+export type ApplyLoaderFn = () => { id: string; dictionaries: TranslateLoaderDictionaries; preloadLangs?: string[] };
 
 export class TranslateLoader {
   constructor(
