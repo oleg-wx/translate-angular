@@ -1,6 +1,6 @@
 import { Component, computed, signal } from '@angular/core';
 import { TranslateRootService } from 'src/_translate.imports';
-import { TranslateProxyCommon, TranslateProxyMore } from './translate.proxy';
+import { TranslateProxyCommon, TranslateProxyMore, TranslateProxyOneMore } from './translate.proxy';
 
 @Component({
   selector: 'app-try-proxy',
@@ -31,6 +31,7 @@ import { TranslateProxyCommon, TranslateProxyMore } from './translate.proxy';
 
     <h5>More Proxy</h5>
     <div>{{ t9nProxy.more.more_translate.Signal()() }}</div>
+    <div>{{ t9nOneMoreProxy.one_more.one_more_translate.Signal()() }}</div>
   `,
 })
 export class TryProxyComponent {
@@ -38,12 +39,14 @@ export class TryProxyComponent {
   selectedLang = this.root.lang;
   dynamicKey = 'hello_world';
   protected t9nProxy = this.translateMore.object.proxy;
+  protected t9nOneMoreProxy = this.translateOneMore.object.proxy;
   countDaysValue = signal<number>(undefined as unknown as number);
   countDays = this.t9nProxy.day_since_new_year.Signal(computed(() => ({ days: this.countDaysValue() })));
 
   constructor(
     private root: TranslateRootService,
     private translateMore: TranslateProxyMore,
+    private translateOneMore: TranslateProxyOneMore,
   ) {
     setInterval(() => {
       this.countDaysValue.set(this.countDaysValue() + 1);

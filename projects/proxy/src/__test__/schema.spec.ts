@@ -8,7 +8,7 @@ import {
   TranslateSchema,
   ValueProp,
   validateDictionary,
-} from '../translate/proxy/schema';
+} from '../lib/schema';
 
 const testSchema = TranslateSchema({
   welcome_to_app: StringProp(),
@@ -86,16 +86,16 @@ describe('schema', () => {
 
   it('does not report a missing key allowed via allowedErrors', () => {
     const { welcome_to_app, ...rest } = validDictionary;
-    expect(validateDictionary(testSchema, rest, { allowedErrors: { welcome_to_app: 'missing' } })).toEqual([]);
+    expect(validateDictionary(testSchema, rest, { knownIssues: { welcome_to_app: 'missing' } })).toEqual([]);
   });
 
   it('does not report a missing key allowed via allowedErrors with a documented reason', () => {
     const { welcome_to_app, ...rest } = validDictionary;
-    expect(validateDictionary(testSchema, rest, { allowedErrors: { welcome_to_app: { kind: 'missing', reason: 'not translated yet' } } })).toEqual([]);
+    expect(validateDictionary(testSchema, rest, { knownIssues: { welcome_to_app: { kind: 'missing', reason: 'not translated yet' } } })).toEqual([]);
   });
 
   it('does not report an orphan key allowed via allowedErrors', () => {
-    const errors = validateDictionary(testSchema, { ...validDictionary, only_root_key: 'Only in the Root' }, { allowedErrors: { only_root_key: 'orphan' } });
+    const errors = validateDictionary(testSchema, { ...validDictionary, only_root_key: 'Only in the Root' }, { knownIssues: { only_root_key: 'orphan' } });
     expect(errors).toEqual([]);
   });
 
@@ -104,7 +104,7 @@ describe('schema', () => {
     const errors = validateDictionary(
       testSchema,
       { ...rest, namespace: { value: namespace.value, hello_user: namespace.hello_user } },
-      { allowedErrors: { user: 'missing' } },
+      { knownIssues: { user: 'missing' } },
     );
     expect(errors).toEqual([{ path: ['namespace', 'user'], message: 'missing key' }]);
   });
@@ -114,24 +114,24 @@ describe('schema', () => {
     const errors = validateDictionary(
       testSchema,
       { ...rest, namespace: { value: namespace.value, hello_user: namespace.hello_user } },
-      { allowedErrors: { 'namespace.user': 'missing' } },
+      { knownIssues: { 'namespace.user': 'missing' } },
     );
     expect(errors).toEqual([]);
   });
 
   it('does not allow a path whose error kind does not match the allowed kind', () => {
     const { welcome_to_app, ...rest } = validDictionary;
-    const errors = validateDictionary(testSchema, rest, { allowedErrors: { welcome_to_app: 'orphan' } });
+    const errors = validateDictionary(testSchema, rest, { knownIssues: { welcome_to_app: 'orphan' } });
     expect(errors).toEqual([{ path: ['welcome_to_app'], message: 'missing key' }]);
   });
 
   it('"any" tolerates whichever check applies at that path', () => {
     const { welcome_to_app, ...rest } = validDictionary;
-    expect(validateDictionary(testSchema, rest, { allowedErrors: { welcome_to_app: 'any' } })).toEqual([]);
+    expect(validateDictionary(testSchema, rest, { knownIssues: { welcome_to_app: 'any' } })).toEqual([]);
   });
 
   it('"params" blanket-allows every placeholder mismatch at that path', () => {
-    const errors = validateDictionary(testSchema, { ...validDictionary, hello_user: 'Hello there ${extra}' }, { allowedErrors: { hello_user: 'params' } });
+    const errors = validateDictionary(testSchema, { ...validDictionary, hello_user: 'Hello there ${extra}' }, { knownIssues: { hello_user: 'params' } });
     expect(errors).toEqual([]);
   });
 
@@ -208,24 +208,24 @@ describe('schema', () => {
   });
 
   it('allows every error under a namespace via a "namespace.*" wildcard', () => {
-    const errors = validateDictionary(testSchema, { ...validDictionary, namespace: {} }, { allowedErrors: { 'namespace.*': 'missing' } });
+    const errors = validateDictionary(testSchema, { ...validDictionary, namespace: {} }, { knownIssues: { 'namespace.*': 'missing' } });
     expect(errors).toEqual([]);
   });
 
   it('a namespace wildcard also covers the namespace key itself, not just its children', () => {
     const { namespace, ...rest } = validDictionary;
-    const errors = validateDictionary(testSchema, rest, { allowedErrors: { 'namespace.*': 'missing' } });
+    const errors = validateDictionary(testSchema, rest, { knownIssues: { 'namespace.*': 'missing' } });
     expect(errors).toEqual([]);
   });
 
   it('a namespace wildcard does not leak outside that namespace', () => {
     const { namespace, welcome_to_app, ...rest } = validDictionary;
-    const errors = validateDictionary(testSchema, { ...rest, namespace: {} }, { allowedErrors: { 'namespace.*': 'missing' } });
+    const errors = validateDictionary(testSchema, { ...rest, namespace: {} }, { knownIssues: { 'namespace.*': 'missing' } });
     expect(errors).toEqual([{ path: ['welcome_to_app'], message: 'missing key' }]);
   });
 
   it('a namespace wildcard still requires the matching kind', () => {
-    const errors = validateDictionary(testSchema, { ...validDictionary, namespace: {} }, { allowedErrors: { 'namespace.*': 'orphan' } });
+    const errors = validateDictionary(testSchema, { ...validDictionary, namespace: {} }, { knownIssues: { 'namespace.*': 'orphan' } });
     expect(errors).toEqual([
       { path: ['namespace', 'value'], message: 'missing key' },
       { path: ['namespace', 'hello_user'], message: 'missing key' },

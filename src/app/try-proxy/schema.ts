@@ -1,4 +1,4 @@
-import { Namespace, NumberParam, NumberNullableParam, StringProp, StringParam, TranslateSchema, ValueProp } from 'projects/translate/src/public_api';
+import { Namespace, NumberParam, NumberNullableParam, StringProp, StringParam, TranslateSchema, ValueProp } from 'simply-translate-angular-proxy';
 
 export const commonDictionary = TranslateSchema({
   proxy: Namespace({
@@ -35,3 +35,13 @@ export const moreDictionary = TranslateSchema({
 });
 
 export type MoreDictionary = typeof moreDictionary;
+
+export const oneMoreDictionary = TranslateSchema({
+  proxy: Namespace({
+    one_more: Namespace({
+      one_more_translate: StringProp(),
+    }),
+  }),
+});
+
+export type OneMoreDictionary = typeof oneMoreDictionary;

@@ -1,10 +1,11 @@
 {
   "name": "simply-translate-angular",
-  "version": "0.21.20",
+  "version": "1.0.0",
+  "description": "Angular bindings for simply-translate: module, directive, pipes and service",
   "type": "module",
   "dependencies": {
     "tslib": "^2.4.0",
-    "simply-translate": "0.20.0",
+    "simply-translate": "^1.0.0",
     "rxjs": "^7.5.7"
   },
   "peerDependencies": {
@@ -20,7 +21,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/oleg-wx/translate-angular.git"
+    "url": "git+https://github.com/oleg-wx/translate-angular.git",
+    "directory": "projects/translate"
   },
   "keywords": [
     "angular",
@@ -35,5 +37,5 @@
   "bugs": {
     "url": "https://github.com/oleg-wx/translate-angular/issues"
   },
-  "homepage": "https://github.com/oleg-wx/translate-angular#readme"
+  "homepage": "https://github.com/oleg-wx/translate-angular/tree/master/projects/translate#readme"
 }

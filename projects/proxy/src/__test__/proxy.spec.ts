@@ -1,10 +1,9 @@
 import { Injectable, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs';
-import { TranslateRootService } from '../public_api';
-import { TranslateModule } from '../simply-translate.module';
-import { Namespace, StringProp as Str, StringParam, TranslateSchema } from '../translate/proxy/schema';
-import { TranslateProxy } from '../translate/proxy/translate.proxy';
+import { TranslateModule, TranslateRootService } from 'simply-translate-angular';
+import { Namespace, StringProp as Str, StringParam, TranslateSchema } from '../lib/schema';
+import { TranslateProxy } from '../lib/translate.proxy';
 
 const testSchema = TranslateSchema({
   hello_user: Str({ params: { user: StringParam } }),

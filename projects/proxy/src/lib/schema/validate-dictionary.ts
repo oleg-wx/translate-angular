@@ -19,7 +19,7 @@ export type SchemaAllowedKind = 'missing' | 'orphan' | 'params' | 'any';
 export type SchemaAllowanceMap = Record<string, SchemaAllowedKind | { kind: SchemaAllowedKind; reason?: string }>;
 
 export interface ValidateDictionaryOptions {
-  allowedErrors?: SchemaAllowanceMap;
+  knownIssues?: SchemaAllowanceMap;
   /** Placeholder syntax the dictionaries use — must match the `placeholder` passed to `TranslateModule.forRoot`. */
   placeholder?: PlaceholderType;
 }
@@ -119,7 +119,7 @@ function validateShape(
   for (const key of Object.keys(shape)) {
     const childPath = [...path, key];
     if (!(key in obj)) {
-      if (!isAllowed(options.allowedErrors, childPath, 'missing')) {
+      if (!isAllowed(options.knownIssues, childPath, 'missing')) {
         errors.push({ path: childPath, message: 'missing key' });
       }
       continue;
@@ -129,7 +129,7 @@ function validateShape(
   for (const key of Object.keys(obj)) {
     if (!(key in shape)) {
       const childPath = [...path, key];
-      if (!isAllowed(options.allowedErrors, childPath, 'orphan')) {
+      if (!isAllowed(options.knownIssues, childPath, 'orphan')) {
         errors.push({ path: childPath, message: 'unexpected key not declared in schema' });
       }
     }
@@ -172,7 +172,7 @@ function validateNode(
         errors.push({ path, message: `expected string, got ${describe(value)}` });
         return;
       }
-      checkParams(collectPlaceholders(value, pattern), node.paramNames, path, errors, options.allowedErrors);
+      checkParams(collectPlaceholders(value, pattern), node.paramNames, path, errors, options.knownIssues);
       return;
     case 'namespace':
       if (!isPlainObject(value)) {
@@ -182,7 +182,7 @@ function validateNode(
       validateShape(node.shape, value, path, errors, options, pattern);
       return;
     case 'value':
-      validateDictionaryValue(value, node.paramNames, pattern, path, errors, options.allowedErrors);
+      validateDictionaryValue(value, node.paramNames, pattern, path, errors, options.knownIssues);
       return;
   }
 }

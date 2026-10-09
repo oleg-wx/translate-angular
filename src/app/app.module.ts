@@ -13,6 +13,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { ComponentsModule } from './components/components.module';
 import { TryProxyComponent } from './try-proxy/try-proxy.component';
+import { TranslateProxyMore, TranslateProxyOneMore } from './try-proxy/translate.proxy';
 
 function getDictionary(lang: string, client: HttpClient) {
   return client.get<Dictionary>(`/assets/translations/${lang}.json`);
@@ -53,7 +54,7 @@ function getDictionary(lang: string, client: HttpClient) {
     AppRoutingModule,
     MoreModule,
   ],
-  providers: [],
+  providers: [TranslateProxyMore, TranslateProxyOneMore],
   exports: [],
   bootstrap: [AppComponent],
 })
