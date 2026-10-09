@@ -1,0 +1,98 @@
+projects/proxy/README.md
+  s_be1155688d1f1e::t_382e5a527496d3 3,5-14,21,40,56,80,84,86-87,117,133,185,191,198-199,227,232,253,256-269
+  s_be1155688d1f1e::t_069077e42f9bf8 1-2,4,15-20,22-39,41-55,57-79,81-83,85,88-116,118-132,134-164,166-179,181-184,186-190,192-197,200-226,228-231,233-252,254-255
+  s_be1155688d1f1e::t_cdba4567580d1d 165,180
+.github/workflows/test.yml
+  s_be1155688d1f1e::t_34cfd8fda29a73 1-32
+projects/translate/package.json
+  s_be1155688d1f1e::t_7fa3fe81c6a282 3-4,8,24-25,40
+projects/proxy/package.json
+  s_be1155688d1f1e::t_7fa3fe81c6a282 1-37
+projects/translate/README.md
+  s_be1155688d1f1e::t_069077e42f9bf8 39,41,128,255-285
+  s_be1155688d1f1e::t_f22ccc413ee9fa 1-38,40,42-47,49-127,129-254,286-287
+  s_be1155688d1f1e::t_cdba4567580d1d 48
+projects/translate/src/translate/translate.service.ts
+  s_be1155688d1f1e::t_703050e10ad351 12
+projects/proxy/CHANGELOG.md
+  s_be1155688d1f1e::t_08cca1f8b214fd 12
+  s_be1155688d1f1e::t_0145b64498ae5c 7
+  s_be1155688d1f1e::t_762fe70b33f6ac 1-6,8-11
+README.md
+  s_be1155688d1f1e::t_a1db599245007b 3,5,7,9,11,13,15,17-21,24,26,28-29,31
+package.json
+  s_be1155688d1f1e::t_7fa3fe81c6a282 4,7-12,16-21,38,45,49-50,55,62
+projects/translate/CHANGELOG.md
+  s_be1155688d1f1e::t_788d883a0a6896 1-13,15-30,33-82
+  s_be1155688d1f1e::t_56b9200e4bd35d 14
+  s_be1155688d1f1e::t_3cc0b8efa74e4e 31-32
+.github/workflows/publish.yml
+  s_be1155688d1f1e::t_65006c21cf153a 1-68
+src/app/try-proxy/schema.ts
+  h_b041fb82ba1455 1,38-47
+package-lock.json
+  s_be1155688d1f1e::t_1778a3ee5be060 25,32,42,48-49,56,575,770,785,795,826,843,850,890,907,917,927,1059,1083,1097,1214,1224,1234,1259,1273,2453,2468,2487,2504,3046,3057,3084,5563,5797,5832,5940,5953,6202,6247,6588,7363,7994,8244,8344,9047,9088,9103,9134,9534,9558,9591,9722-9739,9755-9779,10935,11006,11632,11637,12419,12432,12770,13347-13350,14026,14216,14342,15605,15928,16044,16054-16055,16061,16084,16096-16097,16102-16103,16133,16146,16154-16155,16160-16161,16255-16256,16272,16282,16359-16360,16365-16366,16371-16372,16389,16399,17130,17141,17156,17171,17427,17436-17437,17458,19328,19466-19467,19489-19490,19575,19584,19739-19740,19764,19984,20495-20496,20934,21089-21090,21152,21623,21642-21643,21650,21670-21671,21927-21928,21945-21946,21968-21969,22113-22145,22880-22881,22938-22939,23345-23346,23349-23350,23840,23848-23849,24088-24089,24478-24480,24930,25058-25059,25129
+angular.json
+  s_be1155688d1f1e::t_958dcba8b79100 185-217,219-221
+projects/proxy/ng-package.json
+  s_be1155688d1f1e::t_abb035e15b06f9 1-12
+projects/proxy/src/__test__/core/tick.ts
+  s_be1155688d1f1e::t_e872d6f1340774 1-7
+projects/proxy/src/__test__/loader.spec.ts
+  s_be1155688d1f1e::t_0a96c15568a7f3 5-6,8
+projects/proxy/src/__test__/proxy-loader-decorator.spec.ts
+  s_be1155688d1f1e::t_75314b968fdd99 4-7
+projects/proxy/src/__test__/proxy.spec.ts
+  s_be1155688d1f1e::t_899d754e8b1477 4-6
+projects/proxy/src/__test__/schema.spec.ts
+  s_be1155688d1f1e::t_330bc76a4f0c93 11,89,94,98,107,117,124,130,134,211,217,223,228
+projects/proxy/src/lib/loader/translate.loader.resolver.ts
+  s_be1155688d1f1e::t_43e97b04d51f13 4
+projects/proxy/src/lib/loader/translate.loader.ts
+  s_be1155688d1f1e::t_b5692fcd361799 3
+projects/proxy/src/lib/schema/validate-dictionary.ts
+  s_be1155688d1f1e::t_c34465093da907 22,122,132,175,185
+projects/proxy/src/lib/translate.proxy.ts
+  s_be1155688d1f1e::t_4d63e865607fdc 5
+projects/proxy/src/public-api.ts
+  s_be1155688d1f1e::t_2467dcc101364f 1-10
+projects/proxy/tsconfig.lib.json
+  s_be1155688d1f1e::t_cd4e29c658cfce 1-14
+projects/proxy/tsconfig.lib.prod.json
+  s_be1155688d1f1e::t_1f5ed170b7807c 1-10
+projects/proxy/tsconfig.spec.json
+  s_be1155688d1f1e::t_c265f1b19331b0 1-14
+src/app/app.module.ts
+  s_be1155688d1f1e::t_e62914f288dc04 16,57
+src/app/try-proxy/translate.proxy.ts
+  s_be1155688d1f1e::t_a3ab67d47985b0 3-4,22,37-52
+src/app/try-proxy/try-proxy.component.ts
+  s_be1155688d1f1e::t_f68f78f0d9788f 3,34,42,49
+src/assets/translations/proxy/one-more/en-US.json
+  s_be1155688d1f1e::t_14788174d8f9ed 1-5
+src/assets/translations/proxy/one-more/ru-RU.json
+  s_be1155688d1f1e::t_60dd827261f142 1-3
+tsconfig.json
+  s_be1155688d1f1e::t_28c94f403897ea 17-19,28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "02b3f40adf9252abbbd50fb0bd53e560cf36df2a",
+  "prompts": {},
+  "humans": {
+    "h_b041fb82ba1455": {
+      "author": "Oleg <oleg.wx@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_be1155688d1f1e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "dfe840e2-1162-475d-bc3d-65e9caa671d4",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Oleg <oleg.wx@gmail.com>"
+    }
+  }
+}
