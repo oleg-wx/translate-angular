@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { Dictionary } from 'simply-translate';
 import { TranslateLoaderCache } from './translate.loader-cache';
-import { TranslateService } from '../../translate.service';
+import { TranslateService } from 'simply-translate-angular';
 import { ResolveFn } from '@angular/router';
 
 export const translateLoaderResolver: (id: string) => ResolveFn<Dictionary | undefined> = (id: string) => {

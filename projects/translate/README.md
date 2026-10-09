@@ -1,0 +1,287 @@
+# Simply Translate for Angular
+
+[Simplest translations](https://www.npmjs.com/package/simply-translate) for Angular 17+.
+
+Upgrading or looking for what changed? See the [changelog](CHANGELOG.md). Version 1.0.0 moved `TranslateProxy` and the schema API to [simply-translate-angular-proxy](https://www.npmjs.com/package/simply-translate-angular-proxy).
+
+### Basics
+
+Please use the [simply-translate](https://www.npmjs.com/package/simply-translate) docs to learn more about **basic interaction**, dictionaries, pluralization, cases, etc.
+
+### Install
+
+```javascript
+npm i simply-translate-angular
+```
+
+### Import
+
+```javascript
+import { TranslateModule, TranslateService } from 'simply-translate-angular';
+```
+
+### Initialize
+
+```javascript
+@NgModule({
+  declarations: [AppComponent, AppViewComponent],
+  imports: [
+    TranslateModule.forRoot({
+      // dependencies
+      deps: [ HttpClient ],
+      // language
+      lang: window.navigator.language,
+      fallbackLang: 'ru-RU',
+      // static dictionaries
+      dictionaries:{'ru-RU':{...}},
+      // load dictionaries
+      loadDictionaries:({lang, fallbackLang}, client /* params are injected dependencies received in the same order as they are in deps */) =>{
+        return of({
+          [lang]: {...}
+        });
+      }
+    })
+  ]
+});
+```
+
+See [Load dictionaries](#load-dictionaries)
+
+### Use Directive
+
+```html
+<!-- use default language -->
+<h2 translate="hello_user" [values]="{ user: 'Oleg' }"></h2>
+<!-- use other language -->
+<h2 translate="hello_user" to="ru-RU" [values]="{ user: 'Oleg' }"></h2>
+<!-- use fallback -->
+<h2 translate="hello_user_not_there" [values]="{ user: 'Oleg' }">Hello user</h2>
+<!-- please note that Angular uses curly-braces in templates as well, so prefer use fallback property or replace open bracket with $&#123; (and optionally closing bracket with &#125;) -->
+<h2 translate="hello_user_not_there" [values]="{ user: 'Oleg' }">Hello $&#123;user&#125;</h2>
+<!-- preferred fallback property usage -->
+<h2 translate="hello_user_not_there" [values]="{ user: 'Oleg' }" fallback="Hello ${user}"></h2>
+```
+
+Directives always react to language and dictionary changes automatically, no opt-in needed.
+
+Directive can also use inner text as an implicit key (when `translate` has no value) or as a fallback (when the key is missing) — but only for **static** content; dynamic keys must be bound with `[translate]="expr"`.
+
+### Use Pipe
+
+```html
+<h2>{{ 'hello_user' | translate: { user: 'Oleg' } }}</h2>
+<!-- use other language -->
+<h2>{{ 'hello_user' | translateTo: 'ru-RU': { user: 'Oleg' } }}</h2>
+<!-- use fallback -->
+<h2>{{ 'hello_user_not_there' | translate: { user: 'Oleg' } : 'Hello ${user}'}}</h2>
+```
+
+Pipes are pure by default. However, if the application changes language at runtime you may use the special _impure_ pipe (it has internal dirty check), it will detect language changes as well as pipe parameters.
+
+```html
+<h2>{{ 'hello_user' | translate$: { user: 'Oleg' } }}</h2>
+```
+
+`translate$` is cheap despite being impure: it caches the last language/dictionary version and arguments, and only re-translates when one of them actually changed — not on every check.
+
+### Use Service
+
+```javascript
+@Component({
+    ...
+})
+export class Component {
+    hello: string;
+    constructor(private translate: TranslateService) {
+        // use default language
+        this.hello = translate.translate('hello_user', { user: 'Oleg' })
+        // use other language
+        this.hello = translate.translateTo('ru-RU','hello_user', { user: 'Oleg' })
+        // use fallback
+        this.hello = translate.translateTo('ru-RU','hello_user_not_there', { user: 'Oleg' }, 'Hello ${user}')
+    }
+}
+```
+
+`translateSignal` and `translateObservable` mirror `translate`'s overloads but return a reactive `Signal<string>` / `Observable<string>` that updates on language or dictionary changes.
+
+```javascript
+helloSignal = translate.translateSignal('hello_user', { user: 'Oleg' }); // Signal<string>
+hello$ = translate.translateObservable('hello_user', { user: 'Oleg' }); // Observable<string>
+```
+
+To change language, use `TranslateRootService` `lang` property.   
+To detect changes, subscribe to `languageChange$` and `dictionaryChange$`. **Note** that `loadDictionaries` method in root settings will not execute when language changes.
+
+```javascript
+export class Component {
+  constructor(private rootTranslate: TranslateRootService){
+    rootTranslate.lang = "en-US";
+  }
+}
+```
+
+### Load dictionaries
+
+#### Root
+
+Default `forRoot` initialization can use injected dependencies (e.g. `HttpClient`) to fetch dictionaries. `loadDictionaries` returns an `Observable` of a set of dictionaries
+
+```javascript
+export function getDictionary(lang: string, client: HttpClient) {
+  return client.get<Dictionary>(`/assets/translations/${lang}.json`);
+}
+
+@NgModule({
+  declarations: [...],
+  imports: [
+    ...
+    TranslateModule.forRoot({
+      // dependencies
+      deps: [ HttpClient ],
+
+      lang: window.navigator.language,
+      fallbackLang: 'ru-RU',
+
+      loadDictionaries: ({lang, fallbackLang}, client /* params are injected dependencies received in the same order as they are in deps */) => {
+
+        const res$ = forkJoin([getDictionary(lang, client), getDictionary(fallbackLang, client)]).pipe(
+          map((res) => {
+            return { [lang]: res[0], [fallbackLang]: res[1] };
+          })
+        );
+
+        return res$;
+      },
+    }),
+    ...
+  ],
+  ...
+})
+```
+
+**Note**: it might be useful to **hardcode** _fallback dictionary_ in .ts or .json file then import it rather than use http client to download.
+
+```javascript
+import fallback from './translations/fallback';
+
+TranslateModule.forRoot({
+  lang: window.navigator.language,
+  fallbackLang: env.fallbackLanguage,
+  dictionaries: {
+    [env.fallbackLanguage]: fallback,
+  },
+
+  deps: [ HttpClient ],
+  loadDictionaries: ({lang, fallbackLang}, client /* params are injected dependencies received in the same order as they are in deps */) => {
+    return getDictionary(lang, client).pipe(
+      map((res) => {
+        return { [lang]: res };
+      })
+    );
+  },
+}),
+```
+
+**Note**: For more complex scenarios you may use initialization functions with `APP_INITIALIZER` token.
+
+#### Lazy
+
+Loading dictionaries for **Lazy** modules is a bit trickier.
+
+```javascript
+export function getDictionary(lang: string, client: HttpClient) {
+  return client.get<Dictionary>(`/assets/translations/${lang}.dynamic.json`);
+}
+
+@NgModule({
+  declarations: [...],
+  imports: [
+    TranslateModule.forChild({
+      deps: [ HttpClient ],
+      loadDictionaries: ({ lang, fallbackLang }, client: HttpClient) => {
+        return forkJoin([getDictionary(lang, client), getDictionary(fallbackLang, client)]).pipe(
+          map((res) => {
+            return { [lang]: res[0], [fallbackLang]: res[1] };
+          })
+        );
+      },
+    }),
+    ...
+  ]
+})
+export class DynamicModule {}
+```
+
+Then you **must** add the `TranslateResolve` resolver to every lazy route to wait for child `loadDictionaries`.
+
+```javascript
+const routes: Routes = [{ path: '', component: DynamicComponent, resolve: { translate: TranslateResolve } }];
+
+@NgModule({
+  imports: [RouterModule.forChild(routes)],
+  exports: [RouterModule],
+})
+export class DynamicRoutingModule {}
+```
+
+**Deprecated: Under consideration of removing**: For rare cases you may use `id` parameter for Lazy loaded module, that allows having different values with same key.  
+"Lazy" values will be available only for lazy modules with that special `id`.
+
+```javascript
+@NgModule({
+  declarations: [...],
+  imports: [
+    TranslateModule.forRoot({
+      dictionaries: {'en-US':{
+        'key':'Value'
+      }}
+    })
+  ]
+})
+```
+
+```javascript
+@NgModule({
+  declarations: [...],
+  imports: [
+    TranslateModule.forChild({
+      id: 'lazy',
+      dictionaries: {'en-US':{
+        'key':'Value for Lazy'
+      }}
+    })
+  ]
+})
+```
+
+### Pipeline
+
+**(experimental)**
+Currently it is possible to **append** middleware to the end of translation pipeline.  
+It might be specially useful to add **logger** or rarely fine-tune translation result.
+
+```javascript
+@NgModule({
+  declarations: [...],
+  imports: [
+    ...
+    TranslateModule.forRoot({
+      // dependencies
+      deps: [ Logger ],
+      addMiddleware: (logger /* injected dependencies */) => {
+       return [
+          ({params, result}, next) => {
+            if (result.fallingBack) {
+              logger.log(`Translation absent [${params.lang}:${params.key}]`);
+            }
+            next();
+          },
+        ];
+      },
+    }),
+    ...
+  ],
+  ...
+})
+```

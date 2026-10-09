@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import type { CommonDictionary, MoreDictionary } from 'src/app/try-proxy/schema';
 import { Dictionary } from 'simply-translate';
-import { TranslateProxy, TranslateProxyLoader } from 'projects/translate/src/public_api';
+import { TranslateProxy, TranslateProxyLoader } from 'simply-translate-angular-proxy';
+import type { CommonDictionary, MoreDictionary, OneMoreDictionary } from 'src/app/try-proxy/schema';
 
 @Injectable({ providedIn: 'root' })
 @TranslateProxyLoader({
@@ -19,7 +19,7 @@ export class TranslateProxyCommon extends TranslateProxy<CommonDictionary> {
   }
 }
 
-@Injectable({ providedIn: 'root' })
+@Injectable()
 @TranslateProxyLoader({
   id: 'more',
   extends: [TranslateProxyCommon],
@@ -32,5 +32,21 @@ export class TranslateProxyCommon extends TranslateProxy<CommonDictionary> {
 export class TranslateProxyMore extends TranslateProxy<MoreDictionary & CommonDictionary> {
   onLoaderError(args: { lang: string; id: string; error: any }): void {
     console.error(`Error loading more translations for lang=${args.lang}, id=${args.id}`, args.error);
+  }
+}
+
+@Injectable()
+@TranslateProxyLoader({
+  id: 'one-more',
+  extends: [TranslateProxyCommon],
+  dictionaries: {
+    'en-US': '/assets/translations/proxy/one-more/en-US.json',
+    'ru-RU': '/assets/translations/proxy/one-more/ru-RU.json',
+  },
+  preloadFallbackLang: false,
+})
+export class TranslateProxyOneMore extends TranslateProxy<OneMoreDictionary & CommonDictionary> {
+  onLoaderError(args: { lang: string; id: string; error: any }): void {
+    console.error(`Error loading one more translations for lang=${args.lang}, id=${args.id}`, args.error);
   }
 }

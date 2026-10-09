@@ -1,0 +1,37 @@
+{
+  "name": "simply-translate-angular-proxy",
+  "version": "1.0.0",
+  "description": "Typed, schema-validated dictionary access for simply-translate-angular",
+  "peerDependencies": {
+    "@angular/common": ">=17.0.0",
+    "@angular/core": ">=17.0.0",
+    "@angular/compiler": ">=17.0.0",
+    "typescript": ">=5.0.0"
+  },
+  "dependencies": {
+    "tslib": ">=2.3.0",
+    "simply-translate": "^1.0.0",
+    "simply-translate-angular": "^1.0.0",
+    "rxjs": ">=7.5.7"
+  },
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oleg-wx/translate-angular.git",
+    "directory": "projects/proxy"
+  },
+  "keywords": [
+    "angular",
+    "translate",
+    "translation",
+    "i18n",
+    "typed",
+    "schema"
+  ],
+  "author": "Oleg Volovikov",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/oleg-wx/translate-angular/issues"
+  },
+  "homepage": "https://github.com/oleg-wx/translate-angular/tree/master/projects/proxy#readme"
+}

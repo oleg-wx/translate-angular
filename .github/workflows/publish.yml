@@ -1,0 +1,68 @@
+name: Publish
+
+# Publishes one package to npm when a GitHub Release is published. The release tag picks the
+# package and must be `<package name>@<version>`:
+#   simply-translate-angular@1.0.0        -> projects/translate
+#   simply-translate-angular-proxy@1.0.0  -> projects/proxy
+# Authentication uses npm trusted publishing (OIDC), so no npm token is stored in the repo. The
+# trusted publisher configured on npmjs.com for each package must name this repository and this
+# workflow file (publish.yml).
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node 24 bundles npm 11.5.1+, the minimum for trusted publishing.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      - name: Resolve package from release tag
+        id: pkg
+        run: |
+          NAME="${GITHUB_REF_NAME%@*}"
+          TAG_VERSION="${GITHUB_REF_NAME##*@}"
+          case "$NAME" in
+            simply-translate-angular) PROJECT=translate ;;
+            simply-translate-angular-proxy) PROJECT=proxy ;;
+            *)
+              echo "::error::Release tag $GITHUB_REF_NAME must be simply-translate-angular@<version> or simply-translate-angular-proxy@<version>"
+              exit 1
+              ;;
+          esac
+          VERSION="$(node -p "require('./projects/$PROJECT/package.json').version")"
+          if [ "$TAG_VERSION" != "$VERSION" ]; then
+            echo "::error::Release tag $GITHUB_REF_NAME does not match projects/$PROJECT/package.json version $VERSION"
+            exit 1
+          fi
+          echo "project=$PROJECT" >> "$GITHUB_OUTPUT"
+
+      - run: npm ci
+
+      - run: npm test
+
+      # Builds both: the proxy compiles against dist/translate.
+      - run: npm run build:prod
+
+      # Pre-releases (e.g. 1.1.0-beta.1) go to the "next" dist-tag so they don't become "latest".
+      - name: Publish
+        working-directory: dist/${{ steps.pkg.outputs.project }}
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          if [[ "$VERSION" == *-* ]]; then
+            npm publish --tag next
+          else
+            npm publish
+          fi

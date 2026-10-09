@@ -2,11 +2,10 @@ import { HttpClient } from '@angular/common/http';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { Subject } from 'rxjs';
-import { TranslateLoaderCache, TranslateLoaderDictionaries, TranslateRootService } from '../public_api';
-import { TranslateModule } from '../simply-translate.module';
-import { TranslateService } from '../translate/translate.service';
+import { TranslateModule, TranslateRootService, TranslateService } from 'simply-translate-angular';
+import { TranslateLoaderCache } from '../lib/loader/translate.loader-cache';
 import { tick } from './core/tick';
-import { TranslateLoader } from '../translate/proxy/loader/translate.loader';
+import { TranslateLoader, TranslateLoaderDictionaries } from '../lib/loader/translate.loader';
 
 const lang = 'lang';
 const newLang = 'new';

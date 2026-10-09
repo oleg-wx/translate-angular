@@ -9,8 +9,8 @@ import {
   TranslateKey,
   Dictionaries,
   DictionaryEntry,
+  FallbackWithDifferentLanguageMiddleware,
 } from 'simply-translate';
-import { FallbackWithDifferentLanguageMiddleware } from 'simply-translate/es/core/middleware/fallback-with-different-language-middleware';
 
 export interface DefaultTranslateConfig {
   lang?: string;
