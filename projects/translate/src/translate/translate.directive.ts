@@ -55,7 +55,7 @@ export class TranslateDirective implements OnInit, AfterViewChecked {
         return;
       }
       const output = translated ?? '';
-      this._textNode!.data = output;
+      this._rnd.setValue(this._textNode!, output);
       this._lastOutput = output;
     });
   }
@@ -84,9 +84,9 @@ export class TranslateDirective implements OnInit, AfterViewChecked {
       return el.firstChild as Text;
     }
 
-    el.textContent = '';
+    this._rnd.setProperty(el, 'textContent', '');
     const textNode = this._rnd.createText('');
-    el.appendChild(textNode);
+    this._rnd.appendChild(el, textNode);
     return textNode;
   }
 }

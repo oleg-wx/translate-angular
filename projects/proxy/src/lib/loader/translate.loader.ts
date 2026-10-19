@@ -47,6 +47,9 @@ export class TranslateLoader {
       return;
     }
 
+    // Loaded here rather than through languageChange$ replaying it: an error thrown inside a subscriber
+    // (e.g. a URL dictionary without provideHttpClient()) would be reported asynchronously instead of failing
+    // the proxy's construction. The replay is then a no-op, as the language is already imported.
     this.preloadLang(this.service.lang);
     this.preloadLangs.forEach((lang) => this.preloadLang(lang));
 

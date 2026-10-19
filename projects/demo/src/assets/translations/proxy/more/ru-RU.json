@@ -1,3 +1,5 @@
 {
-  "more": { "more_translate": "Больше перевести" }
+  "proxy": {
+    "more": { "more_translate": "Больше перевести" }
+  }
 }
