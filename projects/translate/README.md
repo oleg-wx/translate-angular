@@ -1,8 +1,12 @@
 # Simply Translate for Angular
 
-[Simplest translations](https://www.npmjs.com/package/simply-translate) for Angular 19+.
+[Simplest translations](https://www.npmjs.com/package/simply-translate) for Angular 20+.
 
 Upgrading or looking for what changed? See the [changelog](CHANGELOG.md). Version 1.0.0 moved `TranslateProxy` and the schema API to [simply-translate-angular-proxy](https://www.npmjs.com/package/simply-translate-angular-proxy).
+
+### Versions
+
+The major version follows Angular's: 20.x needs Angular 20 or later. For Angular 19 use 19.x, and for Angular 17–18 use 1.x.
 
 ### Basics
 
@@ -36,7 +40,7 @@ bootstrapApplication(AppComponent, {
       // static dictionaries, available before anything loads
       withDictionaries({ 'ru-RU': { ... } }),
       // dictionaries fetched while the application initializes
-      withLoader(({ lang, fallbackLang }) => inject(HttpClient).get<Dictionaries>(`/assets/translations/${lang}.json`).pipe(
+      withLoader(({ lang }) => inject(HttpClient).get<Dictionary>(`/assets/translations/${lang}.json`).pipe(
         map((dictionary) => ({ [lang]: dictionary })),
       )),
     ),
@@ -48,7 +52,6 @@ Declarables are standalone. Add `TRANSLATE_IMPORTS` (the three pipes and the dir
 
 ```javascript
 @Component({
-  standalone: true,
   imports: [TRANSLATE_IMPORTS],
   template: `<h2 translate="hello_user" [values]="{ user: 'Oleg' }"></h2>`,
 })

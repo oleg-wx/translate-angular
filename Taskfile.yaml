@@ -3,11 +3,21 @@ version: '3'
 dotenv: ['.env']
 
 tasks:
-  build:
+  build:translate:
     desc: Build simply-translate-angular + proxy
     cmds:
       - npm run build:translate
+
+  build:proxy:
+    desc: Build simply-translate-angular-proxy
+    cmds:
       - npm run build:proxy
+      
+  build:
+    desc: Build simply-translate-angular + proxy
+    cmds:
+      - task: build:translate
+      - task: build:proxy
 
   publish:translate:
     desc: Build, then publish simply-translate-angular to npm
@@ -24,3 +34,12 @@ tasks:
         msg: 'NPM_TOKEN is not set: add it to .env or the environment'
     cmds:
       - npm run publish:proxy
+
+  publish:
+    desc: Build, then publish both simply-translate-angular and simply-translate-angular-proxy to npm
+    preconditions:
+      - sh: '[ -n "$NPM_TOKEN" ]'
+        msg: 'NPM_TOKEN is not set: add it to .env or the environment'
+    cmds:
+      - task: publish:translate
+      - task: publish:proxy

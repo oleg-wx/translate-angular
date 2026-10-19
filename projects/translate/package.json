@@ -1,6 +1,6 @@
 {
   "name": "simply-translate-angular",
-  "version": "19.0.0",
+  "version": "20.0.0",
   "description": "Angular bindings for simply-translate: module, directive, pipes and service",
   "type": "module",
   "dependencies": {
@@ -9,10 +9,10 @@
     "rxjs": "^7.5.7"
   },
   "peerDependencies": {
-    "@angular/common": ">=19.0.0",
-    "@angular/core": ">=19.0.0",
-    "@angular/compiler": ">=19.0.0",
-    "typescript": ">=5.5.0"
+    "@angular/common": ">=20.0.0",
+    "@angular/core": ">=20.0.0",
+    "@angular/compiler": ">=20.0.0",
+    "typescript": ">=5.8.0"
   },
   "peerDependenciesMeta": {
     "typescript": {
