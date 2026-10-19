@@ -1,0 +1,21 @@
+projects/translate/.npmrc
+  s_485483feaa33fc::t_69cf69884cbf57 1
+.npmrc
+  s_485483feaa33fc::t_69cf69884cbf57 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "50ad70271827ea22681bce2d1d06f390a85ae2fd",
+  "prompts": {},
+  "sessions": {
+    "s_485483feaa33fc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "14e1147e-00d1-47bb-b758-378a02ed19da",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Oleg <oleg.wx@gmail.com>"
+    }
+  }
+}
