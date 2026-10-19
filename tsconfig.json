@@ -17,7 +17,7 @@
     "strict": false,
     // without `baseUrl`, paths are relative to this file
     "paths": {
-      "src/*": ["./src/*"],
+      "src/*": ["./projects/demo/src/*"],
       "simply-translate-angular-proxy": ["./dist/proxy"],
       "simply-translate-angular": ["./dist/translate"]
     },
@@ -27,8 +27,10 @@
     "resolveJsonModule": true,
     "esModuleInterop": true
   },
-  // projects/** too, so the editor checks the library sources with these options instead of the defaults
-  "include": ["src/**/*.ts", "projects/**/*.ts"],
+  // covers the demo app and both libraries, so the editor checks their sources with these options instead of the defaults
+  "include": ["projects/**/*.ts"],
+  // the e2e specs have their own tsconfig (protractor types)
+  "exclude": ["projects/demo/e2e/**"],
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,
