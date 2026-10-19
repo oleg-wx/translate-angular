@@ -1,8 +1,12 @@
 import { ChangeDetectorRef, Component } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { TRANSLATE_IMPORTS } from 'src/_translate.imports';
+import { VisitsComponent } from './visits/visits.component';
 
 @Component({
+  standalone: true,
+  imports: [TRANSLATE_IMPORTS, VisitsComponent],
   selector: 'translate-to',
   templateUrl: './translate-to.component.html',
 })

@@ -1,6 +1,7 @@
 import { Directive, ElementRef, Input, OnChanges, SimpleChanges } from '@angular/core';
 
 @Directive({
+  standalone: true,
   selector: '[appTitle]',
 })
 export class TitleDirective implements OnChanges {

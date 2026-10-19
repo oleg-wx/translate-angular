@@ -1,9 +1,13 @@
+import { NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { TRANSLATE_IMPORTS } from 'src/_translate.imports';
 import { StorageService } from '../../storage.service';
 
 @Component({
+  standalone: true,
+  imports: [TRANSLATE_IMPORTS, NgIf],
   selector: 'app-visits',
   template: `
     <div>

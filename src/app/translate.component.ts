@@ -1,8 +1,12 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { TRANSLATE_IMPORTS } from 'src/_translate.imports';
+import { VisitsComponent } from './components/visits/visits.component';
 
 @Component({
+  standalone: true,
+  imports: [TRANSLATE_IMPORTS, VisitsComponent],
   selector: 'app-view',
   template: `
     <div id="view_pipe">
@@ -37,8 +41,8 @@ import { Subscription } from 'rxjs';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppTranslateComponent implements OnInit, OnDestroy {
-  user?: string;
-  subs: Subscription;
+  user?: string | null;
+  subs?: Subscription;
   constructor(private route: ActivatedRoute, private changeDetector: ChangeDetectorRef) {}
 
   ngOnInit(): void {
@@ -52,3 +56,4 @@ export class AppTranslateComponent implements OnInit, OnDestroy {
     this.subs?.unsubscribe();
   }
 }
+

@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { FormsModule } from '@angular/forms';
+import { TRANSLATE_IMPORTS } from 'src/_translate.imports';
 
 @Component({
+  standalone: true,
+  imports: [TRANSLATE_IMPORTS, FormsModule],
   selector: 'app-more',
   template: ` <hr />
     <div>

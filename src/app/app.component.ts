@@ -1,7 +1,10 @@
 import { Component, ViewEncapsulation } from '@angular/core';
-import { FormControl } from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { TRANSLATE_IMPORTS } from 'src/_translate.imports';
 @Component({
+  standalone: true,
+  imports: [TRANSLATE_IMPORTS, ReactiveFormsModule, RouterOutlet, RouterLink, RouterLinkActive],
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],

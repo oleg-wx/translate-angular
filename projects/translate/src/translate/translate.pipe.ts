@@ -2,7 +2,7 @@ import { inject, Pipe, PipeTransform } from '@angular/core';
 import { DictionaryEntry, TranslateDynamicProps, TranslateKey } from 'simply-translate';
 import { TranslateService } from './translate.service';
 
-@Pipe({ name: 'translate' })
+@Pipe({ name: 'translate', standalone: true })
 export class TranslatePipe implements PipeTransform {
   constructor(protected service: TranslateService) {}
 
@@ -15,7 +15,7 @@ export class TranslatePipe implements PipeTransform {
   }
 }
 
-@Pipe({ name: 'translateTo' })
+@Pipe({ name: 'translateTo', standalone: true })
 export class TranslateToPipe implements PipeTransform {
   constructor(protected service: TranslateService) {}
 
@@ -28,7 +28,7 @@ export class TranslateToPipe implements PipeTransform {
   }
 }
 
-@Pipe({ name: 'translate$', pure: false })
+@Pipe({ name: 'translate$', pure: false, standalone: true })
 export class TranslatePipeDetect extends TranslatePipe {
   private _latestValue: string = '';
   private _key!: TranslateKey;

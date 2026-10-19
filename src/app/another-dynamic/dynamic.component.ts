@@ -1,5 +1,9 @@
 import { Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { TRANSLATE_IMPORTS } from 'src/_translate.imports';
 @Component({
+  standalone: true,
+  imports: [TRANSLATE_IMPORTS, RouterLink],
   styles: [
     `
       :host {

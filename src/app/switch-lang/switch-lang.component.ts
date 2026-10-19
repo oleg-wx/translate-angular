@@ -1,8 +1,12 @@
+import { AsyncPipe, NgFor } from '@angular/common';
 import { Component } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
-import { TranslateRootService, TranslateService } from 'src/_translate.imports';
+import { TRANSLATE_IMPORTS, TranslateRootService, TranslateService } from 'src/_translate.imports';
 
 @Component({
+  standalone: true,
+  imports: [TRANSLATE_IMPORTS, FormsModule, NgFor, AsyncPipe],
   selector: 'app-switch-lang',
   template: `
     <select [ngModel]="selectedLang" (ngModelChange)="onLangChange($event)">

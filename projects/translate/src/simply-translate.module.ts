@@ -1,19 +1,17 @@
-import { APP_INITIALIZER, ModuleWithProviders, NgModule } from '@angular/core';
+import { inject, ModuleWithProviders, NgModule, ProviderToken } from '@angular/core';
 import { combineLatest, lastValueFrom, Observable, of, tap } from 'rxjs';
 import { Dictionaries, Dictionary, MiddlewareFunc, MiddlewareStatic } from 'simply-translate';
+import { DefaultTranslateConfig, TranslateRootService, TranslateService, TranslateServiceBase } from './translate/translate.service';
 import {
-  DefaultTranslateConfig,
-  DEFAULT_CONFIG,
-  ROOT_DICTIONARIES,
-  TranslateChildConfig,
-  TranslateRootService,
-  TranslateService,
-  TranslateServiceBase,
-  TRANSLATE_CHILD,
-} from './translate/translate.service';
-import { TranslatePipe, TranslateToPipe, TranslatePipeDetect } from './translate/translate.pipe';
-import { TranslateDirective } from './translate/translate.directive';
-import { TranslateResolve } from './translate/translate.resolver';
+  TranslateFeature,
+  TranslateLoaderFn,
+  withConfig,
+  withDictionaries,
+  withLoader,
+  withMiddleware,
+  withOnReady,
+} from './providers/translate.features';
+import { provideTranslateChild, TRANSLATE_IMPORTS, ɵtranslateRootProviders } from './providers/translate.providers';
 
 export type AddMiddlewareFunc = (...any: any[]) => Array<MiddlewareFunc | MiddlewareStatic>;
 export type LoadDictionariesFunc = (
@@ -23,6 +21,10 @@ export type LoadDictionariesFunc = (
 export type InitFunc = (service: TranslateRootService, ...any: any[]) => Observable<Record<string, Dictionary>>;
 export type FinalFunc<TService extends TranslateServiceBase> = (service: TService, ...any: any[]) => void;
 
+/**
+ * @deprecated Kept for `TranslateModule.forRoot()`. `provideTranslate()` installs its own
+ * `APP_INITIALIZER`; see `translateInitializerFactory`.
+ */
 export function factory(
   config: DefaultTranslateConfig,
   init?: InitFunc,
@@ -32,7 +34,7 @@ export function factory(
 ) {
   const ret = (service: TranslateRootService, ...deps: any[]) => {
     return function () {
-      let customMiddleware: ReturnType<AddMiddlewareFunc>|undefined = undefined;
+      let customMiddleware: ReturnType<AddMiddlewareFunc> | undefined = undefined;
       if (addMiddlewareFn) {
         customMiddleware = addMiddlewareFn(...deps);
         // add some middlewares
@@ -94,6 +96,7 @@ export function factory(
   return ret;
 }
 
+/** @deprecated `provideTranslate()` guards itself; see the error it throws when used twice. */
 export function forRootGuard(service: TranslateService): any {
   if (service) {
     throw new Error(`TranslateModule.forRoot() called twice. Lazy loaded modules should use TranslateModule.forChild() instead.`);
@@ -108,6 +111,7 @@ export interface Config extends DefaultTranslateConfig {
   final?: FinalFunc<TranslateRootService>;
   addMiddleware?: AddMiddlewareFunc;
   dictionaries?: Dictionaries;
+  /** @deprecated Take dependencies with `inject()` inside the callbacks instead. */
   deps?: any[];
 }
 
@@ -116,72 +120,69 @@ export interface ChildConfig {
   extend?: (service: TranslateService, ...any) => Observable<Record<string, Dictionary>>;
   loadDictionaries?: ({ lang, fallbackLang }, ...any) => Observable<Record<string, Dictionary>>;
   dictionaries?: Dictionaries;
+  /** @deprecated Take dependencies with `inject()` inside `loadDictionaries` instead. */
   deps?: any[];
   id?: string;
 }
 
+/** Resolves a legacy `deps: [...]` array from the current injection context. */
+function resolveDeps(deps: any[] | undefined): any[] {
+  return (deps ?? []).map((token: ProviderToken<any>) => inject(token));
+}
+
+/** Translates a legacy `forRoot()` config into the feature set `provideTranslate()` understands. */
+export function configToFeatures(config: Config = {}): TranslateFeature[] {
+  const features: TranslateFeature[] = [
+    withConfig({ lang: config.lang, fallbackLang: config.fallbackLang, placeholder: config.placeholder }),
+    withDictionaries(config.dictionaries ?? {}),
+  ];
+
+  const { addMiddleware, loadDictionaries, init, final, deps } = config;
+
+  if (addMiddleware) {
+    features.push(withMiddleware(() => addMiddleware(...resolveDeps(deps))));
+  }
+  if (loadDictionaries) {
+    features.push(withLoader((opts) => loadDictionaries(opts, ...resolveDeps(deps))));
+  }
+  if (init) {
+    features.push(withLoader(() => init(inject(TranslateRootService), ...resolveDeps(deps))));
+  }
+  if (final) {
+    features.push(withOnReady(() => final(inject(TranslateRootService), ...resolveDeps(deps))));
+  }
+
+  return features;
+}
+
 @NgModule({
-  declarations: [TranslatePipe, TranslateToPipe, TranslatePipeDetect, TranslateDirective],
-  exports: [TranslatePipe, TranslateToPipe, TranslatePipeDetect, TranslateDirective],
+  imports: [...TRANSLATE_IMPORTS],
+  exports: [...TRANSLATE_IMPORTS],
 })
 export class TranslateModule {
+  /** @deprecated Use `provideTranslate()` in the application providers instead. */
   static forRoot(config?: Config): ModuleWithProviders<TranslateModule> {
-    config = config ?? {
-      placeholder: 'default',
-      deps: [],
-    };
-
-    config.placeholder = config.placeholder !== undefined ? config.placeholder : 'default';
-    config.deps = config.deps !== undefined ? [TranslateRootService, ...config?.deps] : [TranslateRootService];
-
-    const value: DefaultTranslateConfig = {
-      lang: config.lang,
-      placeholder: config.placeholder,
-      fallbackLang: config.fallbackLang,
-    };
-
     return {
       ngModule: TranslateModule,
-      providers: [
-        TranslateRootService,
-        TranslateService,
-        TranslateResolve,
-        {
-          provide: TRANSLATE_CHILD,
-          useValue: {},
-        },
-        {
-          provide: DEFAULT_CONFIG,
-          useValue: value,
-        },
-        { provide: ROOT_DICTIONARIES, useValue: config.dictionaries ?? {} },
-        {
-          provide: APP_INITIALIZER,
-          useFactory: factory(config, config.init, config.addMiddleware, config.loadDictionaries, config.final),
-          deps: config.deps,
-          multi: true,
-        },
-      ],
+      // unguarded: NgModule apps may also import forRoot() in a lazily loaded module
+      providers: [ɵtranslateRootProviders(configToFeatures(config), { guard: false })],
     };
   }
 
-  static forChild(config?: ChildConfig): ModuleWithProviders<TranslateModule> {
-    const value: TranslateChildConfig = {
-      loadDictionaries: config?.loadDictionaries ?? config?.extend,
-      dictionaries: config?.dictionaries,
-      deps: config?.deps ?? [],
-      id: config?.id,
-    };
+  /** @deprecated Use `provideTranslateChild()` in `Route.providers` instead. */
+  static forChild(config: ChildConfig = {}): ModuleWithProviders<TranslateModule> {
+    const { loadDictionaries, extend, deps } = config;
+
+    let load: TranslateLoaderFn | undefined;
+    if (loadDictionaries) {
+      load = (opts) => loadDictionaries(opts, ...resolveDeps(deps));
+    } else if (extend) {
+      load = () => extend(inject(TranslateService), ...resolveDeps(deps));
+    }
+
     return {
       ngModule: TranslateModule,
-      providers: [
-        TranslateService,
-        TranslateResolve,
-        {
-          provide: TRANSLATE_CHILD,
-          useValue: value,
-        },
-      ],
+      providers: [provideTranslateChild({ id: config.id, dictionaries: config.dictionaries, loadDictionaries: load })],
     };
   }
 }

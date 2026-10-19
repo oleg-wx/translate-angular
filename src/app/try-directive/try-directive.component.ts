@@ -1,7 +1,11 @@
+import { NgFor } from '@angular/common';
 import { Component } from '@angular/core';
-import { TranslateRootService } from 'src/_translate.imports';
+import { FormsModule } from '@angular/forms';
+import { TRANSLATE_IMPORTS, TranslateRootService } from 'src/_translate.imports';
 
 @Component({
+  standalone: true,
+  imports: [TRANSLATE_IMPORTS, FormsModule, NgFor],
   selector: 'app-try-directive',
   template: `
     <select [ngModel]="selectedLang" (ngModelChange)="onLangChange($event)">

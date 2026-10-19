@@ -1,32 +1,34 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "baseUrl": "./",
+    "rootDir": "./",
     "outDir": "dist/out-tsc",
     "sourceMap": true,
     "declaration": false,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "experimentalDecorators": true,
     "importHelpers": true,
     "target": "ES2022",
     "jsx": "react",
     "types": ["node", "jasmine"],
     "lib": ["es2022", "dom"], // Upgraded to match target ES2022
+    // TypeScript 6 turns `strict` on by default; pinned so every TypeScript version checks the same way
+    "strict": false,
+    // without `baseUrl`, paths are relative to this file
     "paths": {
-      "simply-translate-angular-proxy": [
-        "./dist/proxy"
-      ],
-      "simply-translate-angular": ["dist/translate"]
+      "src/*": ["./src/*"],
+      "simply-translate-angular-proxy": ["./dist/proxy"],
+      "simply-translate-angular": ["./dist/translate"]
     },
+    // @types/node 18 does not type-check under TypeScript 6
+    "skipLibCheck": true,
     "useDefineForClassFields": false,
     "resolveJsonModule": true,
     "esModuleInterop": true
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.spec.ts"
-  ],
+  // projects/** too, so the editor checks the library sources with these options instead of the defaults
+  "include": ["src/**/*.ts", "projects/**/*.ts"],
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,
