@@ -1,9 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { debounceTime, lastValueFrom, of, Subject } from 'rxjs';
 import { Dictionaries } from 'simply-translate';
-import { DefaultTranslateConfig } from '../public_api';
-import { TranslateModule } from '../simply-translate.module';
+import { DefaultTranslateConfig, provideTranslate, TRANSLATE_IMPORTS, withDictionaries, withLoader, withOnReady } from '../public_api';
 
 @Component({
   template: `
@@ -22,6 +21,7 @@ import { TranslateModule } from '../simply-translate.module';
     <div id="d8" translate="hello_user_not_there_fallback" fallback="hello_user_fallback_param"></div>
     <div id="d9" translate="hello_user_not_there_fallback">hello_user_fallback_content</div>
   `,
+  standalone: false,
 })
 export class TestDirectiveComponent {}
 
@@ -46,16 +46,17 @@ describe('directive', () => {
   beforeEach(async () => {
     TestBed.configureTestingModule({
       declarations: [TestDirectiveComponent],
-      imports: [
-        TranslateModule.forRoot({
-          ...config,
-          dictionaries: rootDic,
-          loadDictionaries: () => of(dic).pipe(debounceTime(10)),
-          final: () => {
+      imports: [TRANSLATE_IMPORTS],
+      providers: [
+        provideTranslate(
+          config,
+          withDictionaries(rootDic),
+          withLoader(() => of(dic).pipe(debounceTime(10))),
+          withOnReady(() => {
             _wait.next();
             _wait.complete();
-          },
-        }),
+          }),
+        ),
       ],
     });
   });
@@ -112,5 +113,57 @@ describe('directive', () => {
 
   it('falls back to static DOM content that looks like a translation key', () => {
     expect(element.querySelector<HTMLElement>('#d9').innerText.trim()).toBe('hello_user_fallback_content');
+  });
+});
+
+@Component({
+  imports: [TRANSLATE_IMPORTS],
+  template: `
+    <div id="static" translate>hello</div>
+    <div id="trailing-space" translate>hello_user</div>
+    <div id="interpolated" translate [values]="{ user: 'Oleg' }">{{ key() }}</div>
+    <div id="empty" translate [values]="{ suffix: '' }">suffix_only</div>
+  `,
+})
+class InnerContentKeyComponent {
+  key = signal('hello_user');
+}
+
+describe('directive with the key in its content', () => {
+  let fixture: ComponentFixture<InnerContentKeyComponent>;
+  const text = (id: string) => fixture.nativeElement.querySelector(`#${id}`).textContent.trim();
+
+  beforeEach(async () => {
+    TestBed.configureTestingModule({
+      providers: [provideTranslate({ lang: 'test' }, withDictionaries({ test: { hello: 'Hello', hello_user: 'Hello ${user}', bye_user: 'Bye ${user}', suffix_only: '${suffix}' } }))],
+    });
+    fixture = TestBed.createComponent(InnerContentKeyComponent);
+    fixture.detectChanges();
+    // the content is read back after rendering, which schedules one more pass
+    await fixture.whenStable();
+  });
+
+  it('uses static content as the key', () => {
+    expect(text('static')).toBe('Hello');
+  });
+
+  it('keeps a translation that ends in whitespace instead of reading it back as a key', () => {
+    // no value for ${user} leaves "Hello "
+    expect(text('trailing-space')).toBe('Hello');
+  });
+
+  it('shows a translation that comes out empty instead of keeping the key', () => {
+    expect(text('empty')).toBe('');
+  });
+
+  it('uses interpolated content as the key', () => {
+    expect(text('interpolated')).toBe('Hello Oleg');
+  });
+
+  it('follows the interpolated key when it changes', async () => {
+    fixture.componentInstance.key.set('bye_user');
+    await fixture.whenStable();
+
+    expect(text('interpolated')).toBe('Bye Oleg');
   });
 });

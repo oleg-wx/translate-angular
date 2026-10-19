@@ -1,8 +1,7 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { debounceTime, lastValueFrom, map, of, Subject } from 'rxjs';
-import { TranslateRootService, TranslateService } from '../public_api';
-import { TranslateModule } from '../simply-translate.module';
+import { provideTranslate, TranslateRootService, TranslateService, TRANSLATE_IMPORTS, withDictionaries, withOnReady } from '../public_api';
 import { tick } from './core/tick';
 
 @Component({
@@ -10,6 +9,7 @@ import { tick } from './core/tick';
     <div id="d1" translate="hello_user" [values]="{ user: 'Oleg' }"></div>
     <div id="d2">{{ 'hello_user' | translate$: { user: 'Oleg' } }}</div>
   `,
+  standalone: false,
 })
 export class TestComponent {}
 
@@ -31,15 +31,16 @@ describe('language change detect', () => {
   beforeEach(async () => {
     TestBed.configureTestingModule({
       declarations: [TestComponent],
-      imports: [
-        TranslateModule.forRoot({
-          lang,
-          dictionaries: dic,
-          final: () => {
+      imports: [TRANSLATE_IMPORTS],
+      providers: [
+        provideTranslate(
+          { lang },
+          withDictionaries(dic),
+          withOnReady(() => {
             _wait.next();
             _wait.complete();
-          },
-        }),
+          }),
+        ),
       ],
     });
   });

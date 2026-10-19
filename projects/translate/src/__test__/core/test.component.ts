@@ -1,7 +1,7 @@
 import { Component, Injectable, InjectionToken } from '@angular/core';
 import { TranslateRootService, TranslateService } from '../../public_api';
 
-@Component({ template: '', selector: 'test-component' })
+@Component({ template: '', selector: 'test-component', standalone: false })
 export class TestInjectedServiceComponent {
   constructor(public service: TranslateService, public root: TranslateRootService) {
   }

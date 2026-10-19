@@ -1,18 +1,18 @@
 {
   "name": "simply-translate-angular",
-  "version": "1.0.0",
-  "description": "Angular bindings for simply-translate: module, directive, pipes and service",
+  "version": "21.0.0",
+  "description": "Angular bindings for simply-translate: providers, directive, pipes and service",
   "type": "module",
   "dependencies": {
     "tslib": "^2.4.0",
-    "simply-translate": "^1.0.0",
-    "rxjs": "^7.5.7"
+    "simply-translate": "^1.0.0"
   },
   "peerDependencies": {
-    "@angular/common": ">= 17.0.0",
-    "@angular/core": ">= 17.0.0",
-    "@angular/compiler": ">= 17.0.0",
-    "typescript": ">= 5.0.0"
+    "@angular/common": ">=21.0.0",
+    "@angular/core": ">=21.0.0",
+    "@angular/compiler": ">=21.0.0",
+    "rxjs": "^7.5.7",
+    "typescript": ">=5.9.0"
   },
   "peerDependenciesMeta": {
     "typescript": {

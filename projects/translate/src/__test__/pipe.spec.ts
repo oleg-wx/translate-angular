@@ -1,8 +1,7 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { debounceTime, lastValueFrom, of, Subject } from 'rxjs';
-import { DefaultTranslateConfig } from '../public_api';
-import { TranslateModule } from '../simply-translate.module';
+import { DefaultTranslateConfig, provideTranslate, TRANSLATE_IMPORTS, withDictionaries, withLoader, withOnReady } from '../public_api';
 
 @Component({
   template: `
@@ -12,6 +11,7 @@ import { TranslateModule } from '../simply-translate.module';
     <div id="d4">{{ 'hello_user_not_there' | translate: { user: 'Oleg' }:'Hello \${user} fb' }}</div>
     <div id="d6">{{ 'hello_user_not_there' | translate: { user: 'Oleg', num:5 }:{ value: 'Hello \${user} \${num} fb', plural: { num: [['=5', 'five']] } } }}</div>
   `,
+  standalone: false,
 })
 export class TestDirectiveComponent {}
 
@@ -36,16 +36,17 @@ describe('pipe', () => {
   beforeEach(async () => {
     TestBed.configureTestingModule({
       declarations: [TestDirectiveComponent],
-      imports: [
-        TranslateModule.forRoot({
-          ...config,
-          dictionaries: rootDic,
-          loadDictionaries: () => of(dic).pipe(debounceTime(10)),
-          final: () => {
+      imports: [TRANSLATE_IMPORTS],
+      providers: [
+        provideTranslate(
+          config,
+          withDictionaries(rootDic),
+          withLoader(() => of(dic).pipe(debounceTime(10))),
+          withOnReady(() => {
             _wait.next();
             _wait.complete();
-          },
-        }),
+          }),
+        ),
       ],
     });
   });

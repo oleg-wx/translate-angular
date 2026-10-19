@@ -1,13 +1,13 @@
 import { Component, ViewChild } from '@angular/core';
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { debounceTime, lastValueFrom, of, Subject } from 'rxjs';
-import { DefaultTranslateConfig, TranslateRootService, TranslateService } from '../public_api';
-import { TranslateModule } from '../simply-translate.module';
+import { DefaultTranslateConfig, provideTranslate, TranslateRootService, TranslateService, withDictionaries, withLoader, withOnReady } from '../public_api';
 
 // Mock component helper to inject the services
 @Component({
   selector: 'test-component',
-  template: `<div>Test Framework Elements</div>`
+  template: `<div>Test Framework Elements</div>`,
+  standalone: false,
 })
 class TestInjectedServiceComponent {
   constructor(public root: TranslateRootService, public service: TranslateService) {}
@@ -15,6 +15,7 @@ class TestInjectedServiceComponent {
 
 @Component({
   template: `<test-component #tst></test-component>`,
+  standalone: false,
 })
 export class TestComponent {
   @ViewChild('tst', { static: true })
@@ -55,36 +56,32 @@ describe('Translate Service Integration', () => {
     _wait = new Subject<void>();
 
     await TestBed.configureTestingModule({
-      imports: [
-        TranslateModule.forRoot({
-          ...config,
-          dictionaries: rootDic,
-          loadDictionaries: () => of(dic).pipe(debounceTime(10)),
-          final: () => {
+      providers: [
+        provideTranslate(
+          config,
+          withDictionaries(rootDic),
+          withLoader(() => of(dic).pipe(debounceTime(10))),
+          withOnReady(() => {
             _wait.next();
             _wait.complete();
-          },
-        }),
+          }),
+        ),
       ],
       declarations: [TestInjectedServiceComponent, TestComponent],
     }).compileComponents();
   });
 
-  beforeEach(fakeAsync(() => {
-    // 1. Create a single master test fixture environment
+  beforeEach(async () => {
     fixture = TestBed.createComponent(TestComponent);
-    
-    // 2. Perform initial change detection to start the module dictionaries download loop
     fixture.detectChanges();
 
-    // 3. Fast-forward virtual time past the 10ms dictionary debounce delay
-    tick(15); 
+    // the loader is debounced; wait for the initializer to settle
+    await lastValueFrom(_wait.asObservable(), { defaultValue: 0 });
 
-    // 4. Safely pull instances out after the asynchronous microtasks complete
     component = fixture.componentInstance.testComponent;
     rootService = component.root;
     service = component.service;
-  }));
+  });
 
   it('should translate correctly using root configurations', () => {
     expect(service.translate('hello_user', { user: 'Oleg' })).toBe('Hello Oleg');

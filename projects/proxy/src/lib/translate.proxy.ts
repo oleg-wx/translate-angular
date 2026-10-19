@@ -1,6 +1,6 @@
 import { inject, Injectable, OnDestroy, Signal } from '@angular/core';
-import { Observable } from 'rxjs';
-import { Dictionary, DictionaryEntry, TranslateDynamicProps } from 'simply-translate';
+import { asapScheduler, Observable, observeOn, Subscription } from 'rxjs';
+import { Dictionary, TranslateDynamicProps } from 'simply-translate';
 import type { BaseNode, NamespaceNode, SchemaShape, TranslateSchemaNode } from './schema/schema.types';
 import { TranslateService } from 'simply-translate-angular';
 import { APPLY_LOADER, ApplyLoaderFn, TranslateLoader, TranslateLoaderDictionaries, TranslateLoaderSupport } from './loader/translate.loader';
@@ -37,6 +37,8 @@ export abstract class TranslateProxy<S extends TranslateSchemaNode> implements O
   private _id?: string;
   private _dictionaries?: Record<string, Dictionary | Promise<Dictionary> | Observable<Dictionary> | string>;
   private _loader?: TranslateLoader;
+  /** Delivery of the loader's events to onLoaderReady/onLoaderError, cancelled on destroy. */
+  private readonly _loaderEvents = new Subscription();
 
   constructor() {
     const loaderInfo = this[APPLY_LOADER]?.();
@@ -52,7 +54,7 @@ export abstract class TranslateProxy<S extends TranslateSchemaNode> implements O
 
   /**
    * Loads this proxy's dictionary for `lang` right away, without waiting for the app to switch to it.
-   * Nothing is preloaded automatically — declare known languages upfront via `applyLoader()`'s
+   * Only the active language loads by default — declare known languages upfront with `@TranslateProxyLoader`'s
    * `preloadLangs`, and call this for anything ad hoc. A no-op if this proxy has no loader.
    */
   preloadLang(lang: string | undefined): void {
@@ -71,13 +73,20 @@ export abstract class TranslateProxy<S extends TranslateSchemaNode> implements O
         this._dictionaries,
         preloadLangs ?? [],
       );
+      // subscribed before init() so a dictionary grafted synchronously is reported too, but delivered
+      // on a microtask: this runs in the base constructor, before the subclass's fields are initialized;
+      // unsubscribed in ngOnDestroy, which also drops an event still waiting for that microtask
+      this._loaderEvents.add(
+        this._loader.ready$.pipe(observeOn(asapScheduler)).subscribe((info) => {
+          this.onLoaderReady?.(info);
+        }),
+      );
+      this._loaderEvents.add(
+        this._loader.errors$.pipe(observeOn(asapScheduler)).subscribe((error) => {
+          this.onLoaderError?.(error);
+        }),
+      );
       this._loader.init();
-      this._loader.ready$.subscribe((info) => {
-        this.onLoaderReady?.(info);
-      });
-      this._loader.errors$.subscribe((error) => {
-        this.onLoaderError?.(error);
-      });
     }
   }
 
@@ -149,6 +158,7 @@ export abstract class TranslateProxy<S extends TranslateSchemaNode> implements O
   }
 
   ngOnDestroy(): void {
+    this._loaderEvents.unsubscribe();
     this._loader?.remove();
   }
 }

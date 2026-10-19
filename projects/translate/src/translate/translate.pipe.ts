@@ -4,7 +4,7 @@ import { TranslateService } from './translate.service';
 
 @Pipe({ name: 'translate' })
 export class TranslatePipe implements PipeTransform {
-  constructor(protected service: TranslateService) {}
+  protected readonly service = inject(TranslateService);
 
   transform(key: TranslateKey, dynamicOrFallback?: TranslateDynamicProps | string, fallback?: DictionaryEntry | string): string {
     if (key == null || key === '') {
@@ -17,7 +17,7 @@ export class TranslatePipe implements PipeTransform {
 
 @Pipe({ name: 'translateTo' })
 export class TranslateToPipe implements PipeTransform {
-  constructor(protected service: TranslateService) {}
+  protected readonly service = inject(TranslateService);
 
   transform(key: TranslateKey, lang: string, dynamicOrFallback?: TranslateDynamicProps | string, fallback?: DictionaryEntry | string): string {
     if (key == null || key === '') {
@@ -35,11 +35,6 @@ export class TranslatePipeDetect extends TranslatePipe {
   private _lastVersion = -1;
   private _dynOrFb: string = '';
   private _fb: DictionaryEntry | string | undefined;
-
-  constructor() {
-    const service = inject(TranslateService);
-    super(service);
-  }
 
   transform(key: TranslateKey, dynamicOrFallback?: TranslateDynamicProps | string, fallback?: DictionaryEntry | string): string {
     const version = this.service.stateVersion();

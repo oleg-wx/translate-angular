@@ -1,10 +1,12 @@
 import { Injectable } from '@angular/core';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { StringProp, TranslateSchema } from '../lib/schema';
 import { TranslateProxy } from '../lib/translate.proxy';
 import { TranslateProxyLoader } from '../lib/loader/translate-proxy-loader.decorator';
-import { TranslateModule, TranslateRootService } from 'simply-translate-angular';
+import { provideTranslate, TranslateRootService } from 'simply-translate-angular';
+import { tick } from './core/tick';
 
 const lang = 'lang';
 
@@ -27,11 +29,60 @@ const featureSchema = TranslateSchema({ ok: StringProp(), title: StringProp() })
 })
 class FeatureTranslate extends TranslateProxy<typeof featureSchema> {}
 
+const readyCalls: { lang: string; id: string }[] = [];
+
+@Injectable({ providedIn: 'root' })
+@TranslateProxyLoader({
+  id: 'reported',
+  dictionaries: { [lang]: { ok: 'Ok' } },
+})
+class ReportedTranslate extends TranslateProxy<typeof commonSchema> {
+  onLoaderReady(args: { lang: string; id: string }): void {
+    readyCalls.push(args);
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+@TranslateProxyLoader({
+  id: 'fields',
+  dictionaries: { [lang]: { ok: 'Ok' } },
+})
+class FieldsTranslate extends TranslateProxy<typeof commonSchema> {
+  readonly readyLangs: string[] = [];
+
+  onLoaderReady(args: { lang: string; id: string }): void {
+    this.readyLangs.push(args.lang);
+  }
+}
+
 describe('TranslateProxyLoader decorator', () => {
   beforeEach(() => {
+    readyCalls.length = 0;
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule, TranslateModule.forRoot({ lang })],
+      providers: [provideTranslate({ lang }), provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()],
     });
+  });
+
+  it('reports a plain-object dictionary to onLoaderReady', async () => {
+    TestBed.inject(ReportedTranslate);
+    await tick(0);
+
+    expect(readyCalls).toEqual([{ lang, id: 'reported' }]);
+  });
+
+  it('reports to onLoaderReady once the subclass fields are initialized', async () => {
+    const proxy = TestBed.inject(FieldsTranslate);
+    await tick(0);
+
+    expect(proxy.readyLangs).toEqual([lang]);
+  });
+
+  it('does not report to onLoaderReady once destroyed, even a load that finished before', async () => {
+    const proxy = TestBed.inject(FieldsTranslate);
+    proxy.ngOnDestroy();
+    await tick(0);
+
+    expect(proxy.readyLangs).toEqual([]);
   });
 
   it('loads its own dictionary without being injected directly anywhere', () => {

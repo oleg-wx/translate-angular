@@ -2,12 +2,76 @@
 
 All notable changes to `simply-translate-angular` are listed here.
 
-## 1.0.0 (unreleased)
+## 21.0.0 (unreleased)
+
+### Breaking
+
+-   Requires Angular 21 and TypeScript 5.9. For Angular 20 use 20.x.
+-   Removed `TranslateModule` and its `forRoot()` / `forChild()`, deprecated since 1.0.0. Use `provideTranslate()` and `provideTranslateChild()`, and `TRANSLATE_IMPORTS` in place of `imports: [TranslateModule]`; the [README](README.md#migrating-from-translatemodule) maps every option.
+-   Removed what only the module used: `factory`, `forRootGuard`, `configToFeatures`, the `Config` / `ChildConfig` interfaces, the `AddMiddlewareFunc`, `LoadDictionariesFunc`, `InitFunc` and `FinalFunc` types, and `ɵtranslateRootProviders`.
+-   Removed the deprecated `translateResolve()` helper; use `translateChildResolver` or `withTranslateChild()`.
+-   Removed the deprecated `TranslateChildConfig.deps`, which was no longer read. `loadDictionaries` takes dependencies with `inject()`.
+-   `TranslateRootService`, `TranslateService`, `TranslateResolve` and the pipes take their dependencies with `inject()`, so their constructors no longer have parameters. This only matters when a class is constructed with `new` or extended with a `super(...)` call: create them through DI, and call `super()` without arguments.
+-   Removed the deprecated `fallbackLang` from the `languageChange$` events. Read `TranslateRootService.fallbackLang` instead.
+-   `rxjs` is a peer dependency instead of a dependency, so the application's own copy is used. Angular requires it already.
+
+### Added
+
+-   `LangChange`, the type of the `languageChange$` events, is exported.
+
+### Changed
+
+-   The `translate` directive reads inner content back with `afterEveryRender` instead of `ngAfterViewChecked`. It still writes its text from an `effect`, so server-side rendering keeps the translated text.
+-   The library is tested without zone.js, the way Angular 21 applications run by default.
+
+### Fixed
+
+-   The `translate` directive showed an empty element on first render when its key came from an interpolation, such as `<div translate>{{ key }}</div>`.
+-   The `translate` directive replaced a translation that ends in whitespace (for example a missing placeholder value at the end) with its fallback.
+-   The `translate` directive kept showing its key when the translation came out empty on first render.
+-   A `simply-translate-angular-proxy` node given to `TranslateService` or `TranslateRootService` (and so to the pipes) as a key is looked up by its path. It was looked up as one flat key and never found.
+
+## 20.0.0
+
+### Breaking
+
+-   Requires Angular 20 and TypeScript 5.8. For Angular 19 use 19.x.
+
+## 19.0.0
+
+The major version now follows Angular's: 19.x is built for Angular 19.
+
+### Breaking
+
+-   Requires Angular 19 and TypeScript 5.5.
+
+### Changed
+
+-   Initialization uses `provideAppInitializer()` and `provideEnvironmentInitializer()` instead of the `APP_INITIALIZER` and `ENVIRONMENT_INITIALIZER` tokens deprecated in Angular 19. `translateInitializerFactory` is unchanged.
+
+## 1.0.0
 
 ### Upgrading from 0.21.x
 
 1. If you use `TranslateProxy`, `TranslateSchema`, the schema builders, `validateDictionary`/`assertValidDictionary` or `@TranslateProxyLoader`, install [`simply-translate-angular-proxy`](https://www.npmjs.com/package/simply-translate-angular-proxy) and import them from there instead of `simply-translate-angular`.
 2. Apply the [simply-translate 1.0.0 upgrade steps](https://github.com/oleg-wx/translate/blob/master/CHANGELOG.md): `defaultLang` → `lang`, `$less: true` → `placeholder: 'single'`, and no deep imports such as `simply-translate/es/...`.
+
+### Added
+
+-   Standalone, functional setup. `provideTranslate(config?, ...features)` replaces `TranslateModule.forRoot()`, and `provideTranslateChild()` in `Route.providers` replaces `TranslateModule.forChild()`.
+-   Features: `withConfig()`, `withDictionaries()`, `withLoader()`, `withMiddleware()` and `withOnReady()`. `withLoader()` may be used more than once; the loaders run in parallel and their dictionaries are merged.
+-   `translateChildResolver`, a functional route resolver replacing the `TranslateResolve` class, and `withTranslateChild()` which returns the scope providers and that resolver together, ready to spread into a route.
+-   `TRANSLATE_IMPORTS` for standalone components. The pipes and the `translate` directive are now standalone and can also be imported individually.
+-   Loaders may return a `Promise` or a plain `Dictionaries` object, not only an `Observable`.
+-   `provideTranslate()` throws when used twice, and `provideTranslateChild()` throws when there is no root. Both checks are dev-mode only, and `TranslateModule.forRoot()` is not checked, so importing it in a lazily loaded module still works.
+
+### Changed
+
+-   Every configuration callback runs inside an injection context, so dependencies are taken with `inject()`. The `deps: [...]` array is deprecated.
+-   `TranslateModule.forRoot()` / `.forChild()` are deprecated and now delegate to the new providers. Existing NgModule applications keep working unchanged.
+-   Only a loader's first result is used, and a loader that completes without emitting contributes no dictionaries instead of failing startup or navigation.
+-   A child scope loads its dictionaries again for each newly selected language, and retries a load that failed on the next navigation.
+-   `TranslateChildConfig.deps` is no longer read; `TranslateModule.forChild({ deps })` still resolves them.
 
 ### Breaking
 
@@ -17,6 +81,8 @@ All notable changes to `simply-translate-angular` are listed here.
 ### Fixed
 
 -   The library no longer deep-imports `simply-translate` internals, which the `exports` map of `simply-translate` 1.0.0 blocks.
+-   `TranslateModule.forChild({ extend })` passed `{ lang, fallbackLang }` to `extend` instead of the `TranslateService`.
+-   A scoped `TranslateService` threw when translating with no language set or with a language that has no dictionary.
 
 ## 0.21.20
 

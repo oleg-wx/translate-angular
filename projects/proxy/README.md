@@ -4,13 +4,17 @@ Typed, autocompleted access to [simply-translate-angular](https://www.npmjs.com/
 
 See the [changelog](CHANGELOG.md) for release notes. Before 1.0.0 this API shipped inside `simply-translate-angular`.
 
+### Versions
+
+The major version follows Angular's: 21.x needs Angular 21 or later and `simply-translate-angular` 21.x. For Angular 20 use 20.x, for Angular 19 use 19.x, and for Angular 17–18 use 1.x of both packages.
+
 ### Install
 
 ```bash
 npm i simply-translate-angular simply-translate-angular-proxy
 ```
 
-`TranslateProxy` uses `TranslateService` from `simply-translate-angular`, so set up `TranslateModule.forRoot(...)` as described in the [simply-translate-angular README](https://www.npmjs.com/package/simply-translate-angular#initialize) first.
+`TranslateProxy` uses `TranslateService` from `simply-translate-angular`, so set up `provideTranslate(...)` as described in the [simply-translate-angular README](https://www.npmjs.com/package/simply-translate-angular#initialize) first.
 
 ### Use TranslateProxy
 
@@ -177,14 +181,15 @@ validateDictionary(appSchema, { hello_user: 'Hello ${user}!', about: 'Welcome, $
 // [{ path: ['about'], message: 'unexpected placeholder "name", not declared in schema params' }]
 ```
 
-If your app uses a non-default `placeholder` style (`'single'` `{user}` / `'double'` `{{user}}`, see [`TranslateModule.forRoot`](https://www.npmjs.com/package/simply-translate-angular#initialize)), pass the same value so the checks recognize the right syntax:
+If your app uses a non-default `placeholder` style (`'single'` `{user}` / `'double'` `{{user}}`, see [`provideTranslate`](https://www.npmjs.com/package/simply-translate-angular#initialize)), pass the same value so the checks recognize the right syntax:
 
 ```typescript
 validateDictionary(appSchema, parsedJson, { placeholder: 'single' });
 ```
+
 ### Per-proxy dictionary loading
 
-A `TranslateProxy` subclass can load its own per-language dictionary, without any `forChild()`/`NgModule` wrapper — each language may be a plain object, a `Promise`, an `Observable`, or a URL string fetched via `HttpClient`. Only the *active* language loads eagerly by default; anything else loads on demand the first time you switch to it, unless you ask for it upfront via `preloadLangs`/`preloadFallbackLang`, or on demand via `preloadLang()`. Configure it with the `@TranslateProxyLoader(config)` decorator:
+A `TranslateProxy` subclass can load its own per-language dictionary, without any `provideTranslateChild()` route scope — each language may be a plain object, a `Promise`, an `Observable`, or a URL string fetched via `HttpClient`. Only the *active* language loads eagerly by default; anything else loads on demand the first time you switch to it, unless you ask for it upfront via `preloadLangs`/`preloadFallbackLang`, or on demand via `preloadLang()`. Configure it with the `@TranslateProxyLoader(config)` decorator:
 
 ```typescript
 import { Injectable } from '@angular/core';
@@ -204,7 +209,8 @@ import type { AppSchema } from './app.schema';
   preloadFallbackLang: true, // also load `service.fallbackLang` upfront, not just the active language
 })
 export class AppTranslate extends TranslateProxy<AppSchema> {
-  // optional — fires whenever a language finishes loading successfully
+  // optional — fires whenever a language finishes loading successfully, always after construction,
+  // so this class's own fields are initialized
   onLoaderReady({ lang, id }: { lang: string; id: string }): void {
     console.log(`Loaded '${id}' (${lang})`);
   }
@@ -222,7 +228,7 @@ Beyond `preloadLangs`/`preloadFallbackLang`, call the proxy's own `preloadLang(l
 appTranslate.preloadLang('de-DE');
 ```
 
-**Caveat:** unlike `forChild()`'s `id`-based key prefixing, this does not namespace keys — every proxy's dictionary is merged flat into the same per-language dictionary. If more than one proxy loads its own dictionary, wrap each one's own schema in a top-level `Namespace({...})` (named after that feature) to avoid colliding with another proxy's keys.
+**Caveat:** unlike `provideTranslateChild()`'s `id`-based key prefixing, this does not namespace keys — every proxy's dictionary is merged flat into the same per-language dictionary. If more than one proxy loads its own dictionary, wrap each one's own schema in a top-level `Namespace({...})` (named after that feature) to avoid colliding with another proxy's keys.
 
 #### Sharing a dictionary between proxies (`extends`)
 
@@ -252,7 +258,7 @@ export class FeatureTranslate extends TranslateProxy<typeof featureSchema & type
 
 Injecting `FeatureTranslate` alone is enough — `feature.object.ok` and `feature.object.title` both resolve, without ever injecting `CommonTranslate` anywhere. `extends` takes **class references**, and the decorator `inject`s each one, so it is constructed and loads its dictionary.
 
-Two things `extends` does *not* do: it doesn't derive `FeatureTranslate`'s schema type for you (spread the shape in by hand, as above — `extends` only affects runtime loading), and it doesn't forward `CommonTranslate`'s own `onLoaderReady`/`onLoaderError` to `FeatureTranslate`, `extends` never constructs a `CommonTranslate` instance of its own beyond what DI already gives you.
+Two things `extends` does *not* do: it doesn't derive `FeatureTranslate`'s schema type for you (spread the shape in by hand, as above — `extends` only affects runtime loading), and it doesn't forward `CommonTranslate`'s own `onLoaderReady`/`onLoaderError` to `FeatureTranslate`. `extends` also never constructs a `CommonTranslate` instance of its own beyond what DI already gives you.
 
 #### Waiting for a dictionary in a route (`translateLoaderResolver`)
 
