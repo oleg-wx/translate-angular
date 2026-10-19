@@ -2,8 +2,7 @@
   "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
   "dest": "../../dist/translate",
   "lib": {
-    "entryFile": "src/public_api.ts",
-    "styleIncludePaths": ["./src/styles"]
+    "entryFile": "src/public_api.ts"
   },
-  "allowedNonPeerDependencies": ["simply-translate", "rxjs"]
+  "allowedNonPeerDependencies": ["simply-translate"]
 }

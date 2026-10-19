@@ -1,4 +1,4 @@
-import { from, Observable, shareReplay, Subject, Subscription } from 'rxjs';
+import { from, isObservable, Observable, shareReplay, Subject, Subscription } from 'rxjs';
 import { Dictionary } from 'simply-translate';
 import { TranslateService } from 'simply-translate-angular';
 import { TranslateLoaderCache } from './translate.loader-cache';
@@ -7,7 +7,7 @@ import { HttpClient } from '@angular/common/http';
 export type TranslateLoaderDictionary = Dictionary | Promise<Dictionary> | Observable<Dictionary> | string;
 export type TranslateLoaderDictionaries = Record<string, TranslateLoaderDictionary>;
 
-export interface TranslateLoaderSupport{
+export interface TranslateLoaderSupport {
   onLoaderReady?(args: { lang: string; id: string }): void;
   onLoaderError?(args: { lang: string; id: string; error: any }): void;
 }
@@ -22,29 +22,36 @@ export const APPLY_LOADER: unique symbol = Symbol('applyLoader');
 export type ApplyLoaderFn = () => { id: string; dictionaries: TranslateLoaderDictionaries; preloadLangs?: string[] };
 
 export class TranslateLoader {
+  /** `httpClient` may be `null` when no dictionary is a URL; one that is throws right away. */
   constructor(
     private cache: TranslateLoaderCache,
-    private httpClient: HttpClient,
+    private httpClient: HttpClient | null,
     private service: TranslateService,
     readonly id: string,
     readonly dictionaries: TranslateLoaderDictionaries,
     readonly preloadLangs: readonly string[] = [],
-  ) {}
+  ) {
+    if (!httpClient && Object.values(dictionaries).some((dic) => typeof dic === 'string')) {
+      throw new Error(`TranslateProxyLoader "${id}": dictionaries given as URLs need provideHttpClient().`);
+    }
+  }
 
   private _subs?: Subscription;
-  readonly _readySub = new Subject<{ lang: string; id: string }>();
+  private readonly _readySub = new Subject<{ lang: string; id: string }>();
   readonly ready$ = this._readySub.asObservable();
-  readonly _errorsSub = new Subject<{ lang: string; id: string; error: any }>();
+  private readonly _errorsSub = new Subject<{ lang: string; id: string; error: any }>();
   readonly errors$ = this._errorsSub.asObservable();
 
   init() {
-    if (!this._subs) {
-      this.preloadLang(this.service.lang);
-      this.preloadLangs.forEach((lang) => this.preloadLang(lang));
+    if (this._subs) {
+      return;
     }
 
-    this._subs = this.service.languageChange$.pipe().subscribe((_lang) => {
-      this.preloadLang(_lang.lang);
+    this.preloadLang(this.service.lang);
+    this.preloadLangs.forEach((lang) => this.preloadLang(lang));
+
+    this._subs = this.service.languageChange$.subscribe(({ lang }) => {
+      this.preloadLang(lang);
     });
   }
 
@@ -59,9 +66,11 @@ export class TranslateLoader {
     }
   }
 
+  /** Stops following language changes and completes `ready$` and `errors$`. The loader can't be reused after this. */
   remove() {
     this._subs?.unsubscribe();
-    this._subs = undefined;
+    this._readySub.complete();
+    this._errorsSub.complete();
   }
 
   getProcess() {
@@ -81,7 +90,7 @@ export class TranslateLoader {
       return;
     }
 
-    if (!(typeof dic === 'string' || dic instanceof Promise || dic instanceof Observable)) {
+    if (!(typeof dic === 'string' || dic instanceof Promise || isObservable(dic))) {
       this.cache.set(lang, this.id, dic);
       this.service.extendDictionary(lang, dic);
       this._readySub.next({ lang, id });
@@ -89,7 +98,7 @@ export class TranslateLoader {
       return;
     }
 
-    const source = typeof dic === 'string' ? this.httpClient.get<Dictionary>(dic) : from(dic);
+    const source = typeof dic === 'string' ? this.httpClient!.get<Dictionary>(dic) : from(dic);
     const load = this.cache.set(lang, this.id, source.pipe(shareReplay(1)));
 
     load.subscribe({

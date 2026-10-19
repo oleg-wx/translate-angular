@@ -2,7 +2,24 @@
 
 All notable changes to `simply-translate-angular` are listed here.
 
-## 19.0.0 (unreleased)
+## 19.1.0 (unreleased)
+
+### Added
+
+-   `LangChange`, the type of the `languageChange$` events, is exported.
+
+### Changed
+
+-   `rxjs` is a peer dependency instead of a dependency, so the application's own copy is used. Angular requires it already.
+-   `TranslateRootService` unsubscribes its internal subscription when its injector is destroyed.
+
+### Fixed
+
+-   The `translate` directive showed an empty element on first render when its key came from an interpolation, such as `<div translate>{{ key }}</div>`.
+-   The `translate` directive replaced a translation that ends in whitespace (for example a missing placeholder value at the end) with its fallback.
+-   The `translate` directive no longer uses the `Node` and `document` globals, which are missing during server-side rendering.
+
+## 19.0.0
 
 The major version now follows Angular's: 19.x is built for Angular 19.
 
@@ -14,7 +31,7 @@ The major version now follows Angular's: 19.x is built for Angular 19.
 
 -   Initialization uses `provideAppInitializer()` and `provideEnvironmentInitializer()` instead of the `APP_INITIALIZER` and `ENVIRONMENT_INITIALIZER` tokens deprecated in Angular 19. `translateInitializerFactory` is unchanged.
 
-## 1.0.0 (unreleased)
+## 1.0.0
 
 ### Upgrading from 0.21.x
 

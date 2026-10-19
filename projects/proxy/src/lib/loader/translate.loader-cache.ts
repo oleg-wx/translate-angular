@@ -2,23 +2,29 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Dictionary } from 'simply-translate';
 
-@Injectable({providedIn: 'root'})
-export class TranslateLoaderCache {
-  private readonly cache: Partial<Record<string, Dictionary | Observable<Dictionary>>> = {};
+type CacheEntry = Dictionary | Observable<Dictionary>;
 
-  get(lang: string, id: string): Dictionary | Observable<Dictionary> | undefined {
-    return this.cache[`${id}_${lang}`];
+@Injectable({ providedIn: 'root' })
+export class TranslateLoaderCache {
+  /** id -> lang -> the loaded dictionary, or the load in flight */
+  private readonly cache = new Map<string, Map<string, CacheEntry>>();
+
+  get(lang: string, id: string): CacheEntry | undefined {
+    return this.cache.get(id)?.get(lang);
   }
 
-  set<T extends Dictionary | Observable<Dictionary>>(lang: string, id: string, value: T): T {
-    this.cache[`${id}_${lang}`] = value;
+  set<T extends CacheEntry>(lang: string, id: string, value: T): T {
+    let byLang = this.cache.get(id);
+    if (!byLang) {
+      byLang = new Map();
+      this.cache.set(id, byLang);
+    }
+    byLang.set(lang, value);
 
     return value;
   }
 
   clear(lang: string, id: string): void {
-    delete this.cache[`${id}_${lang}`];
+    this.cache.get(id)?.delete(lang);
   }
 }
-
-

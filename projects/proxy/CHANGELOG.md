@@ -2,7 +2,20 @@
 
 All notable changes to `simply-translate-angular-proxy` are listed here.
 
-## 19.0.0 (unreleased)
+## 19.1.0 (unreleased)
+
+### Changed
+
+-   `simply-translate-angular` and `rxjs` are peer dependencies instead of dependencies, so the application's single copy is used. A second copy of `simply-translate-angular` meant a second `TranslateService` class, and injecting a proxy failed with "No provider for TranslateService". npm 7+ installs peer dependencies automatically; with strict pnpm or Yarn setups, install both yourself, as the README already shows. `@angular/router` is an optional peer dependency, used only by `translateLoaderResolver`.
+
+### Fixed
+
+-   A proxy whose dictionaries are all objects, Promises or Observables no longer needs `provideHttpClient()`. One with a URL dictionary and no `HttpClient` now fails with an error that says so, instead of a `NullInjectorError`.
+-   `onLoaderReady` was never called for a dictionary given as a plain object, because it loads before the proxy subscribed.
+-   Two loader cache entries collided when an id and a language shared an underscore, for example id `a_b` with language `c` and id `a` with language `b_c`.
+-   A destroyed proxy now completes its loader's ready and error streams instead of leaving them open.
+
+## 19.0.0
 
 The major version now follows Angular's: 19.x is built for Angular 19.
 
@@ -10,7 +23,7 @@ The major version now follows Angular's: 19.x is built for Angular 19.
 
 -   Requires Angular 19, TypeScript 5.5 and `simply-translate-angular` 19.0.0.
 
-## 1.0.0 (unreleased)
+## 1.0.0
 
 First release as a separate package. The API moved here unchanged from `simply-translate-angular` 0.21.20. For earlier history see the [`simply-translate-angular` changelog](https://github.com/oleg-wx/translate-angular/blob/master/projects/translate/CHANGELOG.md).
 

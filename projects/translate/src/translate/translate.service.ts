@@ -1,5 +1,5 @@
-import { computed, Inject, Injectable, InjectionToken, isSignal, Optional, Signal, signal } from '@angular/core';
-import { BehaviorSubject, combineLatest, isObservable, map, merge, Observable, of, Subject } from 'rxjs';
+import { computed, Inject, Injectable, InjectionToken, isSignal, OnDestroy, Optional, Signal, signal } from '@angular/core';
+import { BehaviorSubject, combineLatest, isObservable, map, merge, Observable, of, Subject, Subscription } from 'rxjs';
 import {
   Translations,
   Dictionary,
@@ -18,11 +18,12 @@ export interface DefaultTranslateConfig {
   placeholder?: PlaceholderType;
 }
 
-interface LangChange {
+/** Emitted by `languageChange$`. */
+export interface LangChange {
   lang: string;
   oldLang?: string;
 
-  /** @deprecated */
+  /** @deprecated Read `TranslateRootService.fallbackLang` instead. Removed in 21.0.0. */
   fallbackLang?: string;
 }
 
@@ -63,12 +64,13 @@ export const DEFAULT_CONFIG = new InjectionToken<DefaultTranslateConfig>('Transl
 export const ROOT_DICTIONARIES = new InjectionToken<Dictionaries>('TranslateService INITIAL_DICTIONARIES');
 
 @Injectable()
-export class TranslateRootService implements TranslateServiceBase {
+export class TranslateRootService implements TranslateServiceBase, OnDestroy {
   private _fallbackAdded = false;
 
   private _langChangeSubj: BehaviorSubject<LangChange>;
   private _dictionarySubj: Subject<void>;
   private _service: Translations;
+  private _stateVersionSub: Subscription;
 
   private readonly _stateVersionSubs = new BehaviorSubject<number>(0);
 
@@ -131,7 +133,12 @@ export class TranslateRootService implements TranslateServiceBase {
       pipeline,
     );
 
-    merge(this._langChangeSubj, this._dictionarySubj).subscribe(() => this._bumpStateVersion());
+    this._stateVersionSub = merge(this._langChangeSubj, this._dictionarySubj).subscribe(() => this._bumpStateVersion());
+  }
+
+  // ngOnDestroy rather than DestroyRef: in 19.x the service may also be created with `new`, outside DI
+  ngOnDestroy(): void {
+    this._stateVersionSub.unsubscribe();
   }
 
   translateTo(lang: string, key: TranslateKey): string;

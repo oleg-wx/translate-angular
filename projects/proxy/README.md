@@ -184,7 +184,7 @@ validateDictionary(appSchema, parsedJson, { placeholder: 'single' });
 ```
 ### Per-proxy dictionary loading
 
-A `TranslateProxy` subclass can load its own per-language dictionary, without any `forChild()`/`NgModule` wrapper — each language may be a plain object, a `Promise`, an `Observable`, or a URL string fetched via `HttpClient`. Only the *active* language loads eagerly by default; anything else loads on demand the first time you switch to it, unless you ask for it upfront via `preloadLangs`/`preloadFallbackLang`, or on demand via `preloadLang()`. Configure it with the `@TranslateProxyLoader(config)` decorator:
+A `TranslateProxy` subclass can load its own per-language dictionary, without any `forChild()`/`NgModule` wrapper — each language may be a plain object, a `Promise`, an `Observable`, or a URL string fetched via `HttpClient` (only URL strings need `provideHttpClient()`). Only the *active* language loads eagerly by default; anything else loads on demand the first time you switch to it, unless you ask for it upfront via `preloadLangs`/`preloadFallbackLang`, or on demand via `preloadLang()`. Configure it with the `@TranslateProxyLoader(config)` decorator:
 
 ```typescript
 import { Injectable } from '@angular/core';
@@ -204,7 +204,8 @@ import type { AppSchema } from './app.schema';
   preloadFallbackLang: true, // also load `service.fallbackLang` upfront, not just the active language
 })
 export class AppTranslate extends TranslateProxy<AppSchema> {
-  // optional — fires whenever a language finishes loading successfully
+  // optional — fires whenever a language finishes loading successfully. For a plain-object dictionary that
+  // is during construction, before this class's own fields are initialized, so don't rely on them here
   onLoaderReady({ lang, id }: { lang: string; id: string }): void {
     console.log(`Loaded '${id}' (${lang})`);
   }

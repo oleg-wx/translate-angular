@@ -1,23 +1,23 @@
-import { computed, Directive, effect, ElementRef, inject, input, OnInit, signal } from '@angular/core';
-import { DictionaryEntry, TranslateKey } from 'simply-translate';
+import { AfterViewChecked, computed, Directive, effect, ElementRef, inject, input, OnInit, Renderer2, signal } from '@angular/core';
+import { DictionaryEntry, TranslateDynamicProps, TranslateKey } from 'simply-translate';
 import { TranslateService } from './translate.service';
 
 @Directive({
   selector: '[translate]',
 })
-export class TranslateDirective implements OnInit {
-  private _element: ElementRef<HTMLElement> = inject(ElementRef<HTMLElement>);
-  private _service: TranslateService = inject(TranslateService);
-
-  private domContent = signal<string>('');
+export class TranslateDirective implements OnInit, AfterViewChecked {
+  private _element = inject<ElementRef<HTMLElement>>(ElementRef);
+  private _service = inject(TranslateService);
+  private _rnd = inject(Renderer2);
+  private _domContent = signal<string>('');
   private _textNode: Text | null = null;
   private _lastOutput: string | null = null;
   private _initialContent = '';
 
-  fallback = input<DictionaryEntry | string | undefined>(undefined);
-  key = input<TranslateKey | undefined>(undefined, { alias: 'translate' });
-  to = input<string | undefined>(undefined);
-  values = input<{ [key: string]: string | number } | undefined>(undefined);
+  readonly fallback = input<DictionaryEntry | string | undefined>(undefined);
+  readonly key = input<TranslateKey | undefined>(undefined, { alias: 'translate' });
+  readonly to = input<string | undefined>(undefined);
+  readonly values = input<TranslateDynamicProps | undefined>(undefined);
 
   constructor() {
     const finalKey = computed(() => {
@@ -25,7 +25,7 @@ export class TranslateDirective implements OnInit {
       if (boundKey !== undefined && boundKey !== '') {
         return boundKey;
       }
-      return this.domContent();
+      return this._domContent();
     });
 
     const translatedText = computed(() => {
@@ -40,14 +40,19 @@ export class TranslateDirective implements OnInit {
       if (!activeKey) return '';
 
       if (lang) {
-        return this._service.translateTo(lang, activeKey, values as any, fallbackValue);
+        return this._service.translateTo(lang, activeKey, values, fallbackValue);
       }
 
-      return this._service.translate(activeKey, values as any, fallbackValue);
+      return this._service.translate(activeKey, values, fallbackValue);
     });
 
     effect(() => {
       const output = translatedText();
+      // Nothing to show yet: an interpolated key is filled in after this runs, so clearing
+      // the text node now would erase it before it is read back.
+      if (output === '' && this._lastOutput === null) {
+        return;
+      }
       this._textNode!.data = output;
       this._lastOutput = output;
     });
@@ -58,8 +63,8 @@ export class TranslateDirective implements OnInit {
       const currentText = this._textNode.data.trim();
       // Skip a DOM read that's just our own last translated output reflected back —
       // otherwise the implicit key/fallback gets contaminated with a stale translation.
-      if (currentText !== this.domContent() && currentText !== this._lastOutput) {
-        this.domContent.set(currentText);
+      if (currentText !== this._domContent() && currentText !== this._lastOutput?.trim()) {
+        this._domContent.set(currentText);
       }
     }
   }
@@ -67,18 +72,18 @@ export class TranslateDirective implements OnInit {
   ngOnInit(): void {
     this._textNode = this._resolveTextNode();
     this._initialContent = this._textNode.data.trim();
-    this.domContent.set(this._initialContent);
+    this._domContent.set(this._initialContent);
   }
 
   private _resolveTextNode(): Text {
     const el = this._element.nativeElement;
 
-    if (el.childNodes.length === 1 && el.firstChild?.nodeType === Node.TEXT_NODE) {
+    if (el.childNodes.length === 1 && el.firstChild?.nodeType === el.TEXT_NODE) {
       return el.firstChild as Text;
     }
 
     el.textContent = '';
-    const textNode = document.createTextNode('');
+    const textNode = this._rnd.createText('');
     el.appendChild(textNode);
     return textNode;
   }

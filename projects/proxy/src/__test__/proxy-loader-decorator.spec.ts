@@ -28,12 +28,39 @@ const featureSchema = TranslateSchema({ ok: StringProp(), title: StringProp() })
 })
 class FeatureTranslate extends TranslateProxy<typeof featureSchema> {}
 
+const readyCalls: { lang: string; id: string }[] = [];
+
+@Injectable({ providedIn: 'root' })
+@TranslateProxyLoader({
+  id: 'reported',
+  dictionaries: { [lang]: { ok: 'Ok' } },
+})
+class ReportedTranslate extends TranslateProxy<typeof commonSchema> {
+  onLoaderReady(args: { lang: string; id: string }): void {
+    readyCalls.push(args);
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+@TranslateProxyLoader({
+  id: 'remote',
+  dictionaries: { [lang]: '/assets/remote.json' },
+})
+class RemoteTranslate extends TranslateProxy<typeof commonSchema> {}
+
 describe('TranslateProxyLoader decorator', () => {
   beforeEach(() => {
+    readyCalls.length = 0;
     TestBed.configureTestingModule({
       imports: [TranslateModule.forRoot({ lang })],
       providers: [provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()],
     });
+  });
+
+  it('reports a plain-object dictionary to onLoaderReady', () => {
+    TestBed.inject(ReportedTranslate);
+
+    expect(readyCalls).toEqual([{ lang, id: 'reported' }]);
   });
 
   it('loads its own dictionary without being injected directly anywhere', () => {
@@ -56,5 +83,19 @@ describe('TranslateProxyLoader decorator', () => {
 
     expect(root.translate('ok')).toBe('Ok');
     expect(feature.object.ok()).toBe('Ok');
+  });
+});
+
+describe('TranslateProxyLoader decorator without HttpClient', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({ imports: [TranslateModule.forRoot({ lang })] });
+  });
+
+  it('loads dictionaries that are not URLs', () => {
+    expect(TestBed.inject(FeatureTranslate).object.title()).toBe('Title');
+  });
+
+  it('asks for provideHttpClient() when a dictionary is a URL', () => {
+    expect(() => TestBed.inject(RemoteTranslate)).toThrowError(/"remote".*provideHttpClient\(\)/);
   });
 });
