@@ -29,11 +29,13 @@ const childeDic = {
 
 @Component({
   template: `<div>B</div>`,
+  standalone: false,
 })
 export class TestComponent {}
 
 @Component({
   template: `<div id="dyn" translate="hello_user" fallback="fallback"></div>`,
+  standalone: false,
 })
 export class TestComponentDyn {
   constructor(
@@ -49,6 +51,7 @@ export class TestComponentDyn {
 @Component({
   selector: 'root',
   template: `<router-outlet></router-outlet>`,
+  standalone: false,
 })
 export class TestComponentRoot {
   @ContentChildren(TestComponentDyn, { descendants: true })

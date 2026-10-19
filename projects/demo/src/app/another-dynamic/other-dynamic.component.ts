@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import { TRANSLATE_IMPORTS } from 'src/_translate.imports';
 @Component({
-  standalone: true,
   imports: [TRANSLATE_IMPORTS],
   selector: 'app-dynamic',
   template: `

@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { StringProp, TranslateSchema } from '../lib/schema';
 import { TranslateProxy } from '../lib/translate.proxy';
@@ -30,7 +31,8 @@ class FeatureTranslate extends TranslateProxy<typeof featureSchema> {}
 describe('TranslateProxyLoader decorator', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule, TranslateModule.forRoot({ lang })],
+      imports: [TranslateModule.forRoot({ lang })],
+      providers: [provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()],
     });
   });
 

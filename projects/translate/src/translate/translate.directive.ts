@@ -4,7 +4,6 @@ import { TranslateService } from './translate.service';
 
 @Directive({
   selector: '[translate]',
-  standalone: true,
 })
 export class TranslateDirective implements OnInit {
   private _element: ElementRef<HTMLElement> = inject(ElementRef<HTMLElement>);

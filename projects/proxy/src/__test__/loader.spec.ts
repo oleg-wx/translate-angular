@@ -1,5 +1,5 @@
-import { HttpClient } from '@angular/common/http';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpClient, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { Subject } from 'rxjs';
 import { TranslateModule, TranslateRootService, TranslateService } from 'simply-translate-angular';
@@ -29,7 +29,8 @@ describe('TranslateLoader', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule, TranslateModule.forRoot({ lang })],
+      imports: [TranslateModule.forRoot({ lang })],
+      providers: [provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()],
     });
 
     root = TestBed.inject(TranslateRootService);

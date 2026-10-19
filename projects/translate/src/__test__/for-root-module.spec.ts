@@ -6,6 +6,7 @@ import { TranslateModule, factory, DefaultTranslateConfig, TranslateRootService,
 
 @Component({
   template: ``,
+  standalone: false,
 })
 export class TestComponent {}
 

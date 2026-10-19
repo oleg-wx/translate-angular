@@ -5,7 +5,6 @@ import { TRANSLATE_IMPORTS } from 'src/_translate.imports';
 import { VisitsComponent } from './visits/visits.component';
 
 @Component({
-  standalone: true,
   imports: [TRANSLATE_IMPORTS, VisitsComponent],
   selector: 'translate-to',
   templateUrl: './translate-to.component.html',

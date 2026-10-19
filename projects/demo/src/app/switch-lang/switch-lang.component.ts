@@ -5,7 +5,6 @@ import { Observable } from 'rxjs';
 import { TRANSLATE_IMPORTS, TranslateRootService, TranslateService } from 'src/_translate.imports';
 
 @Component({
-  standalone: true,
   imports: [TRANSLATE_IMPORTS, FormsModule, NgFor, AsyncPipe],
   selector: 'app-switch-lang',
   template: `

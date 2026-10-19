@@ -1,11 +1,11 @@
 import {
-  APP_INITIALIZER,
   EnvironmentProviders,
-  ENVIRONMENT_INITIALIZER,
   inject,
   InjectionToken,
   isDevMode,
   makeEnvironmentProviders,
+  provideAppInitializer,
+  provideEnvironmentInitializer,
   Provider,
 } from '@angular/core';
 import { Dictionaries } from 'simply-translate';
@@ -104,8 +104,8 @@ export function ɵtranslateRootProviders(features: TranslateFeature[], { guard }
     { provide: DEFAULT_CONFIG, useValue: { placeholder: 'default' } as DefaultTranslateConfig },
     { provide: ROOT_DICTIONARIES, useValue: {} as Dictionaries },
     { provide: TRANSLATE_ROOT_GUARD, useValue: true },
-    ...(guard ? [{ provide: ENVIRONMENT_INITIALIZER, multi: true, useValue: rootGuard }] : []),
-    { provide: APP_INITIALIZER, multi: true, useFactory: translateInitializerFactory },
+    ...(guard ? [provideEnvironmentInitializer(rootGuard)] : []),
+    provideAppInitializer(() => translateInitializerFactory()()),
     // features last, so that withConfig()/withDictionaries() override the defaults above
     features.map((feature) => feature.ɵproviders),
   ]);
@@ -140,7 +140,7 @@ export function provideTranslateChild(options: TranslateChildOptions = {}): Envi
     TranslateService,
     TranslateResolve,
     { provide: TRANSLATE_CHILD, useValue: value },
-    ...(isDevMode() ? [{ provide: ENVIRONMENT_INITIALIZER, multi: true, useValue: childGuard }] : []),
+    ...(isDevMode() ? [provideEnvironmentInitializer(childGuard)] : []),
   ]);
 }
 

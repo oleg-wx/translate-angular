@@ -2,6 +2,18 @@
 
 All notable changes to `simply-translate-angular` are listed here.
 
+## 19.0.0 (unreleased)
+
+The major version now follows Angular's: 19.x is built for Angular 19.
+
+### Breaking
+
+-   Requires Angular 19 and TypeScript 5.5.
+
+### Changed
+
+-   Initialization uses `provideAppInitializer()` and `provideEnvironmentInitializer()` instead of the `APP_INITIALIZER` and `ENVIRONMENT_INITIALIZER` tokens deprecated in Angular 19. `translateInitializerFactory` is unchanged.
+
 ## 1.0.0 (unreleased)
 
 ### Upgrading from 0.21.x

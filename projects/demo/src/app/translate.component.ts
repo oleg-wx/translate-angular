@@ -5,7 +5,6 @@ import { TRANSLATE_IMPORTS } from 'src/_translate.imports';
 import { VisitsComponent } from './components/visits/visits.component';
 
 @Component({
-  standalone: true,
   imports: [TRANSLATE_IMPORTS, VisitsComponent],
   selector: 'app-view',
   template: `

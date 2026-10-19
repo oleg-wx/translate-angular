@@ -5,7 +5,6 @@ import { TRANSLATE_IMPORTS, TranslateRootService } from 'src/_translate.imports'
 import { TranslateProxyMore, TranslateProxyOneMore } from './translate.proxy';
 
 @Component({
-  standalone: true,
   imports: [TRANSLATE_IMPORTS, FormsModule, NgFor, AsyncPipe],
   selector: 'app-try-proxy',
   template: `
@@ -53,7 +52,7 @@ export class TryProxyComponent {
     private translateOneMore: TranslateProxyOneMore,
   ) {
     setInterval(() => {
-      this.countDaysValue.set(this.countDaysValue() + 1);
+      this.countDaysValue.set((this.countDaysValue() ?? 0) + 1);
     }, 3000);
   }
 

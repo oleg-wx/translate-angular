@@ -1,6 +1,6 @@
 import { inject, Injectable, OnDestroy, Signal } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Dictionary, DictionaryEntry, TranslateDynamicProps } from 'simply-translate';
+import { Dictionary, TranslateDynamicProps } from 'simply-translate';
 import type { BaseNode, NamespaceNode, SchemaShape, TranslateSchemaNode } from './schema/schema.types';
 import { TranslateService } from 'simply-translate-angular';
 import { APPLY_LOADER, ApplyLoaderFn, TranslateLoader, TranslateLoaderDictionaries, TranslateLoaderSupport } from './loader/translate.loader';

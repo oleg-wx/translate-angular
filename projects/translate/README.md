@@ -1,6 +1,6 @@
 # Simply Translate for Angular
 
-[Simplest translations](https://www.npmjs.com/package/simply-translate) for Angular 17+.
+[Simplest translations](https://www.npmjs.com/package/simply-translate) for Angular 19+.
 
 Upgrading or looking for what changed? See the [changelog](CHANGELOG.md). Version 1.0.0 moved `TranslateProxy` and the schema API to [simply-translate-angular-proxy](https://www.npmjs.com/package/simply-translate-angular-proxy).
 

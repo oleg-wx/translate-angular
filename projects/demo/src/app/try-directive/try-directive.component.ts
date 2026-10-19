@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { TRANSLATE_IMPORTS, TranslateRootService } from 'src/_translate.imports';
 
 @Component({
-  standalone: true,
   imports: [TRANSLATE_IMPORTS, FormsModule, NgFor],
   selector: 'app-try-directive',
   template: `

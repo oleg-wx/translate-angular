@@ -2,6 +2,14 @@
 
 All notable changes to `simply-translate-angular-proxy` are listed here.
 
+## 19.0.0 (unreleased)
+
+The major version now follows Angular's: 19.x is built for Angular 19.
+
+### Breaking
+
+-   Requires Angular 19, TypeScript 5.5 and `simply-translate-angular` 19.0.0.
+
 ## 1.0.0 (unreleased)
 
 First release as a separate package. The API moved here unchanged from `simply-translate-angular` 0.21.20. For earlier history see the [`simply-translate-angular` changelog](https://github.com/oleg-wx/translate-angular/blob/master/projects/translate/CHANGELOG.md).

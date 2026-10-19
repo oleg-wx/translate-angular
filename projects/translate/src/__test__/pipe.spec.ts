@@ -12,6 +12,7 @@ import { TranslateModule } from '../simply-translate.module';
     <div id="d4">{{ 'hello_user_not_there' | translate: { user: 'Oleg' }:'Hello \${user} fb' }}</div>
     <div id="d6">{{ 'hello_user_not_there' | translate: { user: 'Oleg', num:5 }:{ value: 'Hello \${user} \${num} fb', plural: { num: [['=5', 'five']] } } }}</div>
   `,
+  standalone: false,
 })
 export class TestDirectiveComponent {}
 

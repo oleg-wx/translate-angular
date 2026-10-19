@@ -16,7 +16,6 @@ import {
 } from '../public_api';
 
 @Component({
-  standalone: true,
   imports: [...TRANSLATE_IMPORTS],
   template: `<span id="text">{{ 'hello_user' | translate }}</span>`,
 })

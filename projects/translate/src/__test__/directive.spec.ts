@@ -22,6 +22,7 @@ import { TranslateModule } from '../simply-translate.module';
     <div id="d8" translate="hello_user_not_there_fallback" fallback="hello_user_fallback_param"></div>
     <div id="d9" translate="hello_user_not_there_fallback">hello_user_fallback_content</div>
   `,
+  standalone: false,
 })
 export class TestDirectiveComponent {}
 

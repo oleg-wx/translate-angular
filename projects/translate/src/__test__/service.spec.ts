@@ -7,7 +7,8 @@ import { TranslateModule } from '../simply-translate.module';
 // Mock component helper to inject the services
 @Component({
   selector: 'test-component',
-  template: `<div>Test Framework Elements</div>`
+  template: `<div>Test Framework Elements</div>`,
+  standalone: false,
 })
 class TestInjectedServiceComponent {
   constructor(public root: TranslateRootService, public service: TranslateService) {}
@@ -15,6 +16,7 @@ class TestInjectedServiceComponent {
 
 @Component({
   template: `<test-component #tst></test-component>`,
+  standalone: false,
 })
 export class TestComponent {
   @ViewChild('tst', { static: true })

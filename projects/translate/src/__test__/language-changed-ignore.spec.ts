@@ -9,6 +9,7 @@ import { TranslateModule } from '../simply-translate.module';
     <div id="d1" translate="hello_user" [values]="{ user: 'Oleg' }"></div>
     <div id="d2">{{ 'hello_user' | translate: { user: 'Oleg' } }}</div>
   `,
+  standalone: false,
 })
 export class TestComponent {}
 

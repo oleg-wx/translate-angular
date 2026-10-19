@@ -6,7 +6,6 @@ import { TRANSLATE_IMPORTS } from 'src/_translate.imports';
 import { StorageService } from '../../storage.service';
 
 @Component({
-  standalone: true,
   imports: [TRANSLATE_IMPORTS, NgIf],
   selector: 'app-visits',
   template: `

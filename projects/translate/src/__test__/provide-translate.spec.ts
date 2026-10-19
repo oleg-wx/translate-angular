@@ -20,7 +20,6 @@ import {
 import { InjectedTestClass, InjectedValue, INJECTED_TOKEN } from './core/test.component';
 
 @Component({
-  standalone: true,
   // nested, the form the README documents
   imports: [TRANSLATE_IMPORTS],
   template: `<span id="pipe">{{ 'hello_user' | translate }}</span><span id="directive" translate="hello_user"></span>`,
