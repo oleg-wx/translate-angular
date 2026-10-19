@@ -77,6 +77,14 @@ describe('TranslateProxyLoader decorator', () => {
     expect(proxy.readyLangs).toEqual([lang]);
   });
 
+  it('does not report to onLoaderReady once destroyed, even a load that finished before', async () => {
+    const proxy = TestBed.inject(FieldsTranslate);
+    proxy.ngOnDestroy();
+    await tick(0);
+
+    expect(proxy.readyLangs).toEqual([]);
+  });
+
   it('loads its own dictionary without being injected directly anywhere', () => {
     const feature = TestBed.inject(FeatureTranslate);
 

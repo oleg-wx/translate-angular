@@ -16,7 +16,7 @@ All notable changes to `simply-translate-angular-proxy` are listed here.
 -   Two loader cache entries collided when an id and a language shared an underscore, for example id `a_b` with language `c` and id `a` with language `b_c`.
 -   A destroyed proxy now completes its loader's ready and error streams instead of leaving them open.
 -   A second proxy with the same loader id, for example one per `provideTranslateChild()` scope, now gets the dictionary on its own `TranslateService` and reports to its own `onLoaderReady`/`onLoaderError`, also while the first load is still in flight. It still makes no second request.
--   `onLoaderReady` and `onLoaderError` are called once the proxy is constructed, so the subclass's fields are initialized.
+-   `onLoaderReady` and `onLoaderError` are called once the proxy is constructed, so the subclass's fields are initialized, and never after it is destroyed.
 -   A dictionary given as a thenable that isn't the page's `Promise`, such as a native `import()` promise under zone.js, is awaited instead of being merged as if it were the dictionary.
 -   A destroyed proxy no longer grafts or reports a load that finishes afterwards, and its `preloadLang()` does nothing. The load still fills the cache for other proxies.
 

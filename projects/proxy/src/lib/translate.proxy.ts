@@ -1,5 +1,5 @@
 import { inject, Injectable, OnDestroy, Signal } from '@angular/core';
-import { asapScheduler, Observable, observeOn } from 'rxjs';
+import { asapScheduler, Observable, observeOn, Subscription } from 'rxjs';
 import { Dictionary, TranslateDynamicProps } from 'simply-translate';
 import type { BaseNode, NamespaceNode, SchemaShape, TranslateSchemaNode } from './schema/schema.types';
 import { TranslateService } from 'simply-translate-angular';
@@ -37,6 +37,8 @@ export abstract class TranslateProxy<S extends TranslateSchemaNode> implements O
   private _id?: string;
   private _dictionaries?: Record<string, Dictionary | Promise<Dictionary> | Observable<Dictionary> | string>;
   private _loader?: TranslateLoader;
+  /** Delivery of the loader's events to onLoaderReady/onLoaderError, cancelled on destroy. */
+  private readonly _loaderEvents = new Subscription();
 
   constructor() {
     const loaderInfo = this[APPLY_LOADER]?.();
@@ -73,13 +75,17 @@ export abstract class TranslateProxy<S extends TranslateSchemaNode> implements O
       );
       // subscribed before init() so a dictionary grafted synchronously is reported too, but delivered
       // on a microtask: this runs in the base constructor, before the subclass's fields are initialized;
-      // both complete when the loader is removed in ngOnDestroy
-      this._loader.ready$.pipe(observeOn(asapScheduler)).subscribe((info) => {
-        this.onLoaderReady?.(info);
-      });
-      this._loader.errors$.pipe(observeOn(asapScheduler)).subscribe((error) => {
-        this.onLoaderError?.(error);
-      });
+      // unsubscribed in ngOnDestroy, which also drops an event still waiting for that microtask
+      this._loaderEvents.add(
+        this._loader.ready$.pipe(observeOn(asapScheduler)).subscribe((info) => {
+          this.onLoaderReady?.(info);
+        }),
+      );
+      this._loaderEvents.add(
+        this._loader.errors$.pipe(observeOn(asapScheduler)).subscribe((error) => {
+          this.onLoaderError?.(error);
+        }),
+      );
       this._loader.init();
     }
   }
@@ -152,6 +158,7 @@ export abstract class TranslateProxy<S extends TranslateSchemaNode> implements O
   }
 
   ngOnDestroy(): void {
+    this._loaderEvents.unsubscribe();
     this._loader?.remove();
   }
 }
