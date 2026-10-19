@@ -1,0 +1,153 @@
+projects/translate/src/__test__/provide-translate.spec.ts
+  s_04ba2b1a194e1b::t_d42782cab41570 5,10,47-48
+  s_04ba2b1a194e1b::t_2d81f4e33f13d9 9,30-34,36-37,61-66,92,105,108,175,187
+  s_04ba2b1a194e1b::t_03ed6ba5dd83ec 24-25
+  s_485483feaa33fc::t_1aa78caf1f8ced 128-173
+  s_485483feaa33fc::t_bfe4c5c87b37af 1,3,6-7
+  s_04ba2b1a194e1b::t_2b727fd2d16199 2,4,8,11-23,26-29,35,38-46,49-60,67-91,93-104,106-107,109-127,174,176-186,188-190
+src/app/dynamic/other-dynamic.component.ts
+  s_04ba2b1a194e1b::t_4e030cd204eb0e 2,4-5
+projects/translate/src/__test__/provide-translate-child.spec.ts
+  s_485483feaa33fc::t_1e83da5f7da5e6 112
+  s_485483feaa33fc::t_3eeaed18d2ebed 84-111,113-140,144,147,150-170,173-175
+  s_485483feaa33fc::t_8663744bbbc14d 141-143,145-146,148-149
+  s_485483feaa33fc::t_91d690bde4c5a8 2-7,9-16
+  s_485483feaa33fc::t_d329a9e23dffb2 171-172
+  s_485483feaa33fc::t_c8f172d8ec3fdf 1
+  s_485483feaa33fc::t_f9f61423df2c01 8
+  s_04ba2b1a194e1b::t_a5bd8e7553bd44 17-83
+projects/translate/README.md
+  s_04ba2b1a194e1b::t_783308481754fe 20,25-26,28-43,47-60
+  s_04ba2b1a194e1b::t_472be3b3e2a4b2 142,145-146,149-159,162-164,169-172,174-176,179,181-187,189,191,193-201,203-205,208,211-216,219-221,224,228-232,238-262,266,269-274,278,280-300
+  s_485483feaa33fc::t_b78dc02a69429a 128
+  s_485483feaa33fc::t_c86ffb588678eb 61
+src/app/app.component.ts
+  s_04ba2b1a194e1b::t_8a775e35ac9e5c 2-4,6-7
+projects/translate/src/translate/translate.pipe.ts
+  s_04ba2b1a194e1b::t_016009f341c4fd 5,18
+  s_04ba2b1a194e1b::t_cdb6a18e6da99f 31
+tsconfig.json
+  s_485483feaa33fc::t_95a6e98607725a 24-25
+  s_485483feaa33fc::t_5aa5a9779be787 4,9,16-18,20-22,30-31,38
+projects/translate/src/simply-translate.module.ts
+  s_04ba2b1a194e1b::t_dc2b1936571d6c 1,6,8-13,24-27,37,99,114,123,128-157,159-160,163,172
+  s_485483feaa33fc::t_04c307e71c86a2 167-168,173-182,185
+  s_485483feaa33fc::t_d5b42f205fc3de 4,7,14
+src/app/another-dynamic/dynamic.component.ts
+  s_04ba2b1a194e1b::t_4e030cd204eb0e 2-3,5-6
+projects/translate/CHANGELOG.md
+  s_04ba2b1a194e1b::t_db98414c9b443f 12-18,20-24
+  s_485483feaa33fc::t_c1be69cf848e49 19
+  s_485483feaa33fc::t_4f3607eee9acaa 25-28
+  s_485483feaa33fc::t_f29739e19abe85 37-38
+src/app/app.spec.ts
+  s_485483feaa33fc::t_63275d289649c5 76-81
+  s_04ba2b1a194e1b::t_1536857379bd6b 1-8,10-39,56-75,82,84-93,95-102
+  s_04ba2b1a194e1b::t_93480b61810c0e 40-55,83,94
+  s_485483feaa33fc::t_b35c8a8b5b6112 9
+src/app/try-directive/try-directive.component.ts
+  s_04ba2b1a194e1b::t_8a775e35ac9e5c 1,3-4,7-8
+src/app/try-proxy/try-proxy.component.ts
+  s_04ba2b1a194e1b::t_8a775e35ac9e5c 1,3-5,8-9
+src/app/more/title.directive.ts
+  s_04ba2b1a194e1b::t_8a775e35ac9e5c 4
+src/app/components/translate-to.component.ts
+  s_04ba2b1a194e1b::t_8a775e35ac9e5c 2,4-5,8-9
+projects/translate/src/providers/translate.providers.ts
+  s_485483feaa33fc::t_a4ab00d9711b45 90-98
+  s_485483feaa33fc::t_f0835b4e8be050 132,136
+  s_04ba2b1a194e1b::t_b7afda2f80b5d2 11-23,25-85,87-89,99-106,108-131,133-135,137-142,144-154,159-163
+  s_485483feaa33fc::t_758b65f314efd3 107
+  s_04ba2b1a194e1b::t_841a016be4c171 1-10,86,143,155-158
+  s_485483feaa33fc::t_0c21c793832d33 24
+src/main.ts
+  s_04ba2b1a194e1b::t_155ac30c23e10d 2,4-5,12
+src/app/another-dynamic/dynamic.routes.ts
+  s_04ba2b1a194e1b::t_993a84f474c724 1-30
+src/app/another-dynamic/other-dynamic.component.ts
+  s_04ba2b1a194e1b::t_4e030cd204eb0e 2,4-5
+src/app/switch-lang/switch-lang.component.ts
+  s_04ba2b1a194e1b::t_8a775e35ac9e5c 1,3,5,8-9
+src/app/app.config.ts
+  s_04ba2b1a194e1b::t_155ac30c23e10d 1-44
+src/app/dynamic/dynamic.routes.ts
+  s_04ba2b1a194e1b::t_993a84f474c724 1-36
+projects/translate/src/translate/translate.utils.ts
+  s_485483feaa33fc::t_39a344cbfd5c2f 16-24
+  s_485483feaa33fc::t_bf31775c609bda 1
+  s_04ba2b1a194e1b::t_f60ddc63e9c301 2-15,25-31
+src/app/translate.component.ts
+  s_04ba2b1a194e1b::t_8a775e35ac9e5c 2,4-5,8-9
+  h_b041fb82ba1455 44-45,59
+README.md
+  s_04ba2b1a194e1b::t_eb5a149dc59ff6 9
+  s_04ba2b1a194e1b::t_f4a15ca80be9b6 19,24
+projects/translate/src/public_api.ts
+  s_04ba2b1a194e1b::t_83027f4b18c493 5-8
+projects/translate/tsconfig.lib.json
+  s_485483feaa33fc::t_74e29d5acc927f 6
+projects/translate/src/providers/translate.initializer.ts
+  s_04ba2b1a194e1b::t_14c2fa01aa6181 3
+  s_485483feaa33fc::t_334adab39d93e6 10
+  s_04ba2b1a194e1b::t_37222c117b9b1a 1,6-9,11-21,24-33,36-37,39-44
+  s_485483feaa33fc::t_6bfa570003e18f 34-35,38
+  s_485483feaa33fc::t_76aa197b594f25 2,4
+  s_04ba2b1a194e1b::t_2638220acc2c93 5,23
+  s_04ba2b1a194e1b::t_ae4a507fa952c7 22
+projects/translate/src/translate/translate.service.ts
+  s_485483feaa33fc::t_db8de8eab377e1 217,219-222
+  s_485483feaa33fc::t_57b0dfc4f4b884 314-316
+  s_04ba2b1a194e1b::t_5bbcd6dde112bb 211-213
+src/_translate.imports.ts
+  s_04ba2b1a194e1b::t_77df49bc2121c2 1-2
+  s_485483feaa33fc::t_89abc3a568c32e 3-6
+projects/translate/src/translate/translate.resolver.ts
+  s_485483feaa33fc::t_e7e5d47542427b 30,34,37,40
+  s_485483feaa33fc::t_077dee59d9d357 1,6
+  s_485483feaa33fc::t_280c5dd12b379f 3,17-18,32-33,35-36,38-39,45-55,57-68
+  s_04ba2b1a194e1b::t_766649180866b9 4,8,16,19,21-25,29,71-80
+src/app/components/try-date.component.ts
+  s_04ba2b1a194e1b::t_8a775e35ac9e5c 2-3,6-7
+src/app/components/visits/visits.component.ts
+  s_04ba2b1a194e1b::t_8a775e35ac9e5c 1,5,9-10
+src/app/dynamic/dynamic.component.ts
+  s_04ba2b1a194e1b::t_4e030cd204eb0e 2-3,5-6
+package.json
+  s_04ba2b1a194e1b::t_a9eb5808421380 17,20
+projects/translate/src/translate/translate.directive.ts
+  s_04ba2b1a194e1b::t_016009f341c4fd 7
+projects/translate/src/providers/translate.features.ts
+  s_04ba2b1a194e1b::t_9644bd384712a3 1-2,4-73
+  s_04ba2b1a194e1b::t_0f76b27258681f 3
+src/app/app.routes.ts
+  s_04ba2b1a194e1b::t_155ac30c23e10d 1-18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ead3d701319c7816abd2b69b7145faac8f3e2aa4",
+  "prompts": {},
+  "humans": {
+    "h_b041fb82ba1455": {
+      "author": "Oleg <oleg.wx@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_04ba2b1a194e1b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "916452a7-45b9-48db-83e1-6114ac6b1cff",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Oleg <oleg.wx@gmail.com>"
+    },
+    "s_485483feaa33fc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "14e1147e-00d1-47bb-b758-378a02ed19da",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Oleg <oleg.wx@gmail.com>"
+    }
+  }
+}
