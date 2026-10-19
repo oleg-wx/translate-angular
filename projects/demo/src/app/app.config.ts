@@ -2,7 +2,7 @@ import { HttpClient, provideHttpClient } from '@angular/common/http';
 import { ApplicationConfig, inject } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { forkJoin, map } from 'rxjs';
-import { Dictionary, provideTranslate, withLoader, withMiddleware } from 'src/_translate.imports';
+import { Dictionary, provideTranslate, withLoader, withMiddleware } from 'simply-translate-angular';
 import { routes } from './app.routes';
 import { TranslateProxyMore, TranslateProxyOneMore } from './try-proxy/translate.proxy';
 

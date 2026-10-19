@@ -6,6 +6,7 @@ import { StringProp, TranslateSchema } from '../lib/schema';
 import { TranslateProxy } from '../lib/translate.proxy';
 import { TranslateProxyLoader } from '../lib/loader/translate-proxy-loader.decorator';
 import { TranslateModule, TranslateRootService } from 'simply-translate-angular';
+import { tick } from './core/tick';
 
 const lang = 'lang';
 
@@ -43,6 +44,19 @@ class ReportedTranslate extends TranslateProxy<typeof commonSchema> {
 
 @Injectable({ providedIn: 'root' })
 @TranslateProxyLoader({
+  id: 'fields',
+  dictionaries: { [lang]: { ok: 'Ok' } },
+})
+class FieldsTranslate extends TranslateProxy<typeof commonSchema> {
+  readonly readyLangs: string[] = [];
+
+  onLoaderReady(args: { lang: string; id: string }): void {
+    this.readyLangs.push(args.lang);
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+@TranslateProxyLoader({
   id: 'remote',
   dictionaries: { [lang]: '/assets/remote.json' },
 })
@@ -57,10 +71,18 @@ describe('TranslateProxyLoader decorator', () => {
     });
   });
 
-  it('reports a plain-object dictionary to onLoaderReady', () => {
+  it('reports a plain-object dictionary to onLoaderReady', async () => {
     TestBed.inject(ReportedTranslate);
+    await tick(0);
 
     expect(readyCalls).toEqual([{ lang, id: 'reported' }]);
+  });
+
+  it('reports to onLoaderReady once the subclass fields are initialized', async () => {
+    const proxy = TestBed.inject(FieldsTranslate);
+    await tick(0);
+
+    expect(proxy.readyLangs).toEqual([lang]);
   });
 
   it('loads its own dictionary without being injected directly anywhere', () => {

@@ -90,6 +90,68 @@ describe('TranslateLoader', () => {
     requests[0].flush({ hello_user: 'Hello ${user}' });
   });
 
+  describe('a second loader with the same id', () => {
+    function onScope(scope: string, dictionaries: TranslateLoaderDictionaries): TranslateLoader {
+      const loader = new TranslateLoader(
+        TestBed.inject(TranslateLoaderCache),
+        TestBed.inject(HttpClient),
+        new TranslateService(root, { id: scope }),
+        'id1',
+        dictionaries,
+      );
+      loader.init();
+      return loader;
+    }
+
+    it('reports an already loaded dictionary to its own ready$', () => {
+      createLoader('id1', { [lang]: { hello_user: 'Hello ${user}' } });
+      const second = new TranslateLoader(
+        TestBed.inject(TranslateLoaderCache),
+        TestBed.inject(HttpClient),
+        TestBed.inject(TranslateService),
+        'id1',
+        { [lang]: { hello_user: 'Hello ${user}' } },
+      );
+      const ready: { lang: string; id: string }[] = [];
+      second.ready$.subscribe((e) => ready.push(e));
+
+      second.init();
+
+      expect(ready).toEqual([{ lang, id: 'id1' }]);
+    });
+
+    it('grafts an already loaded dictionary onto its own scope', () => {
+      createLoader('id1', { [lang]: { hello_user: 'Hello ${user}' } });
+      onScope('scope', { [lang]: { hello_user: 'Hello ${user}' } });
+
+      expect(root.translate('scope.hello_user', { user: 'Oleg' })).toBe('Hello Oleg');
+    });
+
+    it('grafts a load still in flight onto its own scope once it resolves, without a second request', () => {
+      createLoader('id1', { [lang]: '/assets/id1.json' });
+      const second = onScope('scope', { [lang]: '/assets/id1.json' });
+      const ready: { lang: string; id: string }[] = [];
+      second.ready$.subscribe((e) => ready.push(e));
+
+      httpMock.expectOne('/assets/id1.json').flush({ hello_user: 'Hello ${user}' });
+
+      expect(ready).toEqual([{ lang, id: 'id1' }]);
+      expect(root.translate('scope.hello_user', { user: 'Oleg' })).toBe('Hello Oleg');
+    });
+
+    it('reports a failed load still in flight to its own errors$', () => {
+      createLoader('id1', { [lang]: '/assets/id1.json' });
+      const second = onScope('scope', { [lang]: '/assets/id1.json' });
+      const errors: unknown[] = [];
+      second.errors$.subscribe((e) => errors.push(e));
+
+      httpMock.expectOne('/assets/id1.json').error(new ProgressEvent('error'));
+
+      expect(errors.length).toBe(1);
+      expect(second.getProcess()).toBeUndefined();
+    });
+  });
+
   it('merges distinct ids into the same shared per-language dictionary (no id namespacing)', () => {
     createLoader('id1', { [lang]: { greeting_from_id1: 'From id1' } });
     createLoader('id2', { [lang]: { greeting_from_id2: 'From id2' } });

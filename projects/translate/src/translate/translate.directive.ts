@@ -28,7 +28,8 @@ export class TranslateDirective implements OnInit, AfterViewChecked {
       return this._domContent();
     });
 
-    const translatedText = computed(() => {
+    // null while there is no key to translate, which is different from a translation that comes out empty
+    const translatedText = computed<string | null>(() => {
       const lang = this.to();
       this._service.stateVersion();
 
@@ -37,7 +38,7 @@ export class TranslateDirective implements OnInit, AfterViewChecked {
 
       const values = this.values();
 
-      if (!activeKey) return '';
+      if (!activeKey) return null;
 
       if (lang) {
         return this._service.translateTo(lang, activeKey, values, fallbackValue);
@@ -47,12 +48,13 @@ export class TranslateDirective implements OnInit, AfterViewChecked {
     });
 
     effect(() => {
-      const output = translatedText();
-      // Nothing to show yet: an interpolated key is filled in after this runs, so clearing
+      const translated = translatedText();
+      // No key yet: an interpolated key is filled in after this runs, so clearing
       // the text node now would erase it before it is read back.
-      if (output === '' && this._lastOutput === null) {
+      if (translated === null && this._lastOutput === null) {
         return;
       }
+      const output = translated ?? '';
       this._textNode!.data = output;
       this._lastOutput = output;
     });

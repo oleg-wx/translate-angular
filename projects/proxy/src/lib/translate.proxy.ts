@@ -1,5 +1,5 @@
 import { inject, Injectable, OnDestroy, Signal } from '@angular/core';
-import { Observable } from 'rxjs';
+import { asapScheduler, Observable, observeOn } from 'rxjs';
 import { Dictionary, TranslateDynamicProps } from 'simply-translate';
 import type { BaseNode, NamespaceNode, SchemaShape, TranslateSchemaNode } from './schema/schema.types';
 import { TranslateService } from 'simply-translate-angular';
@@ -71,12 +71,13 @@ export abstract class TranslateProxy<S extends TranslateSchemaNode> implements O
         this._dictionaries,
         preloadLangs ?? [],
       );
-      // subscribed before init() so a dictionary grafted synchronously is reported too;
+      // subscribed before init() so a dictionary grafted synchronously is reported too, but delivered
+      // on a microtask: this runs in the base constructor, before the subclass's fields are initialized;
       // both complete when the loader is removed in ngOnDestroy
-      this._loader.ready$.subscribe((info) => {
+      this._loader.ready$.pipe(observeOn(asapScheduler)).subscribe((info) => {
         this.onLoaderReady?.(info);
       });
-      this._loader.errors$.subscribe((error) => {
+      this._loader.errors$.pipe(observeOn(asapScheduler)).subscribe((error) => {
         this.onLoaderError?.(error);
       });
       this._loader.init();

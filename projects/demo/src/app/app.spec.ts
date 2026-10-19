@@ -2,7 +2,7 @@ import { provideHttpClientTesting, HttpTestingController } from '@angular/common
 import { ApplicationInitStatus } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { TranslateRootService } from 'src/_translate.imports';
+import { TranslateRootService } from 'simply-translate-angular';
 import { appConfig } from './app.config';
 import { DynamicComponent } from './dynamic/dynamic.component';
 import { DynamicComponent as AnotherDynamicComponent } from './another-dynamic/dynamic.component';

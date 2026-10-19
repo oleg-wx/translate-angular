@@ -122,6 +122,7 @@ describe('directive', () => {
     <div id="static" translate>hello</div>
     <div id="trailing-space" translate>hello_user</div>
     <div id="interpolated" translate [values]="{ user: 'Oleg' }">{{ key() }}</div>
+    <div id="empty" translate [values]="{ suffix: '' }">suffix_only</div>
   `,
 })
 class InnerContentKeyComponent {
@@ -134,7 +135,7 @@ describe('directive with the key in its content', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      providers: [provideTranslate({ lang: 'test' }, withDictionaries({ test: { hello: 'Hello', hello_user: 'Hello ${user}', bye_user: 'Bye ${user}' } }))],
+      providers: [provideTranslate({ lang: 'test' }, withDictionaries({ test: { hello: 'Hello', hello_user: 'Hello ${user}', bye_user: 'Bye ${user}', suffix_only: '${suffix}' } }))],
     });
     fixture = TestBed.createComponent(InnerContentKeyComponent);
     // with zone.js the fixture only re-renders on its own once auto detection is on, as an application would;
@@ -150,6 +151,10 @@ describe('directive with the key in its content', () => {
   it('keeps a translation that ends in whitespace instead of reading it back as a key', () => {
     // no value for ${user} leaves "Hello "
     expect(text('trailing-space')).toBe('Hello');
+  });
+
+  it('shows a translation that comes out empty instead of keeping the key', () => {
+    expect(text('empty')).toBe('');
   });
 
   it('uses interpolated content as the key', () => {

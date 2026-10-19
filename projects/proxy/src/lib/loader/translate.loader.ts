@@ -37,6 +37,8 @@ export class TranslateLoader {
   }
 
   private _subs?: Subscription;
+  /** Languages this loader has grafted or is loading, so each one is reported once per loader. */
+  private readonly _imported = new Set<string>();
   private readonly _readySub = new Subject<{ lang: string; id: string }>();
   readonly ready$ = this._readySub.asObservable();
   private readonly _errorsSub = new Subject<{ lang: string; id: string; error: any }>();
@@ -62,7 +64,7 @@ export class TranslateLoader {
    */
   preloadLang(lang: string | undefined): void {
     if (lang && this.dictionaries[lang]) {
-      this.importLang(lang, this.id);
+      this.importLang(lang);
     }
   }
 
@@ -82,35 +84,58 @@ export class TranslateLoader {
     return this.cache.get(lang, this.id);
   }
 
-  private importLang(lang: string, id: string): void {
-    const dic = this.dictionaries[lang];
-    const cached = this.cache.get(lang, this.id);
+  private importLang(lang: string): void {
+    if (this._imported.has(lang)) {
+      return;
+    }
+    this._imported.add(lang);
 
+    // Another loader with this id (another proxy instance, possibly on another TranslateService scope)
+    // already loaded or is loading it: reuse that, but still graft it onto this loader's service.
+    const cached = this.cache.get(lang, this.id);
     if (cached) {
+      if (isObservable(cached)) {
+        this.follow(lang, cached);
+      } else {
+        this.graft(lang, cached);
+      }
       return;
     }
 
+    const dic = this.dictionaries[lang];
+
     if (!(typeof dic === 'string' || dic instanceof Promise || isObservable(dic))) {
       this.cache.set(lang, this.id, dic);
-      this.service.extendDictionary(lang, dic);
-      this._readySub.next({ lang, id });
-
+      this.graft(lang, dic);
       return;
     }
 
     const source = typeof dic === 'string' ? this.httpClient!.get<Dictionary>(dic) : from(dic);
     const load = this.cache.set(lang, this.id, source.pipe(shareReplay(1)));
 
+    // only the loader that started the load updates the cache, so a follower can't clear a later retry
     load.subscribe({
-      next: (dictionary) => {
-        this.cache.set(lang, this.id, dictionary);
-        this.service.extendDictionary(lang, dictionary);
-        this._readySub.next({ lang, id });
-      },
+      next: (dictionary) => this.cache.set(lang, this.id, dictionary),
+      error: () => this.cache.clear(lang, this.id),
+    });
+    this.follow(lang, load);
+  }
+
+  private follow(lang: string, load: Observable<Dictionary>): void {
+    load.subscribe({
+      next: (dictionary) => this.graft(lang, dictionary),
       error: (error) => {
-        this.cache.clear(lang, this.id);
-        this._errorsSub.next({ lang, id, error });
+        // allow preloadLang() or a later language change to retry
+        this._imported.delete(lang);
+        this._errorsSub.next({ lang, id: this.id, error });
       },
     });
+  }
+
+  private graft(lang: string, dictionary: Dictionary): void {
+    // a copy: the first dictionary for a language is kept by reference and later ones are merged into it,
+    // which would otherwise mix other ids into the cached entry, or merge it into itself when grafted again
+    this.service.extendDictionary(lang, structuredClone(dictionary));
+    this._readySub.next({ lang, id: this.id });
   }
 }

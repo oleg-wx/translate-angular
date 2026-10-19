@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { TRANSLATE_IMPORTS } from 'src/_translate.imports';
+import { TRANSLATE_IMPORTS } from 'simply-translate-angular';
 @Component({
   imports: [TRANSLATE_IMPORTS],
   selector: 'app-dynamic',
