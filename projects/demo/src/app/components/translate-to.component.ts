@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { TRANSLATE_IMPORTS } from 'src/_translate.imports';
+import { TRANSLATE_IMPORTS } from 'simply-translate-angular';
 import { VisitsComponent } from './visits/visits.component';
 
 @Component({

@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Routes } from '@angular/router';
 import { forkJoin, map } from 'rxjs';
-import { Dictionary, withTranslateChild } from 'src/_translate.imports';
+import { Dictionary, withTranslateChild } from 'simply-translate-angular';
 import { DynamicComponent } from './dynamic.component';
 import { OtherDynamicComponent } from './other-dynamic.component';
 

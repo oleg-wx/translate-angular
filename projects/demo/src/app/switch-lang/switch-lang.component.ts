@@ -2,7 +2,7 @@ import { AsyncPipe } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
-import { TRANSLATE_IMPORTS, TranslateRootService, TranslateService } from 'src/_translate.imports';
+import { TRANSLATE_IMPORTS, TranslateRootService, TranslateService } from 'simply-translate-angular';
 
 @Component({
   imports: [TRANSLATE_IMPORTS, FormsModule, AsyncPipe],

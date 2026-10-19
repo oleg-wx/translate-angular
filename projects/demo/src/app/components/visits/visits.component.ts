@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { TRANSLATE_IMPORTS } from 'src/_translate.imports';
+import { TRANSLATE_IMPORTS } from 'simply-translate-angular';
 import { StorageService } from '../../storage.service';
 
 @Component({

@@ -28,6 +28,8 @@ All notable changes to `simply-translate-angular` are listed here.
 
 -   The `translate` directive showed an empty element on first render when its key came from an interpolation, such as `<div translate>{{ key }}</div>`.
 -   The `translate` directive replaced a translation that ends in whitespace (for example a missing placeholder value at the end) with its fallback.
+-   The `translate` directive kept showing its key when the translation came out empty on first render.
+-   A `simply-translate-angular-proxy` node given to `TranslateService` or `TranslateRootService` (and so to the pipes) as a key is looked up by its path. It was looked up as one flat key and never found.
 
 ## 20.0.0
 

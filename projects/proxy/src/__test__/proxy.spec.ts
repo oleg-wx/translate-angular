@@ -4,6 +4,7 @@ import { BehaviorSubject } from 'rxjs';
 import { provideTranslate, TranslateRootService, withDictionaries } from 'simply-translate-angular';
 import { Namespace, StringProp as Str, StringParam, TranslateSchema } from '../lib/schema';
 import { TranslateProxy } from '../lib/translate.proxy';
+import { scopedService } from './core/scoped-service';
 
 const testSchema = TranslateSchema({
   hello_user: Str({ params: { user: StringParam } }),
@@ -174,6 +175,13 @@ describe('TranslateProxy', () => {
     expect(String(proxy.object.hello_user)).toBe('hello_user');
     expect(String(proxy.object.namespace.hello_user)).toBe('namespace.hello_user');
     expect(`${proxy.object.namespace.hello_user}`).toBe('namespace.hello_user');
+  });
+
+  it('can be passed as a nested key to the service, as the translate pipes do', () => {
+    const scoped = scopedService('scope');
+
+    expect(root.translate(proxy.object.namespace.hello_user, { user: 'Oleg' })).toBe('NS Hello Oleg');
+    expect(scoped.translate(proxy.object.namespace.hello_user, { user: 'Oleg' })).toBe('NS Hello Oleg');
   });
 
   it('does not look like a thenable', () => {

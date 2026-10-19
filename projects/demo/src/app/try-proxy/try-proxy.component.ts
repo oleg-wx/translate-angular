@@ -1,8 +1,8 @@
 import { AsyncPipe } from '@angular/common';
 import { Component, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TRANSLATE_IMPORTS, TranslateRootService } from 'src/_translate.imports';
 import { TranslateProxyMore, TranslateProxyOneMore } from './translate.proxy';
+import { TRANSLATE_IMPORTS, TranslateRootService } from 'simply-translate-angular';
 
 @Component({
   imports: [TRANSLATE_IMPORTS, FormsModule, AsyncPipe],

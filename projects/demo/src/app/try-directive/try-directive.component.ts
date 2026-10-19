@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TRANSLATE_IMPORTS, TranslateRootService } from 'src/_translate.imports';
+import { TRANSLATE_IMPORTS, TranslateRootService } from 'simply-translate-angular';
 
 @Component({
   imports: [TRANSLATE_IMPORTS, FormsModule],

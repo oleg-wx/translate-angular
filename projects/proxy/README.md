@@ -209,8 +209,8 @@ import type { AppSchema } from './app.schema';
   preloadFallbackLang: true, // also load `service.fallbackLang` upfront, not just the active language
 })
 export class AppTranslate extends TranslateProxy<AppSchema> {
-  // optional — fires whenever a language finishes loading successfully. For a plain-object dictionary that
-  // is during construction, before this class's own fields are initialized, so don't rely on them here
+  // optional — fires whenever a language finishes loading successfully, always after construction,
+  // so this class's own fields are initialized
   onLoaderReady({ lang, id }: { lang: string; id: string }): void {
     console.log(`Loaded '${id}' (${lang})`);
   }
