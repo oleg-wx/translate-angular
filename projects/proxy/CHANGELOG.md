@@ -10,10 +10,14 @@ All notable changes to `simply-translate-angular-proxy` are listed here.
 
 ### Fixed
 
--   A proxy whose dictionaries are all objects, Promises or Observables no longer needs `provideHttpClient()`. One with a URL dictionary and no `HttpClient` now fails with an error that says so, instead of a `NullInjectorError`.
+-   A proxy whose dictionaries are all objects, Promises or Observables no longer needs `provideHttpClient()`. One with a URL dictionary and no `HttpClient` fails when that language loads, with an error that says so, instead of a `NullInjectorError`.
 -   `onLoaderReady` was never called for a dictionary given as a plain object, because it loads before the proxy subscribed.
 -   Two loader cache entries collided when an id and a language shared an underscore, for example id `a_b` with language `c` and id `a` with language `b_c`.
 -   A destroyed proxy now completes its loader's ready and error streams instead of leaving them open.
+-   A second proxy with the same loader id, for example one per `provideTranslateChild()` scope, now gets the dictionary on its own `TranslateService` and reports to its own `onLoaderReady`/`onLoaderError`, also while the first load is still in flight. It still makes no second request.
+-   `onLoaderReady` and `onLoaderError` are called once the proxy is constructed, so the subclass's fields are initialized, and never after it is destroyed.
+-   A dictionary given as a thenable that isn't the page's `Promise`, such as a native `import()` promise under zone.js, is awaited instead of being merged as if it were the dictionary.
+-   A destroyed proxy no longer grafts or reports a load that finishes afterwards, and its `preloadLang()` does nothing. The load still fills the cache for other proxies.
 
 ## 19.0.0
 

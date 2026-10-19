@@ -1,7 +1,7 @@
 {
   "proxy": {
     "welcome_to_app": "[Proxy] Welcome to Translation Testing Application",
-    "hello_user": "[Proxy] Hello ${user?namespace.user}!",
+    "hello_user": "[Proxy] Hello $&{user?namespace.user}!",
 
     "hello_world": "[Proxy] Hello World",
     "goodbye_world": {
@@ -11,7 +11,7 @@
 
     "namespace": {
       "value": "[Proxy] Namespace translated",
-      "hello_user": "[Proxy] Hello again!, $&{user?namespace.user}!",
+      "hello_user": "[Proxy] Hello again, $&{user?namespace.user}!",
       "user": "[Proxy] User"
     },
 
