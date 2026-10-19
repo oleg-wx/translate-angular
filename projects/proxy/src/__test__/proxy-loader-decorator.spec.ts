@@ -62,6 +62,13 @@ class FieldsTranslate extends TranslateProxy<typeof commonSchema> {
 })
 class RemoteTranslate extends TranslateProxy<typeof commonSchema> {}
 
+@Injectable({ providedIn: 'root' })
+@TranslateProxyLoader({
+  id: 'mixed',
+  dictionaries: { [lang]: { ok: 'Ok' }, other: '/assets/other.json' },
+})
+class MixedTranslate extends TranslateProxy<typeof commonSchema> {}
+
 describe('TranslateProxyLoader decorator', () => {
   beforeEach(() => {
     readyCalls.length = 0;
@@ -117,7 +124,14 @@ describe('TranslateProxyLoader decorator without HttpClient', () => {
     expect(TestBed.inject(FeatureTranslate).object.title()).toBe('Title');
   });
 
-  it('asks for provideHttpClient() when a dictionary is a URL', () => {
+  it('asks for provideHttpClient() when the active language is a URL', () => {
     expect(() => TestBed.inject(RemoteTranslate)).toThrowError(/"remote".*provideHttpClient\(\)/);
+  });
+
+  it('only asks for provideHttpClient() once a URL language is actually loaded', () => {
+    const mixed = TestBed.inject(MixedTranslate);
+
+    expect(mixed.object.ok()).toBe('Ok');
+    expect(() => mixed.preloadLang('other')).toThrowError(/"mixed".*provideHttpClient\(\)/);
   });
 });

@@ -73,6 +73,15 @@ describe('TranslateLoader', () => {
     expect(root.translate('hello_user', { user: 'Oleg' })).toBe('Hello Oleg');
   });
 
+  it('resolves a thenable that is not this realm’s Promise', async () => {
+    const thenable = { then: (resolve: (d: Record<string, string>) => void) => resolve({ hello_user: 'Hello ${user}' }) };
+    createLoader('id1', { [lang]: thenable as unknown as Promise<Record<string, string>> });
+
+    await tick(0);
+
+    expect(root.translate('hello_user', { user: 'Oleg' })).toBe('Hello Oleg');
+  });
+
   it('fetches a URL source via HttpClient and grafts the response', () => {
     createLoader('id1', { [lang]: '/assets/id1.json' });
 
@@ -196,6 +205,32 @@ describe('TranslateLoader', () => {
 
     loader.remove();
     root.lang = newLang;
+
+    expect(httpMock.match('/assets/id1.new.json').length).toBe(0);
+  });
+
+  it('does not graft or report a load that finishes after it is removed, but still caches it', () => {
+    const loader = createLoader('id1', { [lang]: '/assets/id1.json' });
+    const ready: unknown[] = [];
+    loader.ready$.subscribe((e) => ready.push(e));
+
+    loader.remove();
+    const dict = { hello_user: 'Hello ${user}' };
+    httpMock.expectOne('/assets/id1.json').flush(dict);
+
+    expect(ready).toEqual([]);
+    expect(root.translate('hello_user')).toBe('hello_user');
+    expect(TestBed.inject(TranslateLoaderCache).get(lang, 'id1')).toEqual(dict);
+  });
+
+  it('ignores preloadLang() once removed', () => {
+    const loader = createLoader('id1', {
+      [lang]: { hello_user: 'Hello ${user}' },
+      [newLang]: '/assets/id1.new.json',
+    });
+
+    loader.remove();
+    loader.preloadLang(newLang);
 
     expect(httpMock.match('/assets/id1.new.json').length).toBe(0);
   });

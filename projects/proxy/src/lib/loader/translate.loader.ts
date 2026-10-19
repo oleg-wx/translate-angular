@@ -22,7 +22,7 @@ export const APPLY_LOADER: unique symbol = Symbol('applyLoader');
 export type ApplyLoaderFn = () => { id: string; dictionaries: TranslateLoaderDictionaries; preloadLangs?: string[] };
 
 export class TranslateLoader {
-  /** `httpClient` may be `null` when no dictionary is a URL; one that is throws right away. */
+  /** `httpClient` may be `null` when no dictionary is a URL; loading one that is throws. */
   constructor(
     private cache: TranslateLoaderCache,
     private httpClient: HttpClient | null,
@@ -30,13 +30,11 @@ export class TranslateLoader {
     readonly id: string,
     readonly dictionaries: TranslateLoaderDictionaries,
     readonly preloadLangs: readonly string[] = [],
-  ) {
-    if (!httpClient && Object.values(dictionaries).some((dic) => typeof dic === 'string')) {
-      throw new Error(`TranslateProxyLoader "${id}": dictionaries given as URLs need provideHttpClient().`);
-    }
-  }
+  ) {}
 
   private _subs?: Subscription;
+  /** This loader's own interest in loads; the loads themselves keep going to fill the shared cache. */
+  private readonly _loads = new Subscription();
   /** Languages this loader has grafted or is loading, so each one is reported once per loader. */
   private readonly _imported = new Set<string>();
   private readonly _readySub = new Subject<{ lang: string; id: string }>();
@@ -68,9 +66,13 @@ export class TranslateLoader {
     }
   }
 
-  /** Stops following language changes and completes `ready$` and `errors$`. The loader can't be reused after this. */
+  /**
+   * Stops following language changes and loads in flight, and completes `ready$` and `errors$`.
+   * The loader can't be reused after this.
+   */
   remove() {
     this._subs?.unsubscribe();
+    this._loads.unsubscribe();
     this._readySub.complete();
     this._errorsSub.complete();
   }
@@ -85,9 +87,15 @@ export class TranslateLoader {
   }
 
   private importLang(lang: string): void {
-    if (this._imported.has(lang)) {
+    if (this._loads.closed || this._imported.has(lang)) {
       return;
     }
+
+    const dic = this.dictionaries[lang];
+    if (typeof dic === 'string' && !this.httpClient) {
+      throw new Error(`TranslateProxyLoader "${this.id}": dictionaries given as URLs need provideHttpClient().`);
+    }
+
     this._imported.add(lang);
 
     // Another loader with this id (another proxy instance, possibly on another TranslateService scope)
@@ -102,9 +110,7 @@ export class TranslateLoader {
       return;
     }
 
-    const dic = this.dictionaries[lang];
-
-    if (!(typeof dic === 'string' || dic instanceof Promise || isObservable(dic))) {
+    if (!(typeof dic === 'string' || isPromiseLike(dic) || isObservable(dic))) {
       this.cache.set(lang, this.id, dic);
       this.graft(lang, dic);
       return;
@@ -122,14 +128,16 @@ export class TranslateLoader {
   }
 
   private follow(lang: string, load: Observable<Dictionary>): void {
-    load.subscribe({
-      next: (dictionary) => this.graft(lang, dictionary),
-      error: (error) => {
-        // allow preloadLang() or a later language change to retry
-        this._imported.delete(lang);
-        this._errorsSub.next({ lang, id: this.id, error });
-      },
-    });
+    this._loads.add(
+      load.subscribe({
+        next: (dictionary) => this.graft(lang, dictionary),
+        error: (error) => {
+          // allow preloadLang() or a later language change to retry
+          this._imported.delete(lang);
+          this._errorsSub.next({ lang, id: this.id, error });
+        },
+      }),
+    );
   }
 
   private graft(lang: string, dictionary: Dictionary): void {
@@ -138,4 +146,9 @@ export class TranslateLoader {
     this.service.extendDictionary(lang, structuredClone(dictionary));
     this._readySub.next({ lang, id: this.id });
   }
+}
+
+/** Any thenable, not just this realm's `Promise`: under zone.js a native one (e.g. from `import()`) fails `instanceof Promise`. */
+function isPromiseLike(value: unknown): value is PromiseLike<Dictionary> {
+  return typeof (value as PromiseLike<unknown> | null)?.then === 'function';
 }
