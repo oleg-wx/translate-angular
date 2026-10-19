@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs';
-import { TranslateModule, TranslateRootService } from 'simply-translate-angular';
+import { TranslateModule, TranslateRootService, TranslateService } from 'simply-translate-angular';
 import { Namespace, StringProp as Str, StringParam, TranslateSchema } from '../lib/schema';
 import { TranslateProxy } from '../lib/translate.proxy';
 
@@ -180,6 +180,13 @@ describe('TranslateProxy', () => {
     expect(String(proxy.object.hello_user)).toBe('hello_user');
     expect(String(proxy.object.namespace.hello_user)).toBe('namespace.hello_user');
     expect(`${proxy.object.namespace.hello_user}`).toBe('namespace.hello_user');
+  });
+
+  it('can be passed as a nested key to the service, as the translate pipes do', () => {
+    const scoped = new TranslateService(root, { id: 'scope' });
+
+    expect(root.translate(proxy.object.namespace.hello_user, { user: 'Oleg' })).toBe('NS Hello Oleg');
+    expect(scoped.translate(proxy.object.namespace.hello_user, { user: 'Oleg' })).toBe('NS Hello Oleg');
   });
 
   it('does not look like a thenable', () => {

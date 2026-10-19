@@ -145,14 +145,14 @@ export class TranslateRootService implements TranslateServiceBase, OnDestroy {
   translateTo(lang: string, key: TranslateKey, fallback: string): string;
   translateTo(lang: string, key: TranslateKey, dynamicValues: TranslateDynamicProps, fallback?: DictionaryEntry | string): string;
   translateTo(lang: string, key: TranslateKey, dynamicValuesOrFallback?: TranslateDynamicProps | string, fallback?: DictionaryEntry | string): string {
-    return this._service.translateTo(lang, key, dynamicValuesOrFallback as any, fallback);
+    return this._service.translateTo(lang, toKey(key), dynamicValuesOrFallback as any, fallback);
   }
 
   translate(key: TranslateKey): string;
   translate(key: TranslateKey, fallback: string): string;
   translate(key: TranslateKey, dynamicValues: TranslateDynamicProps, fallback?: DictionaryEntry | string): string;
   translate(key: TranslateKey, dynamicValuesOrFallback?: TranslateDynamicProps | string, fallback?: DictionaryEntry | string): string {
-    return this._service.translate(key, dynamicValuesOrFallback as any, fallback);
+    return this._service.translate(toKey(key), dynamicValuesOrFallback as any, fallback);
   }
 
   translateSignal(key: TranslateKey): Signal<string>;
@@ -164,6 +164,7 @@ export class TranslateRootService implements TranslateServiceBase, OnDestroy {
     dynamicValuesOrFallback?: TranslateDynamicProps | string | Signal<any>,
     fallback?: DictionaryEntry | string,
   ): Signal<string> {
+    key = toKey(key);
     return computed(
       () => {
         this.stateVersion();
@@ -185,6 +186,7 @@ export class TranslateRootService implements TranslateServiceBase, OnDestroy {
     dynamicValuesOrFallback?: Observable<TranslateDynamicProps> | TranslateDynamicProps | string,
     fallback?: DictionaryEntry | string,
   ): Observable<string> {
+    key = toKey(key);
     const params$: Observable<any> = isObservable(dynamicValuesOrFallback) ? dynamicValuesOrFallback : of(dynamicValuesOrFallback);
 
     return combineLatest([this.stateVersion$, params$]).pipe(
@@ -200,11 +202,11 @@ export class TranslateRootService implements TranslateServiceBase, OnDestroy {
   }
 
   hasTranslation(key: TranslateKey) {
-    return this._service.hasTranslation(key);
+    return this._service.hasTranslation(toKey(key));
   }
 
   hasTranslationTo(lang: string, key: TranslateKey) {
-    return this._service.hasTranslationTo(lang, key);
+    return this._service.hasTranslationTo(lang, toKey(key));
   }
 
   private _addFallbackLangMiddleware(pipeline: SimplePipeline, fallbackLang: string | undefined) {
@@ -213,6 +215,19 @@ export class TranslateRootService implements TranslateServiceBase, OnDestroy {
       pipeline.addMiddlewareAt(2, FallbackWithDifferentLanguageMiddleware);
     }
   }
+}
+
+/**
+ * Accepts any object standing for a key — e.g. a `simply-translate-angular-proxy` node passed to a pipe — besides
+ * a string or a path. simply-translate only splits strings and arrays into a path, so anything else would be
+ * looked up as one flat key. Its `valueOf()` path is used when it has one, so segments containing dots survive.
+ */
+function toKey(key: TranslateKey): TranslateKey {
+  if (key == null || typeof key === 'string' || Array.isArray(key)) {
+    return key;
+  }
+  const value = (key as object).valueOf();
+  return Array.isArray(value) ? value : String(key);
 }
 
 /** Dictionaries returned by a loader, in any shape the initializer or resolver can unwrap. */
@@ -308,6 +323,7 @@ export class TranslateService implements TranslateServiceBase {
   }
 
   private getChildKey(key: TranslateKey) {
+    key = toKey(key);
     if (!this._id) return key;
 
     let _key: any;

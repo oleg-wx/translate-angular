@@ -1,7 +1,7 @@
 {
   "proxy": {
     "welcome_to_app": "[Proxy] Добро пожаловть в Тестовое приложение",
-    "hello_user": "[Proxy] Привет, $&{user?namespace.user}!",
+    "hello_user": "[Proxy] Привет, ${user?namespace.user}!",
 
     "hello_world": "[Proxy] Привет мир!",
     "goodbye_world": {
@@ -11,7 +11,7 @@
 
     "namespace": {
       "value": "[Proxy] пространство имен",
-      "hello_user": "[Proxy] Снова здравствуй, $&{user?namespace.user}!",
+      "hello_user": "[Proxy] Снова здравствуй, ${user?namespace.user}!",
       "user": "[Proxy] Пользователь"
     },
 

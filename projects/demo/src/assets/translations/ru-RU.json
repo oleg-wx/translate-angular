@@ -1,6 +1,6 @@
 {
   "welcome_to_app": "Добро пожаловть в Тестовое приложение",
-  "hello_user": "Привет, $&{user?namespace.user}!",
+  "hello_user": "Привет, &{user?namespace.user}!",
 
   "hello_world": "Привет мир!",
   "goodbye_world": {
@@ -10,7 +10,7 @@
 
   "namespace": {
     "value": "пространство имен",
-    "hello_user": "Снова здравствуй, $&{user?namespace.user}!",
+    "hello_user": "Снова здравствуй, &{user?namespace.user}!",
     "user": "Пользователь"
   },
 
