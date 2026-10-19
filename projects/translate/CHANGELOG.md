@@ -13,6 +13,7 @@ All notable changes to `simply-translate-angular` are listed here.
 -   Removed the deprecated `TranslateChildConfig.deps`, which was no longer read. `loadDictionaries` takes dependencies with `inject()`.
 -   `TranslateRootService`, `TranslateService`, `TranslateResolve` and the pipes take their dependencies with `inject()`, so their constructors no longer have parameters. This only matters when a class is constructed with `new` or extended with a `super(...)` call: create them through DI, and call `super()` without arguments.
 -   Removed the deprecated `fallbackLang` from the `languageChange$` events. Read `TranslateRootService.fallbackLang` instead.
+-   `rxjs` is a peer dependency instead of a dependency, so the application's own copy is used. Angular requires it already.
 
 ### Added
 

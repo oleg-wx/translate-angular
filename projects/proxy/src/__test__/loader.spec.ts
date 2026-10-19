@@ -93,8 +93,8 @@ describe('TranslateLoader', () => {
     createLoader('id1', { [lang]: { greeting_from_id1: 'From id1' } });
     createLoader('id2', { [lang]: { greeting_from_id2: 'From id2' } });
 
-    // Both land in the same flat dictionary for `lang` — unlike TranslateService.extendDictionary()
-    // unlike provideTranslateChild(), TranslateLoader does not prefix keys by id, so distinct ids must use distinct keys.
+    // Both land in the same flat dictionary for `lang`: unlike provideTranslateChild(), TranslateLoader
+    // does not prefix keys by id, so distinct ids must use distinct keys.
     expect(root.translate('greeting_from_id1')).toBe('From id1');
     expect(root.translate('greeting_from_id2')).toBe('From id2');
   });
@@ -146,7 +146,7 @@ describe('TranslateLoader', () => {
     expect(httpMock.match('/assets/id1.new.json').length).toBe(0);
   });
 
-  describe('preloadLangs (declared upfront via applyLoader)', () => {
+  describe('preloadLangs (declared upfront via @TranslateProxyLoader)', () => {
     it('loads every declared language immediately, not just the active one', () => {
       createLoader(
         'id1',
@@ -234,6 +234,27 @@ describe('TranslateLoader', () => {
 
       expect(ready).toEqual([{ lang, id: 'id1' }]);
     });
+  });
+
+  it('completes ready$ and errors$ once removed', () => {
+    const loader = createLoader('id1', { [lang]: { hello_user: 'Hello ${user}' } });
+    let completed = 0;
+    loader.ready$.subscribe({ complete: () => completed++ });
+    loader.errors$.subscribe({ complete: () => completed++ });
+
+    loader.remove();
+
+    expect(completed).toBe(2);
+  });
+
+  it('keeps cache entries apart when an id and a language share an underscore', () => {
+    const cache = TestBed.inject(TranslateLoaderCache);
+    const dictionary = { hello_user: 'Hello' };
+
+    cache.set('c', 'a_b', dictionary);
+
+    expect(cache.get('b_c', 'a')).toBeUndefined();
+    expect(cache.get('c', 'a_b')).toBe(dictionary);
   });
 
   it('clears the cache on a failed load so a later attempt retries', () => {

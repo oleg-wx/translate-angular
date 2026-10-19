@@ -5,13 +5,13 @@
   "type": "module",
   "dependencies": {
     "tslib": "^2.4.0",
-    "simply-translate": "^1.0.0",
-    "rxjs": "^7.5.7"
+    "simply-translate": "^1.0.0"
   },
   "peerDependencies": {
     "@angular/common": ">=21.0.0",
     "@angular/core": ">=21.0.0",
     "@angular/compiler": ">=21.0.0",
+    "rxjs": "^7.5.7",
     "typescript": ">=5.9.0"
   },
   "peerDependenciesMeta": {

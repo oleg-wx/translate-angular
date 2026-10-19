@@ -8,6 +8,13 @@ All notable changes to `simply-translate-angular-proxy` are listed here.
 
 -   Requires Angular 21, TypeScript 5.9 and `simply-translate-angular` 21.0.0. For Angular 20 use 20.x of both packages.
 -   `simply-translate-angular` 21 no longer has `TranslateModule`, so set up `TranslateService` with `provideTranslate()`.
+-   `simply-translate-angular` and `rxjs` are peer dependencies instead of dependencies, so the application's single copy is used. A second copy of `simply-translate-angular` meant a second `TranslateService` class, and injecting a proxy failed with "No provider for TranslateService". Install both yourself, as the README already shows. `@angular/router` is an optional peer dependency, used only by `translateLoaderResolver`.
+
+### Fixed
+
+-   `onLoaderReady` was never called for a dictionary given as a plain object, because it loads before the proxy subscribed.
+-   Two loader cache entries collided when an id and a language shared an underscore, for example id `a_b` with language `c` and id `a` with language `b_c`.
+-   A destroyed proxy now completes its loader's ready and error streams instead of leaving them open.
 
 ## 20.0.0
 

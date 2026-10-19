@@ -52,7 +52,7 @@ export abstract class TranslateProxy<S extends TranslateSchemaNode> implements O
 
   /**
    * Loads this proxy's dictionary for `lang` right away, without waiting for the app to switch to it.
-   * Nothing is preloaded automatically — declare known languages upfront via `applyLoader()`'s
+   * Only the active language loads by default — declare known languages upfront with `@TranslateProxyLoader`'s
    * `preloadLangs`, and call this for anything ad hoc. A no-op if this proxy has no loader.
    */
   preloadLang(lang: string | undefined): void {
@@ -71,13 +71,15 @@ export abstract class TranslateProxy<S extends TranslateSchemaNode> implements O
         this._dictionaries,
         preloadLangs ?? [],
       );
-      this._loader.init();
+      // subscribed before init() so a dictionary grafted synchronously is reported too;
+      // both complete when the loader is removed in ngOnDestroy
       this._loader.ready$.subscribe((info) => {
         this.onLoaderReady?.(info);
       });
       this._loader.errors$.subscribe((error) => {
         this.onLoaderError?.(error);
       });
+      this._loader.init();
     }
   }
 
