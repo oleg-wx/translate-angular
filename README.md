@@ -6,7 +6,7 @@ Monorepo for [simply-translate](https://www.npmjs.com/package/simply-translate) 
 
 ### [simply-translate-angular](projects/translate/README.md)
 
-The core translation library — `TranslateModule`, directive, pipes, `TranslateService`, and dictionary loading (root/lazy). See [projects/translate/README.md](projects/translate/README.md) for setup and usage, and its [changelog](projects/translate/CHANGELOG.md).
+The core translation library — `provideTranslate()`, standalone directive and pipes, `TranslateService`, and dictionary loading (root/lazy). See [projects/translate/README.md](projects/translate/README.md) for setup and usage, and its [changelog](projects/translate/CHANGELOG.md).
 
 ### [simply-translate-angular-proxy](projects/proxy/README.md)
 
@@ -16,12 +16,12 @@ Optional add-on built on top of `simply-translate-angular` — `TranslateProxy` 
 
 ```bash
 npm ci
-npm test            # tests both libraries once in headless Chrome
+npm test            # both libraries and the demo app, once in headless Chrome
 npm run build:prod  # builds dist/translate and dist/proxy
 npm run start:demo  # demo app on http://localhost:4800 (run build:prod first)
 ```
 
-The proxy library and the demo app import `simply-translate-angular` from `dist/translate`, so build the translate library before working on them.
+The proxy library imports `simply-translate-angular` from `dist/translate`, and the demo app imports `simply-translate-angular-proxy` from `dist/proxy`, so build those before working on them — `npm test` does it in order.
 
 ## Releasing
 

@@ -208,10 +208,18 @@ export class TranslateRootService implements TranslateServiceBase {
   }
 }
 
+/** Dictionaries returned by a loader, in any shape the initializer or resolver can unwrap. */
+export type LoadedDictionaries = Dictionaries | Promise<Dictionaries> | Observable<Dictionaries>;
+
 export interface TranslateChildConfig {
   id?: string;
   dictionaries?: Dictionaries;
+  /** Called inside an injection context, so dependencies are taken with `inject()`. */
   loadDictionaries?: (opts: { lang: string; fallbackLang: string }, ...deps: any[]) => Observable<Dictionaries>;
+  /**
+   * @deprecated No longer read. Take dependencies with `inject()` inside `loadDictionaries`,
+   * or pass `deps` to `TranslateModule.forChild()`.
+   */
   deps?: any[];
 }
 
@@ -303,7 +311,9 @@ export class TranslateService implements TranslateServiceBase {
       _key = [this._id, ...key];
     }
 
-    if (this._root['_service'].dictionaries[this.lang][this._id] !== undefined) {
+    // no dictionary for the current language (not set, or not loaded yet) means no scope entries either
+    const dictionary = this.lang ? this._root['_service'].dictionaries[this.lang] : undefined;
+    if (dictionary?.[this._id] !== undefined) {
       if (this._root.hasTranslation(_key)) {
         return _key;
       } else {

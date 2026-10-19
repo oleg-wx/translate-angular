@@ -17,33 +17,47 @@ npm i simply-translate-angular
 ### Import
 
 ```javascript
-import { TranslateModule, TranslateService } from 'simply-translate-angular';
+import { provideTranslate, TranslateService, TRANSLATE_IMPORTS } from 'simply-translate-angular';
 ```
 
 ### Initialize
 
+`provideTranslate()` goes into the application providers. Everything optional is passed as a *feature* (`withLoader`, `withMiddleware`, …), and every feature callback runs inside an injection context, so dependencies are taken with `inject()`.
+
 ```javascript
-@NgModule({
-  declarations: [AppComponent, AppViewComponent],
-  imports: [
-    TranslateModule.forRoot({
-      // dependencies
-      deps: [ HttpClient ],
-      // language
-      lang: window.navigator.language,
-      fallbackLang: 'ru-RU',
-      // static dictionaries
-      dictionaries:{'ru-RU':{...}},
-      // load dictionaries
-      loadDictionaries:({lang, fallbackLang}, client /* params are injected dependencies received in the same order as they are in deps */) =>{
-        return of({
-          [lang]: {...}
-        });
-      }
-    })
-  ]
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideHttpClient(),
+    provideTranslate(
+      {
+        lang: window.navigator.language,
+        fallbackLang: 'ru-RU',
+      },
+      // static dictionaries, available before anything loads
+      withDictionaries({ 'ru-RU': { ... } }),
+      // dictionaries fetched while the application initializes
+      withLoader(({ lang, fallbackLang }) => inject(HttpClient).get<Dictionaries>(`/assets/translations/${lang}.json`).pipe(
+        map((dictionary) => ({ [lang]: dictionary })),
+      )),
+    ),
+  ],
 });
 ```
+
+Declarables are standalone. Add `TRANSLATE_IMPORTS` (the three pipes and the directive) to any component that translates:
+
+```javascript
+@Component({
+  standalone: true,
+  imports: [TRANSLATE_IMPORTS],
+  template: `<h2 translate="hello_user" [values]="{ user: 'Oleg' }"></h2>`,
+})
+export class HelloComponent {}
+```
+
+Import them individually (`TranslatePipe`, `TranslateToPipe`, `TranslatePipeDetect`, `TranslateDirective`) when a component needs only some.
+
+Using NgModules? `TranslateModule.forRoot()` / `.forChild()` still work — see [Legacy NgModule API](#legacy-ngmodule-api).
 
 See [Load dictionaries](#load-dictionaries)
 
@@ -111,7 +125,7 @@ hello$ = translate.translateObservable('hello_user', { user: 'Oleg' }); // Obser
 ```
 
 To change language, use `TranslateRootService` `lang` property.   
-To detect changes, subscribe to `languageChange$` and `dictionaryChange$`. **Note** that `loadDictionaries` method in root settings will not execute when language changes.
+To detect changes, subscribe to `languageChange$` and `dictionaryChange$`. **Note** that root loaders (`withLoader()`) run once during initialization and will not execute again when the language changes.
 
 ```javascript
 export class Component {
@@ -125,163 +139,162 @@ export class Component {
 
 #### Root
 
-Default `forRoot` initialization can use injected dependencies (e.g. `HttpClient`) to fetch dictionaries. `loadDictionaries` returns an `Observable` of a set of dictionaries
+`withLoader()` fetches dictionaries during application initialization; the application does not start until they settle. It may return an `Observable`, a `Promise` or a plain `Dictionaries` object, and it runs inside an injection context.
 
 ```javascript
-export function getDictionary(lang: string, client: HttpClient) {
-  return client.get<Dictionary>(`/assets/translations/${lang}.json`);
+function getDictionary(lang: string) {
+  return inject(HttpClient).get<Dictionary>(`/assets/translations/${lang}.json`);
 }
 
-@NgModule({
-  declarations: [...],
-  imports: [
-    ...
-    TranslateModule.forRoot({
-      // dependencies
-      deps: [ HttpClient ],
-
-      lang: window.navigator.language,
-      fallbackLang: 'ru-RU',
-
-      loadDictionaries: ({lang, fallbackLang}, client /* params are injected dependencies received in the same order as they are in deps */) => {
-
-        const res$ = forkJoin([getDictionary(lang, client), getDictionary(fallbackLang, client)]).pipe(
-          map((res) => {
-            return { [lang]: res[0], [fallbackLang]: res[1] };
-          })
-        );
-
-        return res$;
-      },
-    }),
-    ...
-  ],
-  ...
-})
+provideTranslate(
+  {
+    lang: window.navigator.language,
+    fallbackLang: 'ru-RU',
+  },
+  withLoader(({ lang, fallbackLang }) =>
+    forkJoin([getDictionary(lang), getDictionary(fallbackLang)]).pipe(
+      map(([dictionary, fallback]) => ({ [lang]: dictionary, [fallbackLang]: fallback })),
+    ),
+  ),
+);
 ```
 
-**Note**: it might be useful to **hardcode** _fallback dictionary_ in .ts or .json file then import it rather than use http client to download.
+`withLoader()` may be used several times — the loaders run in parallel and their dictionaries are merged, which lets a feature contribute its own without touching the bootstrap config.
+
+**Note**: it might be useful to **hardcode** the _fallback dictionary_ in a .ts or .json file and import it rather than use the http client to download it.
 
 ```javascript
 import fallback from './translations/fallback';
 
-TranslateModule.forRoot({
-  lang: window.navigator.language,
-  fallbackLang: env.fallbackLanguage,
-  dictionaries: {
-    [env.fallbackLanguage]: fallback,
+provideTranslate(
+  {
+    lang: window.navigator.language,
+    fallbackLang: env.fallbackLanguage,
   },
-
-  deps: [ HttpClient ],
-  loadDictionaries: ({lang, fallbackLang}, client /* params are injected dependencies received in the same order as they are in deps */) => {
-    return getDictionary(lang, client).pipe(
-      map((res) => {
-        return { [lang]: res };
-      })
-    );
-  },
-}),
+  withDictionaries({ [env.fallbackLanguage]: fallback }),
+  withLoader(({ lang }) => getDictionary(lang).pipe(map((res) => ({ [lang]: res })))),
+);
 ```
 
-**Note**: For more complex scenarios you may use initialization functions with `APP_INITIALIZER` token.
-
-#### Lazy
-
-Loading dictionaries for **Lazy** modules is a bit trickier.
+`withOnReady()` runs once every loader has settled, before the application starts:
 
 ```javascript
-export function getDictionary(lang: string, client: HttpClient) {
-  return client.get<Dictionary>(`/assets/translations/${lang}.dynamic.json`);
-}
+provideTranslate(
+  { lang: window.navigator.language },
+  withLoader(...),
+  withOnReady(() => inject(SplashScreen).hide()),
+);
+```
 
-@NgModule({
-  declarations: [...],
-  imports: [
-    TranslateModule.forChild({
-      deps: [ HttpClient ],
-      loadDictionaries: ({ lang, fallbackLang }, client: HttpClient) => {
-        return forkJoin([getDictionary(lang, client), getDictionary(fallbackLang, client)]).pipe(
-          map((res) => {
-            return { [lang]: res[0], [fallbackLang]: res[1] };
-          })
-        );
-      },
+#### Lazy routes
+
+A route scopes translation with `provideTranslateChild()` in its `providers`, plus `translateChildResolver` in its `resolve` so navigation waits for the dictionaries. `withTranslateChild()` is the two of them in one object, ready to spread into the route:
+
+```javascript
+const routes: Routes = [
+  {
+    path: 'dynamic',
+    ...withTranslateChild({
+      loadDictionaries: ({ lang, fallbackLang }) =>
+        forkJoin([getDictionary(lang), getDictionary(fallbackLang)]).pipe(
+          map(([dictionary, fallback]) => ({ [lang]: dictionary, [fallbackLang]: fallback })),
+        ),
     }),
-    ...
-  ]
-})
-export class DynamicModule {}
+    loadComponent: () => import('./dynamic.component').then((m) => m.DynamicComponent),
+  },
+];
 ```
 
-Then you **must** add the `TranslateResolve` resolver to every lazy route to wait for child `loadDictionaries`.
+Spelled out, that is:
 
 ```javascript
-const routes: Routes = [{ path: '', component: DynamicComponent, resolve: { translate: TranslateResolve } }];
-
-@NgModule({
-  imports: [RouterModule.forChild(routes)],
-  exports: [RouterModule],
-})
-export class DynamicRoutingModule {}
+{
+  path: 'dynamic',
+  providers: [provideTranslateChild({ loadDictionaries })],
+  resolve: { translate: translateChildResolver },
+  loadComponent: ...,
+}
 ```
 
-**Deprecated: Under consideration of removing**: For rare cases you may use `id` parameter for Lazy loaded module, that allows having different values with same key.  
-"Lazy" values will be available only for lazy modules with that special `id`.
+Components under that route get their own `TranslateService` instance; everywhere else keeps the root one.
+
+**Deprecated: under consideration for removal**: the `id` parameter gives a scope its own values for keys that already exist at the root. Those values are visible only inside that scope, and keys the scope does not define fall back to the root dictionary.
 
 ```javascript
-@NgModule({
-  declarations: [...],
-  imports: [
-    TranslateModule.forRoot({
-      dictionaries: {'en-US':{
-        'key':'Value'
-      }}
-    })
-  ]
-})
+provideTranslate({ lang: 'en-US' }, withDictionaries({ 'en-US': { key: 'Value' } }));
 ```
 
 ```javascript
-@NgModule({
-  declarations: [...],
-  imports: [
-    TranslateModule.forChild({
-      id: 'lazy',
-      dictionaries: {'en-US':{
-        'key':'Value for Lazy'
-      }}
-    })
-  ]
-})
+{
+  path: 'lazy',
+  ...withTranslateChild({ id: 'lazy', dictionaries: { 'en-US': { key: 'Value for Lazy' } } }),
+  loadComponent: ...,
+}
 ```
 
 ### Pipeline
 
 **(experimental)**
-Currently it is possible to **append** middleware to the end of translation pipeline.  
-It might be specially useful to add **logger** or rarely fine-tune translation result.
+Currently it is possible to **append** middleware to the end of the translation pipeline.  
+It might be especially useful to add a **logger** or to rarely fine-tune the translation result.
+
+```javascript
+provideTranslate(
+  { lang: window.navigator.language },
+  withMiddleware(() => {
+    const logger = inject(Logger);
+    return [
+      ({ params, result }, next) => {
+        if (result.fallingBack) {
+          logger.log(`Translation absent [${params.lang}:${params.key}]`);
+        }
+        next();
+      },
+    ];
+  }),
+);
+```
+
+Middleware is appended before any loader runs, so it sees every dictionary as it arrives.
+
+### Legacy NgModule API
+
+`TranslateModule.forRoot()` and `TranslateModule.forChild()` are deprecated but still supported — they build the same providers as `provideTranslate()` and `provideTranslateChild()`. Importing `TranslateModule` into an NgModule still exports the pipes and the directive to its declarations.
 
 ```javascript
 @NgModule({
-  declarations: [...],
+  declarations: [AppComponent],
   imports: [
-    ...
     TranslateModule.forRoot({
-      // dependencies
-      deps: [ Logger ],
-      addMiddleware: (logger /* injected dependencies */) => {
-       return [
-          ({params, result}, next) => {
-            if (result.fallingBack) {
-              logger.log(`Translation absent [${params.lang}:${params.key}]`);
-            }
-            next();
-          },
-        ];
-      },
+      // dependencies, resolved and passed to every callback below
+      deps: [HttpClient],
+      lang: window.navigator.language,
+      fallbackLang: 'ru-RU',
+      dictionaries: { 'ru-RU': { ... } },
+      loadDictionaries: ({ lang, fallbackLang }, client) => of({ [lang]: { ... } }),
     }),
-    ...
   ],
-  ...
 })
+export class AppModule {}
 ```
+
+Lazy NgModules use `TranslateModule.forChild()` and need `TranslateResolve` on every route that waits for its dictionaries:
+
+```javascript
+const routes: Routes = [{ path: '', component: DynamicComponent, resolve: { translate: TranslateResolve } }];
+```
+
+To migrate:
+
+| Legacy | Functional |
+| --- | --- |
+| `TranslateModule.forRoot(config)` | `provideTranslate(config, ...features)` |
+| `TranslateModule.forChild(config)` | `provideTranslateChild(config)` in `Route.providers` |
+| `TranslateResolve` | `translateChildResolver` |
+| `deps: [Dep]` + callback parameters | `inject(Dep)` inside the callback |
+| `dictionaries` | `withDictionaries()` |
+| `loadDictionaries` | `withLoader()` |
+| `addMiddleware` | `withMiddleware()` |
+| `final` | `withOnReady()` |
+| `init` | `withLoader()` |
+| `imports: [TranslateModule]` | `imports: [TRANSLATE_IMPORTS]` |

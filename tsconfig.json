@@ -1,32 +1,36 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "baseUrl": "./",
+    "rootDir": "./",
     "outDir": "dist/out-tsc",
     "sourceMap": true,
     "declaration": false,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "experimentalDecorators": true,
     "importHelpers": true,
     "target": "ES2022",
     "jsx": "react",
     "types": ["node", "jasmine"],
     "lib": ["es2022", "dom"], // Upgraded to match target ES2022
+    // TypeScript 6 turns `strict` on by default; pinned so every TypeScript version checks the same way
+    "strict": false,
+    // without `baseUrl`, paths are relative to this file
     "paths": {
-      "simply-translate-angular-proxy": [
-        "./dist/proxy"
-      ],
-      "simply-translate-angular": ["dist/translate"]
+      "src/*": ["./projects/demo/src/*"],
+      "simply-translate-angular-proxy": ["./dist/proxy"],
+      "simply-translate-angular": ["./dist/translate"]
     },
+    // @types/node 18 does not type-check under TypeScript 6
+    "skipLibCheck": true,
     "useDefineForClassFields": false,
     "resolveJsonModule": true,
     "esModuleInterop": true
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.spec.ts"
-  ],
+  // covers the demo app and both libraries, so the editor checks their sources with these options instead of the defaults
+  "include": ["projects/**/*.ts"],
+  // the e2e specs have their own tsconfig (protractor types)
+  "exclude": ["projects/demo/e2e/**"],
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,
