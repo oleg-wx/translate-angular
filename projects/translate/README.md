@@ -6,7 +6,7 @@ Upgrading or looking for what changed? See the [changelog](CHANGELOG.md). Versio
 
 ### Versions
 
-The major version follows Angular's: 21.x needs Angular 21 or later. For Angular 20 use 20.x, for Angular 19 use 19.x, and for Angular 17–18 use 1.x.
+The major version follows Angular's: 21.x needs Angular 21 or later. For Angular 19-20 use 19.x, and for Angular 17–18 use 1.x.
 
 ### Basics
 
