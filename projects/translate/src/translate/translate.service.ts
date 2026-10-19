@@ -1,4 +1,4 @@
-import { computed, Inject, Injectable, InjectionToken, isSignal, Optional, Signal, signal } from '@angular/core';
+import { computed, DestroyRef, inject, Injectable, InjectionToken, isSignal, Signal, signal } from '@angular/core';
 import { BehaviorSubject, combineLatest, isObservable, map, merge, Observable, of, Subject } from 'rxjs';
 import {
   Translations,
@@ -18,12 +18,10 @@ export interface DefaultTranslateConfig {
   placeholder?: PlaceholderType;
 }
 
-interface LangChange {
+/** Emitted by `languageChange$`. */
+export interface LangChange {
   lang: string;
   oldLang?: string;
-
-  /** @deprecated */
-  fallbackLang?: string;
 }
 
 export abstract class TranslateServiceBase {
@@ -95,7 +93,7 @@ export class TranslateRootService implements TranslateServiceBase {
     }
     const oldLang = this._service.lang;
     this._service.lang = lang;
-    this._langChangeSubj.next({ lang: this.lang, oldLang: oldLang, fallbackLang: this.fallbackLang });
+    this._langChangeSubj.next({ lang: this.lang, oldLang: oldLang });
   }
 
   public get lang(): string | undefined {
@@ -115,7 +113,10 @@ export class TranslateRootService implements TranslateServiceBase {
     return this._service.fallbackLang;
   }
 
-  constructor(@Optional() @Inject(DEFAULT_CONFIG) config?: DefaultTranslateConfig, @Optional() @Inject(ROOT_DICTIONARIES) rootDictionaries?: Dictionaries) {
+  constructor() {
+    const config = inject(DEFAULT_CONFIG, { optional: true });
+    const rootDictionaries = inject(ROOT_DICTIONARIES, { optional: true });
+
     this._langChangeSubj = new BehaviorSubject<LangChange>({ lang: config?.lang ?? '' });
     this.languageChange$ = this._langChangeSubj.asObservable();
     this._dictionarySubj = new Subject<void>();
@@ -131,7 +132,8 @@ export class TranslateRootService implements TranslateServiceBase {
       pipeline,
     );
 
-    merge(this._langChangeSubj, this._dictionarySubj).subscribe(() => this._bumpStateVersion());
+    const sub = merge(this._langChangeSubj, this._dictionarySubj).subscribe(() => this._bumpStateVersion());
+    inject(DestroyRef).onDestroy(() => sub.unsubscribe());
   }
 
   translateTo(lang: string, key: TranslateKey): string;
@@ -222,6 +224,8 @@ export const TRANSLATE_CHILD = new InjectionToken<TranslateChildConfig>('Transla
 
 @Injectable()
 export class TranslateService implements TranslateServiceBase {
+  // declared first: the fields below read from it
+  private readonly _root = inject(TranslateRootService);
   private _id: string | undefined;
   readonly languageChange$ = this._root.languageChange$;
   readonly dictionaryChange$ = this._root.dictionaryChange$;
@@ -236,15 +240,13 @@ export class TranslateService implements TranslateServiceBase {
     return this._root.fallbackLang;
   }
 
-  constructor(
-    private _root: TranslateRootService,
-    @Optional() @Inject(TRANSLATE_CHILD) _options?: TranslateChildConfig,
-  ) {
-    this._id = _options?.id;
+  constructor() {
+    const options = inject(TRANSLATE_CHILD, { optional: true });
+    this._id = options?.id;
 
-    if (_options?.dictionaries) {
-      Object.keys(_options.dictionaries).forEach((lang) => {
-        this.extendDictionary(lang, _options.dictionaries?.[lang] ?? {});
+    if (options?.dictionaries) {
+      Object.keys(options.dictionaries).forEach((lang) => {
+        this.extendDictionary(lang, options.dictionaries?.[lang] ?? {});
       });
     }
   }

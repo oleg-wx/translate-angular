@@ -11,6 +11,22 @@ All notable changes to `simply-translate-angular` are listed here.
 -   Removed what only the module used: `factory`, `forRootGuard`, `configToFeatures`, the `Config` / `ChildConfig` interfaces, the `AddMiddlewareFunc`, `LoadDictionariesFunc`, `InitFunc` and `FinalFunc` types, and `ɵtranslateRootProviders`.
 -   Removed the deprecated `translateResolve()` helper; use `translateChildResolver` or `withTranslateChild()`.
 -   Removed the deprecated `TranslateChildConfig.deps`, which was no longer read. `loadDictionaries` takes dependencies with `inject()`.
+-   `TranslateRootService`, `TranslateService`, `TranslateResolve` and the pipes take their dependencies with `inject()`, so their constructors no longer have parameters. This only matters when a class is constructed with `new` or extended with a `super(...)` call: create them through DI, and call `super()` without arguments.
+-   Removed the deprecated `fallbackLang` from the `languageChange$` events. Read `TranslateRootService.fallbackLang` instead.
+
+### Added
+
+-   `LangChange`, the type of the `languageChange$` events, is exported.
+
+### Changed
+
+-   The `translate` directive reads inner content back with `afterEveryRender` instead of `ngAfterViewChecked`. It still writes its text from an `effect`, so server-side rendering keeps the translated text.
+-   The library is tested without zone.js, the way Angular 21 applications run by default.
+
+### Fixed
+
+-   The `translate` directive showed an empty element on first render when its key came from an interpolation, such as `<div translate>{{ key }}</div>`.
+-   The `translate` directive replaced a translation that ends in whitespace (for example a missing placeholder value at the end) with its fallback.
 
 ## 20.0.0
 

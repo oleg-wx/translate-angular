@@ -2,24 +2,9 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "../../out-tsc/lib",
-    "module": "es2015",
-    "moduleResolution": "bundler",
     "declaration": true,
-    "sourceMap": true,
     "inlineSources": true,
-    "experimentalDecorators": true,
-    "importHelpers": true,
-    "types": [],
-    "paths": {
-      "@soe": ["./src"]
-    }
-  },
-  "angularCompilerOptions": {
-    "skipTemplateCodegen": true,
-    "strictMetadataEmit": true,
-    "fullTemplateTypeCheck": true,
-    "strictInjectionParameters": true,
-    "enableResourceInlining": true
+    "types": []
   },
   "exclude": [
     "src/test.ts",

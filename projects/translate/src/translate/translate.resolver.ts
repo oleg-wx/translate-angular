@@ -1,8 +1,8 @@
-import { DestroyRef, ErrorHandler, Inject, inject, Injectable, Injector, Optional, runInInjectionContext } from '@angular/core';
+import { DestroyRef, ErrorHandler, inject, Injectable, Injector, runInInjectionContext } from '@angular/core';
 
 import { Observable, of, tap, shareReplay, skip } from 'rxjs';
 import { Dictionaries } from 'simply-translate';
-import { TranslateChildConfig, TranslateService, TRANSLATE_CHILD } from './translate.service';
+import { TranslateService, TRANSLATE_CHILD } from './translate.service';
 import { extendAll, firstDictionaries$ } from './translate.utils';
 
 @Injectable()
@@ -10,13 +10,14 @@ export class TranslateResolve {
   /** Per language: the load in flight, or `true` once its dictionaries are merged. */
   private readonly _extended = new Map<string, true | Observable<Dictionaries>>();
   protected readonly extend: () => Observable<Dictionaries>;
+  protected readonly service = inject(TranslateService);
 
-  constructor(
-    protected service: TranslateService,
-    injector: Injector,
-    @Optional() @Inject(TRANSLATE_CHILD) settings?: TranslateChildConfig,
-  ) {
+  constructor() {
+    const service = this.service;
+    const settings = inject(TRANSLATE_CHILD, { optional: true });
+
     if (settings?.loadDictionaries) {
+      const injector = inject(Injector);
       const loadDictionaries = settings.loadDictionaries;
       this.extend = () => {
         const opts = { lang: service.lang, fallbackLang: service.fallbackLang };

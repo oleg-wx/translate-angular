@@ -165,8 +165,7 @@
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
             "main": "projects/translate/src/test.ts",
-            "tsConfig": "projects/translate/tsconfig.spec.json",
-            "karmaConfig": "projects/translate/karma.conf.cjs"
+            "tsConfig": "projects/translate/tsconfig.spec.json"
           }
         },
         "lint": {
