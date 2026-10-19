@@ -215,12 +215,7 @@ export interface TranslateChildConfig {
   id?: string;
   dictionaries?: Dictionaries;
   /** Called inside an injection context, so dependencies are taken with `inject()`. */
-  loadDictionaries?: (opts: { lang: string; fallbackLang: string }, ...deps: any[]) => Observable<Dictionaries>;
-  /**
-   * @deprecated No longer read. Take dependencies with `inject()` inside `loadDictionaries`,
-   * or pass `deps` to `TranslateModule.forChild()`.
-   */
-  deps?: any[];
+  loadDictionaries?: (opts: { lang: string; fallbackLang: string }) => Observable<Dictionaries>;
 }
 
 export const TRANSLATE_CHILD = new InjectionToken<TranslateChildConfig>('TranslateService TRANSLATE_CHILD');

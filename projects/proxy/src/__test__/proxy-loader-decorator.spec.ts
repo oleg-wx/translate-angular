@@ -5,7 +5,7 @@ import { TestBed } from '@angular/core/testing';
 import { StringProp, TranslateSchema } from '../lib/schema';
 import { TranslateProxy } from '../lib/translate.proxy';
 import { TranslateProxyLoader } from '../lib/loader/translate-proxy-loader.decorator';
-import { TranslateModule, TranslateRootService } from 'simply-translate-angular';
+import { provideTranslate, TranslateRootService } from 'simply-translate-angular';
 
 const lang = 'lang';
 
@@ -31,8 +31,7 @@ class FeatureTranslate extends TranslateProxy<typeof featureSchema> {}
 describe('TranslateProxyLoader decorator', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [TranslateModule.forRoot({ lang })],
-      providers: [provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()],
+      providers: [provideTranslate({ lang }), provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()],
     });
   });
 

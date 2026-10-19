@@ -1,15 +1,17 @@
-import { AsyncPipe, NgFor } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { Component, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TRANSLATE_IMPORTS, TranslateRootService } from 'src/_translate.imports';
 import { TranslateProxyMore, TranslateProxyOneMore } from './translate.proxy';
 
 @Component({
-  imports: [TRANSLATE_IMPORTS, FormsModule, NgFor, AsyncPipe],
+  imports: [TRANSLATE_IMPORTS, FormsModule, AsyncPipe],
   selector: 'app-try-proxy',
   template: `
     <select [ngModel]="selectedLang" (ngModelChange)="onLangChange($event)">
-      <option *ngFor="let lang of langs" [value]="lang">{{ lang }}</option>
+      @for (lang of langs; track lang) {
+        <option [value]="lang">{{ lang }}</option>
+      }
     </select>
 
     <h3>Just Name</h3>

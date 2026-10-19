@@ -1,14 +1,15 @@
-import { NgFor } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TRANSLATE_IMPORTS, TranslateRootService } from 'src/_translate.imports';
 
 @Component({
-  imports: [TRANSLATE_IMPORTS, FormsModule, NgFor],
+  imports: [TRANSLATE_IMPORTS, FormsModule],
   selector: 'app-try-directive',
   template: `
     <select [ngModel]="selectedLang" (ngModelChange)="onLangChange($event)">
-      <option *ngFor="let lang of langs" [value]="lang">{{ lang }}</option>
+      @for (lang of langs; track lang) {
+        <option [value]="lang">{{ lang }}</option>
+      }
     </select>
 
     <h3>Key inferred from static DOM content</h3>
@@ -47,7 +48,6 @@ import { TRANSLATE_IMPORTS, TranslateRootService } from 'src/_translate.imports'
     <div translate>{{ dynamicKey }}</div>
     <button (click)="dynamicKey = 'hello_world'">Set key to hello_world</button>
     <button (click)="dynamicKey = 'hello_user'">Set key to hello_user</button>
-
   `,
 })
 export class TryDirectiveComponent {

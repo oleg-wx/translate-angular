@@ -2,7 +2,17 @@
 
 All notable changes to `simply-translate-angular` are listed here.
 
-## 20.0.0 (unreleased)
+## 21.0.0 (unreleased)
+
+### Breaking
+
+-   Requires Angular 21 and TypeScript 5.9. For Angular 20 use 20.x.
+-   Removed `TranslateModule` and its `forRoot()` / `forChild()`, deprecated since 1.0.0. Use `provideTranslate()` and `provideTranslateChild()`, and `TRANSLATE_IMPORTS` in place of `imports: [TranslateModule]`; the [README](README.md#migrating-from-translatemodule) maps every option.
+-   Removed what only the module used: `factory`, `forRootGuard`, `configToFeatures`, the `Config` / `ChildConfig` interfaces, the `AddMiddlewareFunc`, `LoadDictionariesFunc`, `InitFunc` and `FinalFunc` types, and `ɵtranslateRootProviders`.
+-   Removed the deprecated `translateResolve()` helper; use `translateChildResolver` or `withTranslateChild()`.
+-   Removed the deprecated `TranslateChildConfig.deps`, which was no longer read. `loadDictionaries` takes dependencies with `inject()`.
+
+## 20.0.0
 
 ### Breaking
 

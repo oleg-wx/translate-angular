@@ -1,12 +1,12 @@
 # Simply Translate for Angular
 
-[Simplest translations](https://www.npmjs.com/package/simply-translate) for Angular 20+.
+[Simplest translations](https://www.npmjs.com/package/simply-translate) for Angular 21+.
 
 Upgrading or looking for what changed? See the [changelog](CHANGELOG.md). Version 1.0.0 moved `TranslateProxy` and the schema API to [simply-translate-angular-proxy](https://www.npmjs.com/package/simply-translate-angular-proxy).
 
 ### Versions
 
-The major version follows Angular's: 20.x needs Angular 20 or later. For Angular 19 use 19.x, and for Angular 17–18 use 1.x.
+The major version follows Angular's: 21.x needs Angular 21 or later. For Angular 20 use 20.x, for Angular 19 use 19.x, and for Angular 17–18 use 1.x.
 
 ### Basics
 
@@ -60,7 +60,7 @@ export class HelloComponent {}
 
 Import them individually (`TranslatePipe`, `TranslateToPipe`, `TranslatePipeDetect`, `TranslateDirective`) when a component needs only some.
 
-Using NgModules? `TranslateModule.forRoot()` / `.forChild()` still work — see [Legacy NgModule API](#legacy-ngmodule-api).
+Coming from `TranslateModule.forRoot()` / `.forChild()`? They were removed in 21.0.0 — see [Migrating from TranslateModule](#migrating-from-translatemodule).
 
 See [Load dictionaries](#load-dictionaries)
 
@@ -260,34 +260,12 @@ provideTranslate(
 
 Middleware is appended before any loader runs, so it sees every dictionary as it arrives.
 
-### Legacy NgModule API
+### Migrating from TranslateModule
 
-`TranslateModule.forRoot()` and `TranslateModule.forChild()` are deprecated but still supported — they build the same providers as `provideTranslate()` and `provideTranslateChild()`. Importing `TranslateModule` into an NgModule still exports the pipes and the directive to its declarations.
+`TranslateModule` with `forRoot()` and `forChild()` was removed in 21.0.0, together with the `deps` arrays and the legacy `factory` / `forRootGuard` helpers. Use 20.x if you cannot migrate yet.
 
-```javascript
-@NgModule({
-  declarations: [AppComponent],
-  imports: [
-    TranslateModule.forRoot({
-      // dependencies, resolved and passed to every callback below
-      deps: [HttpClient],
-      lang: window.navigator.language,
-      fallbackLang: 'ru-RU',
-      dictionaries: { 'ru-RU': { ... } },
-      loadDictionaries: ({ lang, fallbackLang }, client) => of({ [lang]: { ... } }),
-    }),
-  ],
-})
-export class AppModule {}
-```
+NgModule applications don't need to become standalone to migrate: `provideTranslate()` and `provideTranslateChild()` go into `@NgModule({ providers })` as well, and `TRANSLATE_IMPORTS` goes into `@NgModule({ imports })` to make the pipes and the directive available to that module's declarations.
 
-Lazy NgModules use `TranslateModule.forChild()` and need `TranslateResolve` on every route that waits for its dictionaries:
-
-```javascript
-const routes: Routes = [{ path: '', component: DynamicComponent, resolve: { translate: TranslateResolve } }];
-```
-
-To migrate:
 
 | Legacy | Functional |
 | --- | --- |

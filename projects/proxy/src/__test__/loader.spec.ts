@@ -2,7 +2,7 @@ import { HttpClient, provideHttpClient, withInterceptorsFromDi } from '@angular/
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { Subject } from 'rxjs';
-import { TranslateModule, TranslateRootService, TranslateService } from 'simply-translate-angular';
+import { provideTranslate, TranslateRootService, TranslateService } from 'simply-translate-angular';
 import { TranslateLoaderCache } from '../lib/loader/translate.loader-cache';
 import { tick } from './core/tick';
 import { TranslateLoader, TranslateLoaderDictionaries } from '../lib/loader/translate.loader';
@@ -29,8 +29,7 @@ describe('TranslateLoader', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [TranslateModule.forRoot({ lang })],
-      providers: [provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()],
+      providers: [provideTranslate({ lang }), provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()],
     });
 
     root = TestBed.inject(TranslateRootService);
@@ -95,7 +94,7 @@ describe('TranslateLoader', () => {
     createLoader('id2', { [lang]: { greeting_from_id2: 'From id2' } });
 
     // Both land in the same flat dictionary for `lang` — unlike TranslateService.extendDictionary()
-    // for forChild(), TranslateLoader does not prefix keys by id, so distinct ids must use distinct keys.
+    // unlike provideTranslateChild(), TranslateLoader does not prefix keys by id, so distinct ids must use distinct keys.
     expect(root.translate('greeting_from_id1')).toBe('From id1');
     expect(root.translate('greeting_from_id2')).toBe('From id2');
   });

@@ -2,7 +2,14 @@
 
 All notable changes to `simply-translate-angular-proxy` are listed here.
 
-## 20.0.0 (unreleased)
+## 21.0.0 (unreleased)
+
+### Breaking
+
+-   Requires Angular 21, TypeScript 5.9 and `simply-translate-angular` 21.0.0. For Angular 20 use 20.x of both packages.
+-   `simply-translate-angular` 21 no longer has `TranslateModule`, so set up `TranslateService` with `provideTranslate()`.
+
+## 20.0.0
 
 ### Breaking
 

@@ -4,7 +4,6 @@ import { BehaviorSubject, concat, debounceTime, EMPTY, NEVER, of } from 'rxjs';
 import {
   DEFAULT_CONFIG,
   Dictionaries,
-  TranslateModule,
   provideTranslate,
   provideTranslateChild,
   ROOT_DICTIONARIES,
@@ -130,13 +129,6 @@ describe('provideTranslate', () => {
       const parent = TestBed.inject(EnvironmentInjector);
 
       expect(() => createEnvironmentInjector([provideTranslate()], parent)).toThrowError(/called more than once/);
-    });
-
-    it('lets TranslateModule.forRoot() be imported again in a lazily loaded module', () => {
-      TestBed.configureTestingModule({ imports: [TranslateModule.forRoot()] });
-      const parent = TestBed.inject(EnvironmentInjector);
-
-      expect(() => createEnvironmentInjector(TranslateModule.forRoot().providers!, parent)).not.toThrow();
     });
   });
 

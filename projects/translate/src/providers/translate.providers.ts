@@ -87,15 +87,6 @@ export function provideTranslate(
     assertFeaturesUsedOnce(features);
   }
 
-  return ɵtranslateRootProviders(features, { guard: isDevMode() });
-}
-
-/**
- * The root providers behind `provideTranslate()` and `TranslateModule.forRoot()`.
- * `forRoot()` passes `guard: false` because NgModule apps may legitimately import
- * it in a lazily loaded module as well.
- */
-export function ɵtranslateRootProviders(features: TranslateFeature[], { guard }: { guard: boolean }): EnvironmentProviders {
   return makeEnvironmentProviders([
     TranslateRootService,
     TranslateService,
@@ -104,7 +95,7 @@ export function ɵtranslateRootProviders(features: TranslateFeature[], { guard }
     { provide: DEFAULT_CONFIG, useValue: { placeholder: 'default' } as DefaultTranslateConfig },
     { provide: ROOT_DICTIONARIES, useValue: {} as Dictionaries },
     { provide: TRANSLATE_ROOT_GUARD, useValue: true },
-    ...(guard ? [provideEnvironmentInitializer(rootGuard)] : []),
+    ...(isDevMode() ? [provideEnvironmentInitializer(rootGuard)] : []),
     provideAppInitializer(() => translateInitializerFactory()()),
     // features last, so that withConfig()/withDictionaries() override the defaults above
     features.map((feature) => feature.ɵproviders),

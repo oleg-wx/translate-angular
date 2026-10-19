@@ -1,4 +1,3 @@
-import { NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -6,18 +5,20 @@ import { TRANSLATE_IMPORTS } from 'src/_translate.imports';
 import { StorageService } from '../../storage.service';
 
 @Component({
-  imports: [TRANSLATE_IMPORTS, NgIf],
+  imports: [TRANSLATE_IMPORTS],
   selector: 'app-visits',
   template: `
     <div>
       <hr />
-      <i *ngIf="lang; else def">{{ 'i_have_been_here_count' | translateTo: lang: { count: this.count, days: this.days } }}</i> |
+      @if (lang) {
+        <i>{{ 'i_have_been_here_count' | translateTo: lang: { count: this.count, days: this.days } }}</i>
+      } @else {
+        <i>{{ 'i_have_been_here_count' | translate:{ count: this.count, days: this.days } }}</i>
+      }
+      |
       <button (click)="resetVisits()">X</button>
       <hr />
     </div>
-    <ng-template #def>
-      <i>{{ 'i_have_been_here_count' | translate:{ count: this.count, days: this.days } }}</i>
-    </ng-template>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

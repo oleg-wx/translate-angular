@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs';
-import { TranslateModule, TranslateRootService } from 'simply-translate-angular';
+import { provideTranslate, TranslateRootService, withDictionaries } from 'simply-translate-angular';
 import { Namespace, StringProp as Str, StringParam, TranslateSchema } from '../lib/schema';
 import { TranslateProxy } from '../lib/translate.proxy';
 
@@ -40,13 +40,7 @@ describe('TranslateProxy', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [TestTranslateProxy],
-      imports: [
-        TranslateModule.forRoot({
-          lang,
-          dictionaries: dic,
-        }),
-      ],
+      providers: [provideTranslate({ lang }, withDictionaries(dic)), TestTranslateProxy],
     });
 
     root = TestBed.inject(TranslateRootService);

@@ -1,15 +1,17 @@
-import { AsyncPipe, NgFor } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { TRANSLATE_IMPORTS, TranslateRootService, TranslateService } from 'src/_translate.imports';
 
 @Component({
-  imports: [TRANSLATE_IMPORTS, FormsModule, NgFor, AsyncPipe],
+  imports: [TRANSLATE_IMPORTS, FormsModule, AsyncPipe],
   selector: 'app-switch-lang',
   template: `
     <select [ngModel]="selectedLang" (ngModelChange)="onLangChange($event)">
-      <option *ngFor="let lang of langs" [value]="lang">{{ lang }}</option>
+      @for (lang of langs; track lang) {
+        <option [value]="lang">{{ lang }}</option>
+      }
     </select>
 
     <h3>Directive</h3>

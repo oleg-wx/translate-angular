@@ -1,8 +1,7 @@
 import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { debounceTime, lastValueFrom, of, Subject } from 'rxjs';
-import { DefaultTranslateConfig, TranslateRootService, TranslateService } from '../public_api';
-import { TranslateModule } from '../simply-translate.module';
+import { DefaultTranslateConfig, provideTranslate, TranslateRootService, TranslateService, withDictionaries, withLoader, withOnReady } from '../public_api';
 
 // Mock component helper to inject the services
 @Component({
@@ -57,16 +56,16 @@ describe('Translate Service Integration', () => {
     _wait = new Subject<void>();
 
     await TestBed.configureTestingModule({
-      imports: [
-        TranslateModule.forRoot({
-          ...config,
-          dictionaries: rootDic,
-          loadDictionaries: () => of(dic).pipe(debounceTime(10)),
-          final: () => {
+      providers: [
+        provideTranslate(
+          config,
+          withDictionaries(rootDic),
+          withLoader(() => of(dic).pipe(debounceTime(10))),
+          withOnReady(() => {
             _wait.next();
             _wait.complete();
-          },
-        }),
+          }),
+        ),
       ],
       declarations: [TestInjectedServiceComponent, TestComponent],
     }).compileComponents();

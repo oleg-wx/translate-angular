@@ -14,11 +14,13 @@ Optional add-on built on top of `simply-translate-angular` — `TranslateProxy` 
 
 ## Versions
 
-Both packages follow Angular's major version: 20.x is built for Angular 20 and later, 19.x for Angular 19. For Angular 17–18 use 1.x.
+Both packages follow Angular's major version: 21.x is built for Angular 21 and later, 20.x for Angular 20, 19.x for Angular 19. For Angular 17–18 use 1.x.
+
+21.0.0 removes the deprecated `TranslateModule` (`forRoot()` / `forChild()`); see [Migrating from TranslateModule](projects/translate/README.md#migrating-from-translatemodule).
 
 ## Development
 
-Requires Node 20.19+, 22.12+ or 24 (the versions Angular 20 supports).
+Requires Node 20.19+, 22.12+ or 24 (the versions Angular 21 supports).
 
 ```bash
 npm ci
@@ -32,9 +34,9 @@ The libraries live in `projects/translate` and `projects/proxy`, the demo app in
 ## Releasing
 
 1. Bump `version` in `projects/<translate|proxy>/package.json` and move the `(unreleased)` heading in that project's `CHANGELOG.md` to the new version. Keep the major version equal to the Angular version the release is built for.
-2. Publish a GitHub Release whose tag is `<package name>@<version>`, for example `simply-translate-angular@20.0.0` or `simply-translate-angular-proxy@20.0.0`.
+2. Publish a GitHub Release whose tag is `<package name>@<version>`, for example `simply-translate-angular@21.0.0` or `simply-translate-angular-proxy@21.0.0`.
 
-The [Publish workflow](.github/workflows/publish.yml) checks that the tag matches the package version, runs the tests, and publishes that package to npm using trusted publishing, so no token is needed. Versions with a pre-release suffix (`20.1.0-beta.1`) go to the `next` dist-tag.
+The [Publish workflow](.github/workflows/publish.yml) checks that the tag matches the package version, runs the tests, and publishes that package to npm using trusted publishing, so no token is needed. Versions with a pre-release suffix (`21.1.0-beta.1`) go to the `next` dist-tag.
 
 ### Publishing from your machine
 

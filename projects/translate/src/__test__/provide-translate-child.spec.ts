@@ -1,13 +1,11 @@
-import { Component, createEnvironmentInjector, EnvironmentInjector, NgModule } from '@angular/core';
+import { Component, createEnvironmentInjector, EnvironmentInjector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, RouterModule, Routes } from '@angular/router';
+import { provideRouter, Routes } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { of, throwError } from 'rxjs';
 import {
   provideTranslate,
   provideTranslateChild,
-  TranslateModule,
-  TranslateResolve,
   TranslateRootService,
   TranslateService,
   TRANSLATE_IMPORTS,
@@ -108,7 +106,6 @@ describe('provideTranslateChild loading', () => {
             }),
             component: ScopedComponent,
           },
-          { path: 'legacy', loadChildren: () => LegacyChildModule },
           { path: 'plain', component: ScopedComponent },
         ]),
         provideTranslate({ lang: 'test' }, withDictionaries({ test: { hello_user: 'Hello User' } })),
@@ -147,28 +144,4 @@ describe('provideTranslateChild loading', () => {
     root.lang = undefined;
     expect(() => scoped.translate('hello_user')).not.toThrow();
   });
-
-  it('passes the scoped TranslateService to the legacy forChild({ extend })', async () => {
-    await harness.navigateByUrl('/legacy');
-
-    expect(legacyExtendedWith).toEqual(jasmine.any(TranslateService));
-    expect(legacyExtendedWith).not.toBe(TestBed.inject(TranslateService));
-  });
 });
-
-let legacyExtendedWith: unknown;
-
-@NgModule({
-  imports: [
-    TranslateModule.forChild({
-      id: 'legacy',
-      extend: (service: TranslateService) => {
-        legacyExtendedWith = service;
-        return of({});
-      },
-    }),
-    // the resolver must sit inside the lazy module to see its scope
-    RouterModule.forChild([{ path: '', component: ScopedComponent, resolve: { translate: TranslateResolve } }]),
-  ],
-})
-class LegacyChildModule {}

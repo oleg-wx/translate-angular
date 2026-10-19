@@ -12,7 +12,6 @@
     "target": "ES2022",
     "jsx": "react",
     "types": ["node", "jasmine"],
-    "lib": ["es2022", "dom"], // Upgraded to match target ES2022
     // TypeScript 6 turns `strict` on by default; pinned so every TypeScript version checks the same way
     "strict": false,
     // without `baseUrl`, paths are relative to this file

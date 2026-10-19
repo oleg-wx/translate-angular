@@ -1,5 +1,5 @@
 import { HttpClient, provideHttpClient } from '@angular/common/http';
-import { ApplicationConfig, inject } from '@angular/core';
+import { ApplicationConfig, inject, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { forkJoin, map } from 'rxjs';
 import { Dictionary, provideTranslate, withLoader, withMiddleware } from 'src/_translate.imports';
@@ -12,6 +12,8 @@ function getDictionary(lang: string, client: HttpClient) {
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    // Angular 21 bootstraps zoneless by default; the demo still relies on zone.js
+    provideZoneChangeDetection(),
     provideHttpClient(),
     provideRouter(routes),
 

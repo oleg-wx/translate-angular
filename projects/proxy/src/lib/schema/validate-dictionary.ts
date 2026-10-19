@@ -20,7 +20,7 @@ export type SchemaAllowanceMap = Record<string, SchemaAllowedKind | { kind: Sche
 
 export interface ValidateDictionaryOptions {
   knownIssues?: SchemaAllowanceMap;
-  /** Placeholder syntax the dictionaries use — must match the `placeholder` passed to `TranslateModule.forRoot`. */
+  /** Placeholder syntax the dictionaries use — must match the `placeholder` passed to `provideTranslate`. */
   placeholder?: PlaceholderType;
 }
 

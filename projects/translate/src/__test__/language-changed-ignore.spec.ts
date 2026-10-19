@@ -1,8 +1,7 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { lastValueFrom, Subject } from 'rxjs';
-import { TranslateRootService, TranslateService } from '../public_api';
-import { TranslateModule } from '../simply-translate.module';
+import { provideTranslate, TranslateRootService, TranslateService, TRANSLATE_IMPORTS, withDictionaries, withOnReady } from '../public_api';
 
 @Component({
   template: `
@@ -32,15 +31,16 @@ describe('language change ignore', () => {
   beforeEach(async () => {
     TestBed.configureTestingModule({
       declarations: [TestComponent],
-      imports: [
-        TranslateModule.forRoot({
-          lang,
-          dictionaries: dic,
-          final: () => {
+      imports: [TRANSLATE_IMPORTS],
+      providers: [
+        provideTranslate(
+          { lang },
+          withDictionaries(dic),
+          withOnReady(() => {
             _wait.next();
             _wait.complete();
-          },
-        }),
+          }),
+        ),
       ],
     });
   });

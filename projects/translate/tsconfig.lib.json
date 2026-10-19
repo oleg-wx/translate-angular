@@ -12,11 +12,7 @@
     "types": [],
     "paths": {
       "@soe": ["./src"]
-    },
-    "lib": [
-      "dom",
-      "es2017"
-    ]
+    }
   },
   "angularCompilerOptions": {
     "skipTemplateCodegen": true,

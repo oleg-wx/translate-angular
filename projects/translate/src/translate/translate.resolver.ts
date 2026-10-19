@@ -5,13 +5,6 @@ import { Dictionaries } from 'simply-translate';
 import { TranslateChildConfig, TranslateService, TRANSLATE_CHILD } from './translate.service';
 import { extendAll, firstDictionaries$ } from './translate.utils';
 
-/** @deprecated Use `translateChildResolver` (or `withTranslateChild()`) on the route instead. */
-export function translateResolve() {
-  return {
-    translate: TranslateResolve,
-  };
-}
-
 @Injectable()
 export class TranslateResolve {
   /** Per language: the load in flight, or `true` once its dictionaries are merged. */
